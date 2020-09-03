@@ -1,3 +1,4 @@
 discord
 youtube_dl
 mutagen
+pillow

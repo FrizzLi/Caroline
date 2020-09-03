@@ -1,0 +1,32 @@
+FirstParent:
+?X is parent of ?Y, married ?X ?Z
+add ?Z is parent of ?Y
+
+SecondParent:
+?X is parent of ?Y, married ?Z ?X
+add ?Z is parent of ?Y
+
+Father:
+?X is parent of ?Y, male ?X
+add ?X is father ?Y
+
+Mother:
+?X is parent of ?Y, female ?X
+add ?X is mother ?Y
+
+Siblings:
+?X is parent of ?Y, ?X is parent of ?Z, <> ?Y ?Z
+add ?Y and ?Z are siblings
+
+Brother:
+?Y and ?Z are siblings, male ?Y
+add ?Y is brother of ?Z
+
+Uncle:
+?Y is brother of ?Z, ?Z is parent of ?X
+add ?Y is uncle of ?X, message ?X has uncle
+
+Remove_test:
+?Y is uncle of ?X, female ?X
+remove female ?X
+
