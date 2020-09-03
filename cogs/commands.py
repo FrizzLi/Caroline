@@ -99,7 +99,7 @@ class Commands(commands.Cog):
         path.findShortestPath(**path_parameters)
         chain.runProduction(**chain_parameters)
 
-        skip_rake = True
+        skip_rake = False
 
         view.createGif(fname, skip_rake, climb)
 
