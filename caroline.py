@@ -48,3 +48,5 @@ if __name__ == '__main__':
                 print(f'{file} module cannot be loaded. [{e}]')
 
     client.run(gconfig['token'])
+
+# NOTE: Test scenarios for audio download: Youtube song, Youtube playlist, Spotify song, Spotify playlist, Youtube song dl while playing, Youtube playlist dl while playing, Spotify song dl while playing, Spotify playlist dl while playing, ALSO WANT STREAMING MUSIC!
