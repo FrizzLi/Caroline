@@ -20,7 +20,7 @@ class Commands(commands.Cog):
     @commands.command(brief="Enables Python interactive shell.")
     async def python(self, ctx):
         await ctx.send(f'Python mode activated! Exit by "{ctx.prefix}"')
-        await self.client.change_presence(activity=discord.Game(name='Python'))
+        await self.client.change_presence(activity=discord.Game(name='Vocabulary'))
 
         ans = 0
         msg = await self.client.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel)

@@ -254,6 +254,13 @@ def createGif(fname: str, skip_rake: bool, climb: bool) -> None:
         loop=0,
     )
 
+"""
+class View:
+    pass
+
+def setup(client):
+    client.add_cog(View(client))
+"""
 
 if __name__ == "__main__":
 

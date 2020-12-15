@@ -7,5 +7,6 @@
     "python.formatting.blackPath": "black",
     "python.formatting.provider": "black",
     "git.allowForcePush": true,
-    "files.autoSave": "afterDelay"
+    "files.autoSave": "afterDelay",
+    "python.pythonPath": "venv\\Scripts\\python.exe"
 }
