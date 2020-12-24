@@ -1,5 +1,5 @@
 {
-    "television": "텔레비전",
+    "TV, television": "텔레비전",
     "air conditioner": "에어컨",
     "americano": "아메리카노",
     "apple": "사과",
@@ -23,7 +23,7 @@
     "hat": "모자",
     "it": "그것",
     "juice": "주스",
-    "key": "욜쇠",
+    "key": "열쇠",
     "mirror": "거울",
     "notebook": "공책",
     "orange": "오렌지",
@@ -39,6 +39,6 @@
     "watch, clock": "시계",
     "water": "물",
     "what": "무엇",
-    "who": "우구",
+    "who": "누구",
     "window": "창문"
 }

@@ -3,7 +3,7 @@
 공책 - notebook
 그것 - it
 꽃 - flower
-우구 - who
+누구 - who
 모자 - hat
 무엇 - what
 문 - door
@@ -18,7 +18,7 @@
 에어컨 - air conditioner
 여권 - passport
 연필 - pencil
-욜쇠 - key
+열쇠 - key
 오렌지 - orange
 우산 - umbrella
 의자 - chair

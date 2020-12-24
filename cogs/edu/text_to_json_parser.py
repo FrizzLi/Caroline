@@ -11,13 +11,15 @@ with open(paths[0], encoding="utf-8") as f:
 if not first_line:
     first_line = "<NO_CONTENT>"
 reverse_lang = input(f"First line looks like this: {first_line}\
-Do you want to switch keys and vals? (0/1)\n")
+Second is what you will have to write, do you want to switch it? (0/1)\n")
 
 # create json files from text files
 for path in paths: 
     with open(path, encoding="utf-8") as f:
         vocabd = {}
         for line in f:
+            if line == "\n":
+                continue
             key, val = line.split(" - ")
             val = val.strip()
             key, val = (val, key) if int(reverse_lang) else (key, val)

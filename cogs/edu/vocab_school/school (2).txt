@@ -16,7 +16,7 @@
 사람 - person
 아니요 - no
 어느 나라 - which country
-요자 - woman
+여자 - woman
 영국 - Britain
 영국 사람 - British
 영어 - English

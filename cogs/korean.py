@@ -44,28 +44,46 @@ class Language(commands.Cog):
             if os.path.exists(f"cogs/edu/{nick}-{unit}.json"):
                 with open(f'cogs/edu/{nick}-{unit}.json', 'r', encoding='utf-8') as f:
                     stats = defaultdict(list, json.load(f))  # optimize maybe
-        probs = expon.pdf(np.linspace(0, 5, len(sub_vocab)))   # expon.ppf(0.01), expon.ppf(0.99)
+        # probs = expon.pdf(np.linspace(0, 5, len(sub_vocab)))   # expon.ppf(0.01), expon.ppf(0.99)
         attempts = 0
         corrects = 0
 
         while not response.content.startswith(f'{ctx.prefix}'):  # while True:
-            q = random.choices(sub_vocab, weights=probs)[0]
+            # q = random.choices(sub_vocab, weights=probs)[0]
+            q = sub_vocab[0]
+            # guessing, answer = q if self.show_eng_word else q[::-1]
             guessing, answer = q if self.show_eng_word else q[::-1]
             await ctx.send(f"{guessing}")   # response = input(guessing + '   ')  # DISCORD INPUT
             response = await self.client.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel)
-            sub_vocab.append(sub_vocab.pop(sub_vocab.index(q)))  # lower prob
+            # sub_vocab.append(sub_vocab.pop(sub_vocab.index(q)))  # lower prob
 
             if response.content.lower() == answer.lower():
                 stats[answer].append(True)
                 await ctx.send("Correct!")
                 corrects += 1
+                # sub_vocab.append(sub_vocab.pop(sub_vocab.index(q)))  # lower prob
+                sub_vocab.append(sub_vocab.pop(0))
             elif response.content == "?":
                 break
             else:
                 stats[answer].append(False)
-                await ctx.send(f"Uncorrect! The right answer is {answer}")
-                # simple implementation is to not append, but put in 33% of the queue or so
+                await ctx.send(f"Incorrect! The right answer is {answer}")
+                new_index = len(sub_vocab) // 5
+                # old_index = sub_vocab.index(q)
+                sub_vocab.insert(new_index, sub_vocab.pop(0))
             attempts += 1
+
+            # requires optimalization
+            continue_ = False
+            for word in stats.values():
+                for last_result in word[-2::]:
+                    if not last_result:
+                        continue_ = True
+
+            if not continue_ and len(sub_vocab) >= len(stats):
+                await ctx.send('You answered all words correctly twice in a row! (or once if you only guessed once)')
+                break
+
 
         # print and save stats
         await ctx.send('{} answers were right out of {}! ({:.2f}%)'.format(corrects, attempts, corrects/attempts*100))
