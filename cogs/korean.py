@@ -44,30 +44,27 @@ class Language(commands.Cog):
             if os.path.exists(f"cogs/edu/{nick}-{unit}.json"):
                 with open(f'cogs/edu/{nick}-{unit}.json', 'r', encoding='utf-8') as f:
                     stats = defaultdict(list, json.load(f))  # optimize maybe
-        # probs = expon.pdf(np.linspace(0, 5, len(sub_vocab)))   # expon.ppf(0.01), expon.ppf(0.99)
         attempts = 0
         corrects = 0
+        incorrect_words = set()
 
         while not response.content.startswith(f'{ctx.prefix}'):  # while True:
-            # q = random.choices(sub_vocab, weights=probs)[0]
             q = sub_vocab[0]
-            # guessing, answer = q if self.show_eng_word else q[::-1]
             guessing, answer = q if self.show_eng_word else q[::-1]
             await ctx.send(f"{guessing}")   # response = input(guessing + '   ')  # DISCORD INPUT
             response = await self.client.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel)
-            # sub_vocab.append(sub_vocab.pop(sub_vocab.index(q)))  # lower prob
 
             if response.content.lower() == answer.lower():
                 stats[answer].append(True)
                 await ctx.send("Correct!")
                 corrects += 1
-                # sub_vocab.append(sub_vocab.pop(sub_vocab.index(q)))  # lower prob
                 sub_vocab.append(sub_vocab.pop(0))
             elif response.content == "?":
                 break
             else:
                 stats[answer].append(False)
                 await ctx.send(f"Incorrect! The right answer is {answer}")
+                incorrect_words.add(guessing)
                 new_index = len(sub_vocab) // 5
                 # old_index = sub_vocab.index(q)
                 sub_vocab.insert(new_index, sub_vocab.pop(0))
@@ -76,12 +73,12 @@ class Language(commands.Cog):
             # requires optimalization
             continue_ = False
             for word in stats.values():
-                for last_result in word[-2::]:
+                for last_result in word[-1::]:
                     if not last_result:
                         continue_ = True
 
-            if not continue_ and len(sub_vocab) >= len(stats):
-                await ctx.send('You answered all words correctly twice in a row! (or once if you only guessed once)')
+            if not continue_ and len(sub_vocab) <= attempts:
+                await ctx.send(f'You answered all words correctly twice in a row! (or once if you only guessed once). Incorrect words are: {incorrect_words}')
                 break
 
 
@@ -91,21 +88,14 @@ class Language(commands.Cog):
             with open(f'cogs/edu/{nick}-{unit}.json', 'w', encoding='utf-8') as f:
                 json.dump(stats, f, sort_keys=True, ensure_ascii=False)
             await ctx.send('Score has been saved.')
-        await ctx.send('Exiting exercise..')
+        await ctx.send(f'Exiting {unit} exercise..')
 
 def setup(client):
     client.add_cog(Language(client))
 
-##############################################################
-# vypocitat kolko % sa bralo z KNOW a REPE
-# y2 = tpQueue / len(probs)          # vaha UPLNE nahodne vybraneho
-# z2 = y2 * 100 / tpQueue            # percento UPLNE nahodneho vybraneho (priemernej vahy) (100 / len(probs)
-# w2 = pQueue[queue.index(guessing)]     # vaha vybraneho
-# u2 = w2 * 100 / tpQueue            # percento vybraneho
-# h2 = u2 * 100 / z2                  # hodnota predstavujuca rozdiel medzi vybranym a uplne nahodne vybranym
-
 # DISCORD ToDo: 
 #   competitive mode -> ked je nespravne nic sa nestane, nieje personalizacia
 #   vyhodnotenie vsetkych co sa zustastnili
-#   vykreslenie vedenia pismen/slov [KNOW_HISTORY] 
-#   stats function - Pismena, Slova (z akeho konca) -> Total spravne, total attemptov, (GLOBAL)
+#   vykreslenie vedenia pismen/slov [KNOW_HISTORY] stats
+
+#  - 12 -> **2, order queue, (nn save stats)
