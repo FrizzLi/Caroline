@@ -1,4 +1,7 @@
 discord
 youtube_dl
+spotdl
 mutagen
 pillow
+pynacl
+ffmpeg

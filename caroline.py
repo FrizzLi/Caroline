@@ -11,6 +11,8 @@ async def on_command_error(ctx, error):
         await ctx.send('BadArgument! [{}]'.format(error))
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('MissingRequiredArgument! [{}]'.format(error))
+    else:
+        await ctx.send(error)
 
 ### Event and surveillance functions ###
 @client.event
@@ -47,6 +49,6 @@ if __name__ == '__main__':
             except Exception as e:
                 print(f'{file} module cannot be loaded. [{e}]')
 
-    client.run(gconfig['token'])
+    client.run("NjU1NDYwOTE1MjgxNjU3ODc3..XfUbjA..tvHJtxhSBQ3tBuv6v_DBQFBrNA8")
 
 # NOTE: Test scenarios for audio download: Youtube song, Youtube playlist, Spotify song, Spotify playlist, Youtube song dl while playing, Youtube playlist dl while playing, Spotify song dl while playing, Spotify playlist dl while playing, ALSO WANT STREAMING MUSIC!

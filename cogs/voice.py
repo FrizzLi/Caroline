@@ -47,6 +47,8 @@ class Voice(commands.Cog):
                     info = ydl.extract_info(query[0], download=False)
                     title = info['title']
 
+                title = self.replaceChars(title)  # for special characters that cannot be saved
+
                 # get local existing titles
                 playlist = True if info['webpage_url_basename'] == 'playlist' else False
                 if playlist:
@@ -64,6 +66,8 @@ class Voice(commands.Cog):
                     ydl.extract_info(query[0], download=True)
 
         except: # spotify source
+            pass
+            """
             url_str = " ".join(query)
             list_type = 'album' if 'album' in url_str else ''
             list_type = 'playlist' if 'playlist' in url_str else list_type
@@ -93,6 +97,7 @@ class Voice(commands.Cog):
                 paths = glob.glob(f"{path}/*.mp3")
                 latest = max(paths, key=os.path.getctime)
                 title = os.path.basename(latest)[:-4]
+            """
 
         return title, playlist
 
@@ -139,7 +144,7 @@ class Voice(commands.Cog):
                 self.pointer = 0
             if len(self.queuer) > self.pointer: # play
                 track_path = self.queuer[self.pointer]
-                voice.play(discord.FFmpegPCMAudio(track_path), after=lambda e: check_queue())
+                voice.play(discord.FFmpegPCMAudio(track_path, executable="C:/ffmpeg/ffmpeg.exe"), after=lambda e: check_queue())
                 voice.source = discord.PCMVolumeTransformer(voice.source)
                 voice.source.volume = self.voluming
             else: # end
@@ -343,6 +348,7 @@ class Voice(commands.Cog):
             raise commands.CommandError("Queue is empty.")
 
     @play.before_invoke
+    @newPlay.before_invoke
     async def ensure_voice_play(self, ctx):
         voice = get(self.client.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
