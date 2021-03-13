@@ -348,7 +348,6 @@ class Voice(commands.Cog):
             raise commands.CommandError("Queue is empty.")
 
     @play.before_invoke
-    @newPlay.before_invoke
     async def ensure_voice_play(self, ctx):
         voice = get(self.client.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
