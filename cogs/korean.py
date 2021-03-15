@@ -53,7 +53,7 @@ class Language(commands.Cog):
                 word = audio_path.split("\\")[-1][:-4]
                 path_to_name_dict[word] = audio_path
 
-            keys = list(path_to_name_dict.keys())
+            keys = list(all_vocab.keys())
             random.shuffle(keys)
             i = 0
             ####
@@ -71,11 +71,16 @@ class Language(commands.Cog):
             # edit last message with spoiled word
             while True:
                 if i == len(keys):
+                    await ctx.send("All words from the lesson have been sent")
                     i = 0
 
                 eng, kor = all_vocab[keys[i]], keys[i]
-                msg_display = f"||{kor} = {eng}||"
-                voice.play(discord.FFmpegPCMAudio(path_to_name_dict[kor], executable="C:/ffmpeg/ffmpeg.exe"))
+                if kor in path_to_name_dict:
+                    msg_display = f"||{kor} = {eng}||"
+                    voice.play(discord.FFmpegPCMAudio(path_to_name_dict[kor], executable="C:/ffmpeg/ffmpeg.exe"))
+                else:
+                    msg_display = f"{kor} = ||{eng}||"
+
                 await msg.edit(content=msg_display)
 
                 # self.client = commands
