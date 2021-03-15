@@ -18,3 +18,6 @@
 학생식당 - student restaurant
 헬스장 - fitness center
 휴게실 - restroom, retiring room
+학습실 - ~study room
+면접 - ~interview
+서류 - ~document, paper

@@ -22,3 +22,4 @@
 풍차 - ~windmill
 한옥 - ~korean traditional house
 휴일 - ~holiday
+지내다 - ~to stay

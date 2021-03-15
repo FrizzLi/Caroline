@@ -25,5 +25,4 @@
 색깔 - ~color
 값 - ~price, value
 가격 - ~price
-기숙사 - ~dormitory
 전공 - ~major, specialty
