@@ -36,10 +36,20 @@ for path in paths:
         with open(path + '.json', "w", encoding="utf-8") as f:
             json.dump(vocabd, f, indent=4, sort_keys=True, ensure_ascii=False)
 '''
-def getLessonNames(paths):
-    return path.split('\\')[-1][:-4]
+# from pathlib import Path
+# import pathlib
 
-paths2 = map(getLessonNames, paths)
+def getLessonNames(paths):
+    return paths.split('\\')[-1][:-4]
+
+paths2 = list(map(getLessonNames, paths))
+
+from pathlib import Path
+import pathlib
+current_path = pathlib.Path().absolute()
+for lesson_name in paths2:
+    Path(f"{current_path}/{dir_name}/{lesson_name}").mkdir(parents=True, exist_ok=True)
+
 
 vocabd = {}
 for path in paths:
@@ -82,7 +92,6 @@ for lesson_name in paths2:
         korean_lesson_words.append(dict_val)
 
     import urllib.request, json, codecs, math, time
-    from pathlib import Path
     
     def searchWords(koreanWords):
         url = ('https://ko.dict.naver.com/api3/koko/search?' + urllib.parse.urlencode({'query': koreanWords}) + '&range=word&page=1')
