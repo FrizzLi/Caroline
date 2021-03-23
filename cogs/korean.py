@@ -77,7 +77,10 @@ class Language(commands.Cog):
                 eng, kor = all_vocab[keys[i]], keys[i]
                 if kor in path_to_name_dict:
                     msg_display = f"||{kor} = {eng}||"
-                    voice.play(discord.FFmpegPCMAudio(path_to_name_dict[kor], executable="C:/ffmpeg/ffmpeg.exe"))
+                    try:
+                        voice.play(discord.FFmpegPCMAudio(path_to_name_dict[kor], executable="C:/ffmpeg/ffmpeg.exe"))
+                    except Exception:
+                        await ctx.send("Previous audio is still playing, press 🔁 to hear current one.")
                 else:
                     msg_display = f"{kor} = ||{eng}||"
 

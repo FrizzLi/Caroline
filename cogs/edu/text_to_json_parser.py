@@ -4,7 +4,7 @@ import glob, os, json
 dir_name = "level_2"
 #dir_name = input(f"Which directory you want to make json from?\n\
 #{[f for f in os.listdir() if f.startswith('vocab')]}\n")
-paths = glob.glob(dir_name + "/lesson_?.txt", recursive=True)
+paths = glob.glob(dir_name + "/lesson_*.txt", recursive=True)
 lesson_file_names = []
 for name in os.listdir("level_2"):
     if name.startswith("lesson_"):

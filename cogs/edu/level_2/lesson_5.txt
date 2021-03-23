@@ -19,5 +19,7 @@
 헬스장 - fitness center
 휴게실 - restroom, retiring room
 학습실 - ~study room
-면접 - ~interview
+면접 - ~job interview
 서류 - ~document, paper
+시험기간 - ~testing period
+지하 - ~underground

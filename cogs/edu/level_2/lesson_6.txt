@@ -1,7 +1,7 @@
 게시판 - notice board, message board
 기숙사 - dormitory
 꺼내다 - pull, take out
-답답하다 - stuffy, stifling, suffocating, frustrating
+답답하다 - frustrating, stuffy, stifling, suffocating
 등록 - registration, enrollment, register
 매표소 - ticket office, booking office, box office
 바로 - right away, at once, immediately, straight, upright
@@ -20,3 +20,13 @@
 확인하다 - check, affirm, confirm, verify
 서두릅시다 - ~hurry, rush, hasten
 얘기가 - to talk (이야 abbrv)
+생활하다 - ~to live
+내용하다 - ~content(s), substance
+환전하다 - ~change, exchange
+허락 - ~permission, consent, approval
+화 - ~anger
+몸 - ~body
+냄새 - ~smell
+해외여행 - ~overseas trip
+신청하다 - ~apply, ask for, register
+주차 - ~parking, park
