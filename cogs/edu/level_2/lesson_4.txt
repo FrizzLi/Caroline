@@ -24,3 +24,4 @@
 서비스를 받다 - ~receive service
 분식집 - ~snack shop
 살이 빼다 - ~to lose weight
+살이 찌다 - ~to gain weight

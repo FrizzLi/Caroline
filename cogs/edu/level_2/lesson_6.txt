@@ -1,10 +1,10 @@
 게시판 - notice board, message board
 기숙사 - dormitory
 꺼내다 - pull, take out
-답답하다 - frustrating, stuffy, stifling, suffocating
+답답하다 - frustrating, stuffy, suffocating
 등록 - registration, enrollment, register
-매표소 - ticket office, booking office, box office
-바로 - right away, at once, immediately, straight, upright
+매표소 - ticket office, booking office
+바로 - right away, at once, immediately
 방문 - visit
 배낭 여행 - backpacking
 복사기 - copy machine, photocopier, copier
@@ -14,19 +14,20 @@
 수수료 - commission, charge
 신청 - application, request
 자기소개서 - a letter of self-introduction
-정도 - ~~about (in time), meaning roughly to the extent of (degree)
+정도 - ~about (in time), meaning roughly to the extent of (degree)
 졸업증명서 - diploma, graduate certificate
 출입구 - entrance, entry(way), exit
 확인하다 - check, affirm, confirm, verify
 서두릅시다 - ~hurry, rush, hasten
-얘기가 - to talk (이야 abbrv)
+얘기가 - to talk
 생활하다 - ~to live
 내용하다 - ~content(s), substance
-환전하다 - ~change, exchange
-허락 - ~permission, consent, approval
+환전하다 - ~change, exchange (money)
+허락 - ~permission, approval
 화 - ~anger
 몸 - ~body
 냄새 - ~smell
 해외여행 - ~overseas trip
 신청하다 - ~apply, ask for, register
 주차 - ~parking, park
+들어가다 - ~to go in
