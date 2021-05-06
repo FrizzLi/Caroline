@@ -1,9 +1,7 @@
 import json
 import random
-import numpy as np
 import collections as col
 import os
-from scipy.stats import expon
 #
 import os, random, shutil, glob
 import discord
