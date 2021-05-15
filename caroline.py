@@ -7,7 +7,9 @@ from discord.ext import commands
 
 with open("config.json", "r") as f:
     gconfig = json.load(f)
-client = commands.Bot(command_prefix=gconfig["prefix"])
+
+prefix = "?"
+client = commands.Bot(command_prefix=prefix)
 
 
 @client.event
@@ -25,7 +27,7 @@ async def on_ready():
     await client.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.listening,
-            name=f'{gconfig["prefix"]}help',
+            name=f'{prefix}help',
         )
     )
     print(
@@ -65,7 +67,7 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"{dir_name} module cannot be loaded. [{e}]")
 
-    client.run("NjU1NDYwOTE1MjgxNjU3ODc3.XfUbjA.tvHJtxhSBQ3tBuv6v_DBQFBrNA8")
+    client.run(gconfig["token"])
 
 # NOTE: Test scenarios for audio download:
 # Youtube song/playlist + dl while playing,

@@ -3,3 +3,4 @@
 venv
 audio
 *.mp3
+config.json
