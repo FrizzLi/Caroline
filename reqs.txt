@@ -1,7 +1,13 @@
+# voice
 discord
 youtube_dl
 spotdl
 mutagen
-pillow
 pynacl
 ffmpeg
+
+# ai_algo
+pillow
+
+# surveillance (maybe need more)
+pytz
