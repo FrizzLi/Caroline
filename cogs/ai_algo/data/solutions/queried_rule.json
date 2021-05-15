@@ -1,0 +1,37 @@
+{
+    "Vlado is parent of Maria": [],
+    "female Eva": [],
+    "female Viera": [],
+    "married Peter Eva": [],
+    "male Vlado": [
+        "add Vlado is father Maria"
+    ],
+    "male Jano": [],
+    "Peter is parent of Vlado": [
+        "add Eva is parent of Vlado",
+        "add Eva is mother Vlado"
+    ],
+    "Peter is parent of Jano": [
+        "add Eva is parent of Jano",
+        "add Eva is mother Jano",
+        "add Vlado and Jano are siblings",
+        "add Jano and Vlado are siblings",
+        "add Vlado is brother of Jano",
+        "add Jano is brother of Vlado",
+        "message Maria has uncle"
+    ],
+    "male Peter": [
+        "add Peter is father Vlado",
+        "add Peter is father Jano"
+    ],
+    "female Maria": [
+        "remove female Maria"
+    ],
+    "Vlado is parent of Viera": [
+        "add Vlado is father Viera",
+        "add Maria and Viera are siblings",
+        "add Viera and Maria are siblings",
+        "message Viera has uncle",
+        "remove female Viera"
+    ]
+}
