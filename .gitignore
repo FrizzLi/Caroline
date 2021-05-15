@@ -2,3 +2,4 @@
 *.egg-info
 venv
 audio
+*.mp3
