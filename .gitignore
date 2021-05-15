@@ -1,6 +1,6 @@
 *.pyc
 *.egg-info
-venv
-audio
+*.vscode
 *.mp3
+venv
 config.json
