@@ -8,9 +8,9 @@ from discord.ext import commands
 with open("config.json", "r") as f:
     gconfig = json.load(f)
 
+intents = discord.Intents().all()
 prefix = "?"
-client = commands.Bot(command_prefix=prefix)
-
+client = commands.Bot(command_prefix=prefix, intents=intents)
 
 @client.event
 async def on_command_error(ctx, error):
@@ -27,7 +27,7 @@ async def on_ready():
     await client.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.listening,
-            name=f'{prefix}help',
+            name=f"{prefix}help",
         )
     )
     print(

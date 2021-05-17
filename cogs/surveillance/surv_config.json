@@ -1,0 +1,22 @@
+{
+    "IDs": {
+        "logs": 556514691069902870
+    },
+    "bypass_channels": [
+        "\ud83d\udd2csecret-test-chamber",
+        "\u26e9weeboviny"
+    ],
+    "logs": {
+        "member_join": "1",
+        "member_remove": "1",
+        "member_role": "1",
+        "member_update": "1",
+        "member_voice": "1",
+        "msg_delete": "1",
+        "msg_edit": "1",
+        "msg_post": "1",
+        "on_typing": "0",
+        "reaction_add": "1",
+        "reaction_remove": "1"
+    }
+}

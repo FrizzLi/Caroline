@@ -55,7 +55,7 @@ class Commands(commands.Cog):
     @commands.command(brief="Replies specified message.++")
     async def echo(self, ctx, *args):
         """ For voice put '-v' after echo. E.g. ?echo -v Hello world!"""
-        # ToDo: after voice is done, make TTS
+        # TODO: after voice is done, make TTS
 
         if args[0] == "-v":
             await ctx.send(" ".join(args[1:]), tts=True)
