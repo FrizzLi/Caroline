@@ -12,6 +12,7 @@ intents = discord.Intents().all()
 prefix = "?"
 client = commands.Bot(command_prefix=prefix, intents=intents)
 
+
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.BadArgument):
