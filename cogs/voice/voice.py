@@ -25,13 +25,16 @@ class Voice(commands.Cog):
         }],
     }
 
+    # 'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 
+    ffmpeg_options = {'options': '-vn'}
+
     # THIS NEEDS TO BE ADDED SOMEWHERE
     def replaceChars(self, track):
         track = track.replace('"', '\'')
         for char in '\\/:*?<>|':
             track = track.replace(char, '_')
 
-        return track 
+        return track
 
     def downloadAudio(self, query):
         try: # youtube source
@@ -51,21 +54,22 @@ class Voice(commands.Cog):
 
                 # get local existing titles
                 playlist = True if info['webpage_url_basename'] == 'playlist' else False
+                voice_dir = os.path.dirname(os.path.abspath(__file__))
                 if playlist:
                     dest = title
-                    audio_paths = "audio/*"
+                    audio_paths = voice_dir + "\\audio\\*"
                 else:
-                    dest = "DOWNLOAD"
-                    audio_paths = "audio/DOWNLOAD/*.mp3"
+                    dest = "singles"
+                    audio_paths = voice_dir + "\\audio\\singles\\*.mp3"
                 paths = glob.glob(audio_paths)
                 titles = [os.path.basename(full_path) for full_path in paths]
 
                 # download title if it doesnt exist
                 if not (title+".mp3") in titles:
-                    ydl.params['outtmpl'] = os.path.realpath(f"audio\\{dest}\\%(title)s.%(ext)s")
-                    ydl.extract_info(query[0], download=True)
+                    ydl.params['outtmpl'] = f"{voice_dir}\\audio\\{dest}\\%(title)s.%(ext)s"
+                    ydl.extract_info(info["webpage_url"], download=True)
 
-        except: # spotify source
+        except Exception:  # spotify source
             pass
             """
             url_str = " ".join(query)
@@ -86,7 +90,7 @@ class Voice(commands.Cog):
                     path = f"audio\\{title}"
                     os.system(f"spotdl --list={latest} -f {path} --overwrite skip")
                 os.remove(latest)
-                
+
             else:
                 # download the track
                 name_format = '"' + "{artist} - {track_name}" + '"'
@@ -102,10 +106,12 @@ class Voice(commands.Cog):
         return title, playlist
 
     def setQueue(self, query):
-        # get audio path from local 
+        voice_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # get audio path from local
         if query[0][0] == '-':
             title = query[0][1:]
-            audio_paths = glob.glob(f"audio/{title}/*.mp3")
+            audio_paths = glob.glob(f"{voice_dir}\\audio\\{title}\\*.mp3")
             audio_paths.sort(key=lambda x: os.path.getctime(x))
             try:
                 index = int(query[1])
@@ -115,14 +121,31 @@ class Voice(commands.Cog):
                 pass
 
         # download audio and get its path
-        else:
+        elif query[0][0] == '+':
             title, playlist = self.downloadAudio(query)
             if playlist:
-                audio_paths = f"audio/{title}/*.mp3"
+                audio_paths = f"{voice_dir}\\audio\\{title}\\*.mp3"
             else:
-                audio_paths = f"audio/*/{title}.mp3"
+                audio_paths = f"{voice_dir}\\audio\\*\\{title}.mp3"
             audio_paths = glob.glob(audio_paths)
             audio_paths.sort(key=lambda x: os.path.getctime(x))
+
+        # TODO: stream audio and get its URL
+        else:
+            with youtube_dl.YoutubeDL(self.ydl_opts) as ydl:
+                # get query title info (song/playlist name) and handle searches for playlists
+                if not query[0].startswith("https"):
+                    ydl.params['noplaylist'] = True
+                    info = ydl.extract_info(f"ytsearch1:" + " ".join(query), download=False)
+                    title = info['entries'][0]['title']
+                else:
+                    ydl.params['noplaylist'] = False
+                    info = ydl.extract_info(query[0], download=False)
+                    title = info['title']
+                if "entries" in info:
+                    audio_paths = [entry["webpage_url"] for entry in info['entries']]
+                else:
+                    audio_paths = [info["webpage_url"]]
 
         # set queuer
         for full_path in audio_paths:
@@ -136,18 +159,18 @@ class Voice(commands.Cog):
 
         # queue playing loop
         def check_queue():
-            if not self.loop_track: # next
+            if not self.loop_track:  # next
                 self.pointer += 1
-            if self.jump_index: # jump
+            if self.jump_index:  # jump
                 self.pointer = self.jump_index - 1
-            if self.loop_queue and len(self.queuer) < self.pointer+1: # repeat queue
+            if self.loop_queue and len(self.queuer) < self.pointer+1:  # repeat queue
                 self.pointer = 0
-            if len(self.queuer) > self.pointer: # play
-                track_path = self.queuer[self.pointer]
-                voice.play(discord.FFmpegPCMAudio(track_path, executable="C:/ffmpeg/ffmpeg.exe"), after=lambda e: check_queue())
+            if len(self.queuer) > self.pointer:  # play
+                track_path = self.queuer[self.pointer]  # can be URL too!?????
+                voice.play(discord.FFmpegPCMAudio(track_path, **self.ffmpeg_options, executable="C:/ffmpeg/ffmpeg.exe"), after=lambda e: check_queue())
                 voice.source = discord.PCMVolumeTransformer(voice.source)
                 voice.source.volume = self.voluming
-            else: # end
+            else:  # end
                 self.pointer = -1
                 self.queuer.clear()
             self.jump_index = 0
@@ -159,6 +182,8 @@ class Voice(commands.Cog):
 
         # go to playing loop if there isnt song being played/paused
         voice = get(self.client.voice_clients, guild=ctx.guild)
+
+        # need the streaming tho!
         if not voice.is_playing() and not voice.is_paused():
             check_queue()
 
@@ -248,6 +273,8 @@ class Voice(commands.Cog):
 
     @commands.command(brief="Check or change the current volume. [%]")
     async def volume(self, ctx, vol=None):
+        if ctx.voice_client is None:
+            return await ctx.send("Not connected to a voice channel.")
         if vol:
             self.voluming = int(vol) / 100
             ctx.voice_client.source.volume = self.voluming

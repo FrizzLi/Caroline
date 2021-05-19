@@ -66,14 +66,6 @@ class Commands(commands.Cog):
     async def close(self, ctx):
         await self.client.close()
 
-    @commands.command(brief="Changes the player's volume in percentages.")
-    async def volume(self, ctx, volume):
-        if ctx.voice_client is None:
-            return await ctx.send("Not connected to a voice channel.")
-
-        ctx.voice_client.source.volume = volume / 100
-        await ctx.send(f"Changed volume to {volume}%")
-
 
 def setup(client):
     client.add_cog(Commands(client))
