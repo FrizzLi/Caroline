@@ -1,12 +1,18 @@
 import json
 import pickle
+import os
 from functools import partial
 from typing import Any, Dict, List, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
-import cogs.model.evolution as evo
-import cogs.model.pathfinding as path
+# This import is for version without discord
+if __name__ == "__main__":
+    import model.evolution as evo
+    import model.pathfinding as path
+else:
+    import cogs.ai_algo.model.evolution as evo
+    import cogs.ai_algo.model.pathfinding as path
 
 
 def loadPickle(fname: str) -> Any:
@@ -19,7 +25,8 @@ def loadPickle(fname: str) -> Any:
         Any: pickled content
     """
 
-    with open("cogs/data/solutions/" + fname, "rb") as handle:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    with open(f"{current_dir}\\data\\solutions\\{fname}", "rb") as handle:
         return pickle.loads(handle.read())
 
 
@@ -33,8 +40,27 @@ def loadJson(fname: str) -> Dict[str, Any]:
         Dict[str, Any]: json-ed content
     """
 
-    with open("cogs/data/solutions/" + fname + ".json", "r") as f:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    with open(f"{current_dir}\\data\\solutions\\{fname}.json", "r") as f:
         return json.load(f)
+
+
+def saveGif(frames) -> None:
+    """Saves all frames into one gif file.
+
+    Args:
+        frames (Image]): drawn images
+    """
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    frames[0].save(
+        f"{current_dir}\\data\\test.gif",
+        format="GIF",
+        append_images=frames[1:],
+        save_all=True,
+        duration=200,
+        loop=0,
+    )
 
 
 def getCenterCircle(
@@ -245,22 +271,8 @@ def createGif(fname: str, skip_rake: bool, climb: bool) -> None:
     # leave the last frame for longer
     frames.extend([frames[-1]] * 20)
 
-    frames[0].save(
-        "cogs/data/test.gif",
-        format="GIF",
-        append_images=frames[1:],
-        save_all=True,
-        duration=200,
-        loop=0,
-    )
+    saveGif(frames)
 
-"""
-class View:
-    pass
-
-def setup(client):
-    client.add_cog(View(client))
-"""
 
 if __name__ == "__main__":
 

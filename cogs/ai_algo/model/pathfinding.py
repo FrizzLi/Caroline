@@ -1,8 +1,10 @@
 import heapq
 import pickle
+import os
 from copy import deepcopy as dcopy
 from itertools import combinations, permutations
 from sys import maxsize
+from os.path import dirname
 from typing import Any, Dict, FrozenSet, List, Tuple, Union
 
 
@@ -54,7 +56,8 @@ class Map:
         }  # type: Dict[str, Any]
         nodes = {}  # type: Dict[Tuple[int, int], Node]
 
-        with open("cogs/data/maps/" + fname + "_pro.txt") as f:
+        current_dir = dirname(dirname(os.path.abspath(__file__)))
+        with open(f"{current_dir}\\data\\maps\\{fname}_pro.txt") as f:
             for i, line in enumerate(f):
                 for j, col in enumerate(line.split()):
                     if col[0] in "([{":
@@ -440,7 +443,11 @@ def saveSolution(comb_path: List[List[Tuple[int, int]]], fname: str) -> None:
         fname (str): name of pickle file into which the solution
             will be saved
     """
-    with open("cogs/data/solutions/" + fname + "_path", "wb") as f:
+
+    current_dir = dirname(dirname(os.path.abspath(__file__)))
+    with open(
+        f"{current_dir}\\data\\solutions\\{fname}_path", "wb"
+    ) as f:
         pickle.dump(comb_path, f)
 
 

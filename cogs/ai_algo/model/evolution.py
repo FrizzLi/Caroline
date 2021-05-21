@@ -3,6 +3,8 @@ import pickle
 import random
 import re
 import time
+import os
+from os.path import dirname
 from typing import Any, Dict, Generator, List, Tuple
 
 
@@ -358,7 +360,8 @@ def saveMap(
         spacing (str, optional): spacing between numbers. Defaults to "{:^3}".
     """
 
-    with open("cogs/data/maps/" + fname + ".txt", "w") as f:
+    current_dir = dirname(dirname(os.path.abspath(__file__)))
+    with open(f"{current_dir}\\data\\maps\\{fname}.txt", "w") as f:
         for i, row in enumerate(map_list):
             for j in range(len(row)):
                 f.write(spacing.format(map_list[i][j]))
@@ -380,8 +383,9 @@ def loadMap(fname: str) -> List[List[str]]:
     """
 
     map_ = []
+    current_dir = dirname(dirname(os.path.abspath(__file__)))
     try:
-        with open("cogs/data/maps/" + fname + ".txt") as f:
+        with open(f"{current_dir}\\data\\maps\\{fname}.txt") as f:
             line = f.readline().rstrip()
             map_.append(line.split())
             prev_length = len(line)
@@ -407,7 +411,9 @@ def saveSolution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
         fname (str): name of pickle file into which the solution
             will be saved
     """
-    with open("cogs/data/solutions/" + fname + "_rake", "wb") as f:
+
+    current_dir = dirname(dirname(os.path.abspath(__file__)))
+    with open(f"{current_dir}\\data\\solutions\\{fname}_rake", "wb") as f:
         pickle.dump(rake_paths, f)
 
 
@@ -482,7 +488,9 @@ def createTerrain(max_runs: int, fname: str, show: bool = False) -> str:
 
 
 def createProperties(
-    points_amount: int, fname: str, show: bool = False,
+    points_amount: int,
+    fname: str,
+    show: bool = False,
 ) -> None:
     """Creates a file that represents terrained map with properties.
     Properties are represented with a bracket around the number of terrain.
