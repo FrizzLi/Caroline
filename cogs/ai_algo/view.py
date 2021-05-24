@@ -45,16 +45,17 @@ def loadJson(fname: str) -> Dict[str, Any]:
         return json.load(f)
 
 
-def saveGif(frames) -> None:
+def saveGif(frames, fname: str) -> None:
     """Saves all frames into one gif file.
 
     Args:
         frames (Image]): drawn images
+        fname (str): root name of the file to load
     """
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     frames[0].save(
-        f"{current_dir}\\data\\test.gif",
+        f"{current_dir}\\data\\{fname}.gif",
         format="GIF",
         append_images=frames[1:],
         save_all=True,
@@ -271,7 +272,7 @@ def createGif(fname: str, skip_rake: bool, climb: bool) -> None:
     # leave the last frame for longer
     frames.extend([frames[-1]] * 20)
 
-    saveGif(frames)
+    saveGif(frames, fname)
 
 
 if __name__ == "__main__":

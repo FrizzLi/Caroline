@@ -2,6 +2,7 @@ import heapq
 import pickle
 import os
 from copy import deepcopy as dcopy
+from pathlib import Path
 from itertools import combinations, permutations
 from sys import maxsize
 from os.path import dirname
@@ -445,9 +446,9 @@ def saveSolution(comb_path: List[List[Tuple[int, int]]], fname: str) -> None:
     """
 
     current_dir = dirname(dirname(os.path.abspath(__file__)))
-    with open(
-        f"{current_dir}\\data\\solutions\\{fname}_path", "wb"
-    ) as f:
+    solutions_dir = f"{current_dir}\\data\\solutions"
+    Path(solutions_dir).mkdir(parents=True, exist_ok=True)
+    with open(f"{solutions_dir}\\{fname}_path", "wb") as f:
         pickle.dump(comb_path, f)
 
 
@@ -467,7 +468,7 @@ def setSubsetSize(
         int: subset size
     """
 
-    if subset_size is None:
+    if subset_size is None or subset_size > len(points):
         subset_size = len(points)
     if subset_size < 0:
         raise SubsetSizeError("Invalid subset size!")

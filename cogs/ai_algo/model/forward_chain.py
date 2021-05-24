@@ -3,6 +3,7 @@ import json
 import random
 import re
 import os
+from pathlib import Path
 from itertools import islice
 from os.path import dirname
 from typing import Any, Dict, List, Tuple
@@ -229,7 +230,9 @@ def saveFacts(facts: List[str], save_fname_facts: str) -> None:
     """
 
     current_dir = dirname(dirname(os.path.abspath(__file__)))
-    fpath = f"{current_dir}\\data\\knowledge\\{save_fname_facts}.txt"
+    knowledge_dir = f"{current_dir}\\data\\knowledge"
+    Path(knowledge_dir).mkdir(parents=True, exist_ok=True)
+    fpath = f"{knowledge_dir}\\{save_fname_facts}.txt"
     with open(fpath, "w") as f:
         f.write("\n".join(facts))
 
@@ -245,9 +248,9 @@ def saveSolution(stepped_facts: Dict[str, List[str]], fname: str) -> None:
     """
 
     current_dir = dirname(dirname(os.path.abspath(__file__)))
-    with open(
-        f"{current_dir}\\data\\solutions\\{fname}_rule.json", "w"
-    ) as f:
+    solutions_dir = f"{current_dir}\\data\\solutions"
+    Path(solutions_dir).mkdir(parents=True, exist_ok=True)
+    with open(f"{solutions_dir}\\{fname}_rule.json", "w") as f:
         json.dump(stepped_facts, f, indent=4)
 
 

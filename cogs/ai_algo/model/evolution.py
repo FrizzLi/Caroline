@@ -4,6 +4,7 @@ import random
 import re
 import time
 import os
+from pathlib import Path
 from os.path import dirname
 from typing import Any, Dict, Generator, List, Tuple
 
@@ -361,7 +362,9 @@ def saveMap(
     """
 
     current_dir = dirname(dirname(os.path.abspath(__file__)))
-    with open(f"{current_dir}\\data\\maps\\{fname}.txt", "w") as f:
+    map_dir = f"{current_dir}\\data\\maps"
+    Path(map_dir).mkdir(parents=True, exist_ok=True)
+    with open(f"{map_dir}\\{fname}.txt", "w") as f:
         for i, row in enumerate(map_list):
             for j in range(len(row)):
                 f.write(spacing.format(map_list[i][j]))
@@ -413,7 +416,9 @@ def saveSolution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
     """
 
     current_dir = dirname(dirname(os.path.abspath(__file__)))
-    with open(f"{current_dir}\\data\\solutions\\{fname}_rake", "wb") as f:
+    solutions_dir = f"{current_dir}\\data\\solutions"
+    Path(solutions_dir).mkdir(parents=True, exist_ok=True)
+    with open(f"{solutions_dir}\\{fname}_rake", "wb") as f:
         pickle.dump(rake_paths, f)
 
 
