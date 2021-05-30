@@ -1,7 +1,7 @@
 import glob, os, json
 
 # select directory     f'{dir_name}/{lesson_name[-1]}unfoundWords.txt'
-dir_name = "level_1"
+dir_name = "level_3"
 #dir_name = input(f"Which directory you want to make json from?\n\
 #{[f for f in os.listdir() if f.startswith('vocab')]}\n")
 paths = glob.glob(dir_name + "/lesson_*.txt", recursive=True)
