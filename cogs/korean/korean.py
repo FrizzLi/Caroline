@@ -5,7 +5,6 @@ import glob
 import discord
 from discord.ext import commands
 from discord.utils import get
-
 from collections import defaultdict
 
 
@@ -13,22 +12,20 @@ class Language(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    # unit = "school_2"
-    show_eng_word = 1  # 0 - write in english
-    personalization = True  # for now, just add bools of correctness
-    level = "level_2"
+    show_eng_word = 1  # NotImplemented (0 - write in english)
+    personalization = True  # NotImplemented
 
-    # change options of unit, show_eng_word, personalization
+    # TODO: parser, tasks
+    unfounded_words_save = False
+    level = "3"
+    lesson = ""
 
     @commands.command(brief="start listening vocab exercise", aliases=["el"])
     async def exerciseListening(self, ctx):
-        with open(
-            "cogs/edu/" + self.level + ".json", "r", encoding="utf-8"
-        ) as f:
+        with open(f"cogs/edu/{self.level}.json", "r", encoding="utf-8") as f:
             all_vocab = json.load(f)
-
             await ctx.send(
-                f'Select writing unit name: {", ".join(all_vocab.keys())},\
+                f'Type lesson number up to {len(all_vocab)},\
                 Exit by "{ctx.prefix}"'
             )
             await self.client.change_presence(
@@ -64,25 +61,19 @@ class Language(commands.Cog):
                 word = audio_path.split("\\")[-1][:-4]
                 path_to_name_dict[word] = audio_path
 
+            # get questioning words from vocab and shuffle it
             keys = list(all_vocab.keys())
             random.shuffle(keys)
             i = 0
-            ####
 
             msg = await ctx.send("STARTING...")
             await msg.add_reaction("⏭️")
             await msg.add_reaction("🔁")
             await msg.add_reaction("🔚")  # repeat, next, end
-            # add two emojis to it, so u can interact with it
 
+            # nobody except the command sender can interact with the "menu"
             def check(reaction, user):
-                return user == ctx.author and str(reaction.emoji) in [
-                    "🔚",
-                    "⏭️",
-                    "🔁",
-                ]
-                # This makes sure nobody except the command sender
-                # can interact with the "menu"
+                return user == ctx.author and str(reaction.emoji) in "🔚⏭️🔁"
 
             # edit last message with spoiled word
             while True:
@@ -94,23 +85,14 @@ class Language(commands.Cog):
                 if kor in path_to_name_dict:
                     msg_display = f"||{kor} = {eng}||"
                     try:
-                        voice.play(
-                            discord.FFmpegPCMAudio(
-                                path_to_name_dict[kor],
-                                executable="C:/ffmpeg/ffmpeg.exe",
-                            )
-                        )
+                        p, e = path_to_name_dict[kor], "C:/ffmpeg/ffmpeg.exe"
+                        voice.play(discord.FFmpegPCMAudio(p, executable=e))
                     except Exception:
-                        await ctx.send(
-                            "Previous audio is still playing, \
-                            press 🔁 to hear current one."
-                        )
+                        await ctx.send("Wait, press 🔁 to play unplayed audio.")
                 else:
                     msg_display = f"{kor} = ||{eng}||"
 
                 await msg.edit(content=msg_display)
-
-                # self.client = commands
                 reaction, user = await self.client.wait_for(
                     "reaction_add", check=check
                 )
@@ -132,9 +114,7 @@ class Language(commands.Cog):
     @commands.command(brief="start vocab exercise", aliases=["e"])
     async def exercise(self, ctx):
 
-        with open(
-            "cogs/edu/" + self.level + ".json", "r", encoding="utf-8"
-        ) as f:
+        with open(f"cogs/edu/{self.level}.json", "r", encoding="utf-8") as f:
             all_vocab = json.load(f)
 
             await ctx.send(
@@ -264,5 +244,3 @@ def setup(client):
 #   competitive mode -> ked je nespravne nic sa nestane, nieje personalizacia
 #   vyhodnotenie vsetkych co sa zustastnili
 #   vykreslenie vedenia pismen/slov [KNOW_HISTORY] stats
-
-#  - 12 -> **2, order queue, (nn save stats)
