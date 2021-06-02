@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 from discord.utils import get
 from collections import defaultdict
+from pathlib import Path
 
 
 class Language(commands.Cog):
@@ -15,102 +16,124 @@ class Language(commands.Cog):
     show_eng_word = 1  # NotImplemented (0 - write in english)
     personalization = True  # NotImplemented
 
-    # TODO: parser, tasks
+    # TODO: hint somewhere in order to cancel session, press ctx.prefix
     unfounded_words_save = False
-    level = "3"
-    lesson = ""
+
+    # TODO: write level/lesson automatically into variables
+    # TODO: hint out the number possibilities of level/lesson
+    level = "level_3"
+    lesson = "lesson_2"
+
+    # TODO: function to add lesson to queue file (with file creation too)
+    review_fname = "review_3"
 
     @commands.command(brief="start listening vocab exercise", aliases=["el"])
-    async def exerciseListening(self, ctx):
-        with open(f"cogs/edu/{self.level}.json", "r", encoding="utf-8") as f:
-            all_vocab = json.load(f)
+    async def exerciseListening(self, ctx, review=False):
+
+        # TODO: this could be placed in a wrapper (voice.py)
+        voice = get(self.client.voice_clients, guild=ctx.guild)
+        user_voice = ctx.message.author.voice
+        if not voice and not user_voice:
             await ctx.send(
-                f'Type lesson number up to {len(all_vocab)},\
-                Exit by "{ctx.prefix}"'
+                "You or bot have to be connected to voice channel first."
             )
-            await self.client.change_presence(
-                activity=discord.Game(name="Korean vocabulary")
-            )
-            response = await self.client.wait_for(
-                "message",
-                check=lambda message: message.author == ctx.author
-                and message.channel == ctx.channel,
-            )
-            unit = response.content
+            raise commands.CommandError("No bot nor you is connected.")
+        elif not voice:
+            await user_voice.channel.connect()
+        voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
 
-            all_vocab = {v: k for k, v in all_vocab[unit].items()}
-            # sub_vocab = list(all_vocab[unit].items())
-            # random.shuffle(sub_vocab)
+        await self.client.change_presence(activity=discord.Game(name="Korean"))
 
-            # ### get audio
-            voice = get(self.client.voice_clients, guild=ctx.guild)
-            user_voice = ctx.message.author.voice
-            if not voice and not user_voice:
-                await ctx.send(
-                    "You or bot have to be connected to voice channel first."
+        # get vocab
+        dir_path = os.path.dirname(os.path.abspath(__file__)) + "\\edu"
+        if review:
+            full_path = f"\\{ctx.author}"  # /{self.review_fname}
+            Path(full_path).mkdir(parents=True, exist_ok=True)
+            full_path = f"{full_path}\\{self.review_fname}.json"
+            if os.path.exists(full_path):
+                with open(full_path, "r", encoding="utf-8") as f:
+                    all_vocab = json.load(f)
+            else:
+                await ctx.send("Review vocab file does not exist.")
+                raise commands.CommandError(
+                    "Review vocab file does not exist."
                 )
-                raise commands.CommandError("No bot nor you is connected.")
-            elif not voice:
-                await user_voice.channel.connect()
-            voice = discord.utils.get(
-                self.client.voice_clients, guild=ctx.guild
+            all_vocab = [(k, v) for k, v in all_vocab[self.lesson].items()]
+        else:
+            full_path = f"{dir_path}\\{self.level}.json"
+            with open(full_path, "r", encoding="utf-8") as f:
+                all_vocab = json.load(f)
+            all_vocab = [(k, v) for k, v in all_vocab[self.lesson].items()]
+            random.shuffle(all_vocab)
+
+        # load all audio files in one lesson
+        # TODO: in review, load all audio files in one level
+        audio_paths = glob.glob(f"{dir_path}\\{self.level}\\{self.lesson}\\*")
+        name_to_path_dict = {}
+        for audio_path in audio_paths:
+            word = audio_path.split("\\")[-1][:-4]
+            name_to_path_dict[word] = audio_path
+
+        # TODO: counting how many words are in a lesson/level(?)
+        #       and how many I had quessed
+        # #msg = await ctx.send("")
+        msg = await ctx.send("STARTING...")
+        await msg.add_reaction("✅")  # next: know well
+        await msg.add_reaction("⏭️")  # next: know okayish
+        await msg.add_reaction("❌")  # next: don't know
+        await msg.add_reaction("🔁")  # repeat
+        await msg.add_reaction("🔚")  # end
+
+        # nobody except the command sender can interact with the "menu"
+        def check(reaction, user):
+            return user == ctx.author and reaction.emoji in "🔚⏭️🔁❌✅"
+
+        # edit last message with spoiled word
+        while True:
+            eng, kor = all_vocab[0]
+
+            # handling word that has no audio
+            if kor in name_to_path_dict:
+                msg_display = f"||{kor} = {eng}||"
+                try:
+                    p, e = name_to_path_dict[kor], "C:/ffmpeg/ffmpeg.exe"
+                    voice.play(discord.FFmpegPCMAudio(p, executable=e))
+                except Exception:
+                    await ctx.send("Wait, press 🔁 to play unplayed audio.")
+            else:
+                msg_display = f"{kor} = ||{eng}||"
+
+            await msg.edit(content=msg_display)
+            reaction, user = await self.client.wait_for(
+                "reaction_add", check=check
             )
-            audio_paths = glob.glob(f"cogs/edu/{self.level}/{unit}/*")
-            path_to_name_dict = {}
-            for audio_path in audio_paths:
-                word = audio_path.split("\\")[-1][:-4]
-                path_to_name_dict[word] = audio_path
 
-            # get questioning words from vocab and shuffle it
-            keys = list(all_vocab.keys())
-            random.shuffle(keys)
-            i = 0
+            await msg.remove_reaction(reaction, user)
 
-            msg = await ctx.send("STARTING...")
-            await msg.add_reaction("⏭️")
-            await msg.add_reaction("🔁")
-            await msg.add_reaction("🔚")  # repeat, next, end
+            if reaction.emoji == "🔚":
+                await msg.edit(content="Ending listening session.")
+                if review:
+                    dict_vocab = {k: v for k, v in all_vocab}
+                    with open(full_path, "w", encoding="utf-8") as f:
+                        json.dump(dict_vocab, f, indent=4, ensure_ascii=False)
+                break
+            await msg.edit(content=msg_display)
 
-            # nobody except the command sender can interact with the "menu"
-            def check(reaction, user):
-                return user == ctx.author and str(reaction.emoji) in "🔚⏭️🔁"
-
-            # edit last message with spoiled word
-            while True:
-                if i == len(keys):
-                    await ctx.send("All words from the lesson have been sent")
-                    i = 0
-
-                eng, kor = all_vocab[keys[i]], keys[i]
-                if kor in path_to_name_dict:
-                    msg_display = f"||{kor} = {eng}||"
-                    try:
-                        p, e = path_to_name_dict[kor], "C:/ffmpeg/ffmpeg.exe"
-                        voice.play(discord.FFmpegPCMAudio(p, executable=e))
-                    except Exception:
-                        await ctx.send("Wait, press 🔁 to play unplayed audio.")
+            if reaction.emoji == "🔁":
+                continue
+            word_to_move = all_vocab.pop(0)
+            if reaction.emoji == "✅":
+                all_vocab.append(word_to_move)
+            elif reaction.emoji == "⏭️":
+                all_vocab.insert(len(all_vocab) // 2, word_to_move)
+            elif reaction.emoji == "❌":
+                if review:
+                    all_vocab.insert(10, word_to_move)
                 else:
-                    msg_display = f"{kor} = ||{eng}||"
+                    new_index = len(all_vocab) // 5
+                    all_vocab.insert(new_index, word_to_move)
 
-                await msg.edit(content=msg_display)
-                reaction, user = await self.client.wait_for(
-                    "reaction_add", check=check
-                )
-
-                if str(reaction.emoji) == "🔚":
-                    await msg.edit(content="Ending listening session.")
-                    await msg.remove_reaction(reaction, user)
-                    break
-
-                if str(reaction.emoji) == "⏭️":
-                    await msg.edit(content=msg_display)
-                    await msg.remove_reaction(reaction, user)
-                    i += 1
-
-                elif str(reaction.emoji) == "🔁":
-                    await msg.edit(content=msg_display)
-                    await msg.remove_reaction(reaction, user)
-
+    # TODO: needs paths fix and polish
     @commands.command(brief="start vocab exercise", aliases=["e"])
     async def exercise(self, ctx):
 
@@ -118,7 +141,7 @@ class Language(commands.Cog):
             all_vocab = json.load(f)
 
             await ctx.send(
-                f'Vocabulary practice mode activated! Start by writing unit \
+                f'Vocabulary practice mode activated! Start by writing lesson \
                 name: {", ".join(all_vocab.keys())}, Exit by "{ctx.prefix}"'
             )
             await self.client.change_presence(
@@ -129,17 +152,17 @@ class Language(commands.Cog):
                 check=lambda message: message.author == ctx.author
                 and message.channel == ctx.channel,
             )
-            unit = response.content
+            lesson = response.content
 
-            sub_vocab = list(all_vocab[unit].items())
+            sub_vocab = list(all_vocab[lesson].items())
             random.shuffle(sub_vocab)
 
         if self.personalization:
             stats = defaultdict(list)
             nick = response.author.nick
-            if os.path.exists(f"cogs/edu/{nick}-{unit}.json"):
+            if os.path.exists(f"cogs/edu/{nick}-{lesson}.json"):
                 with open(
-                    f"cogs/edu/{nick}-{unit}.json", "r", encoding="utf-8"
+                    f"cogs/edu/{nick}-{lesson}.json", "r", encoding="utf-8"
                 ) as f:
                     stats = defaultdict(list, json.load(f))  # optimize maybe
         attempts = 0
@@ -157,12 +180,11 @@ class Language(commands.Cog):
         elif not voice:
             await user_voice.channel.connect()
         voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
-        audio_paths = glob.glob(f"cogs/edu/{self.level}/{unit}/*")
-        path_to_name_dict = {}
+        audio_paths = glob.glob(f"cogs/edu/{self.level}/{lesson}/*")
+        name_to_path_dict = {}
         for audio_path in audio_paths:
             word = audio_path.split("\\")[-1][:-4]
-            path_to_name_dict[word] = audio_path
-        ####
+            name_to_path_dict[word] = audio_path
 
         while not response.content.startswith(f"{ctx.prefix}"):  # while True:
             q = sub_vocab[0]
@@ -193,17 +215,16 @@ class Language(commands.Cog):
             attempts += 1
 
             # play sound
-            if answer in path_to_name_dict:
+            if answer in name_to_path_dict:
                 voice.play(
                     discord.FFmpegPCMAudio(
-                        path_to_name_dict[answer],
+                        name_to_path_dict[answer],
                         executable="C:/ffmpeg/ffmpeg.exe",
                     )
                 )
 
             # set queuer
-            # level, unit
-
+            # level, lesson
             # answer
 
             # requires optimalization
@@ -229,18 +250,15 @@ class Language(commands.Cog):
         )
         if self.personalization:
             with open(
-                f"cogs/edu/{nick}-{unit}.json", "w", encoding="utf-8"
+                f"cogs/edu/{nick}-{lesson}.json", "w", encoding="utf-8"
             ) as f:
                 json.dump(stats, f, sort_keys=True, ensure_ascii=False)
             await ctx.send("Score has been saved.")
-        await ctx.send(f"Exiting {unit} exercise..")
+        await ctx.send(f"Exiting {lesson} exercise..")
 
 
 def setup(client):
     client.add_cog(Language(client))
 
 
-# DISCORD ToDo:
-#   competitive mode -> ked je nespravne nic sa nestane, nieje personalizacia
-#   vyhodnotenie vsetkych co sa zustastnili
-#   vykreslenie vedenia pismen/slov [KNOW_HISTORY] stats
+# TODO: competitive mode, stats summary after session, knowledge visualization
