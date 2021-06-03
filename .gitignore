@@ -1,10 +1,10 @@
+venv
 *.pyc
 *.egg-info
 *.vscode
-cogs/voice/audio
-venv
-config.json
-cogs/ai_algo/data/solutions
-cogs/ai_algo/data/maps
-cogs/ai_algo/data/knowledge/*facts.txt
 *.gif
+config.json
+cogs/ai_algo/data/knowledge/*facts.txt
+cogs/ai_algo/data/maps
+cogs/ai_algo/data/solutions
+cogs/voice/audio
