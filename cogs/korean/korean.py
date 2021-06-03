@@ -11,29 +11,88 @@ from pathlib import Path
 
 class Language(commands.Cog):
     def __init__(self, client):
-        self.client = client
+        kor_dir = os.path.dirname(os.path.abspath(__file__))
+        with open(f"{kor_dir}\\kor_config.json", "r") as cf:
+            config = json.load(cf)
 
+        self.client = client
+        self.config = config
+
+    # TODO: implement together with text_to_json_parser.py
     show_eng_word = 1  # NotImplemented (0 - write in english)
     personalization = True  # NotImplemented
+    unfounded_words_save = False  # NotImplemented
 
-    # TODO: hint somewhere in order to cancel session, press ctx.prefix
-    unfounded_words_save = False
+    @property
+    def level(self):
+        return f'level_{self.config["level"]}'
 
-    # TODO: write level/lesson automatically into variables
-    # TODO: hint out the number possibilities of level/lesson
-    level = "level_3"
-    lesson = "lesson_2"
+    @property
+    def lesson(self):
+        return f'lesson_{self.config["lesson"]}'
 
-    # TODO: function to add lesson to queue file (with file creation too)
-    review_fname = "review_3"
+    @property
+    def review_fname(self):
+        return f'review_{self.config["review_fname"]}'
+
+    def saveJsonConfig(self):
+        kor_dir = os.path.dirname(os.path.abspath(__file__))
+        with open(f"{kor_dir}\\kor_config.json", "w") as cf:
+            json.dump(self.config, cf)
+
+    @level.setter
+    def level(self, number):
+        self.config["level"] = number
+        self.saveJsonConfig()
+
+    @lesson.setter
+    def lesson(self, number):
+        self.config["lesson"] = number
+        self.saveJsonConfig()
+
+    @review_fname.setter
+    def review_fname(self, fname):
+        self.config["review_fname"] = fname
+        self.saveJsonConfig()
+
+    @commands.command()
+    async def setLevel(self, ctx, number):
+        self.level = number
+        await ctx.send(f"Level number was set to {number}.")
+
+    @commands.command()
+    async def setLesson(self, ctx, number):
+        self.lesson = number
+        await ctx.send(f"Lesson number was set to {number}.")
+
+    @commands.command()
+    async def setReviewFilename(self, ctx, fname):
+        self.review_fname = fname
+        await ctx.send(f"Review file name was set to {fname}.")
+
+    @commands.command(brief="shows level, lesson, review_fname settings.")
+    async def koreanSettings(self, ctx):
+        embed = discord.Embed(
+            title="Korean settings",
+            description="Settings for choosing lessons and reviews sessions",
+            colour=discord.Colour.blue(),
+        )
+        for setting in self.config:
+            embed.add_field(name=setting, value=self.config[setting])
+
+        await ctx.send(embed=embed)
+
+    # TODO: function to add lesson to queue(?) file (with file creation too)
 
     @commands.command(brief="start listening vocab exercise", aliases=["el"])
     async def exerciseListening(self, ctx, review=False):
 
-        # TODO: this could be placed in a wrapper (voice.py)
+        # TODO: this could be placed in a wrapper (voice.py) (?)
         voice = get(self.client.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
         if not voice and not user_voice:
+            # TODO: delete this await in other commit
+            # search "raise commands.CommandError("
             await ctx.send(
                 "You or bot have to be connected to voice channel first."
             )
