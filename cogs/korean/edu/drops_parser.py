@@ -1,4 +1,4 @@
-import glob, os
+import glob
 
 paths = glob.glob("vocab5/*/*")
 titles = [full_path for full_path in paths]
@@ -26,8 +26,7 @@ for title in titles:
             kor_exp.append(line.rstrip())
             korean = False
             english = True
-    
+
     fii = open(title, "w", encoding="utf-8")
     for eng, kor in zip(eng_exp, kor_exp):
         fii.write(eng + " - " + kor + "\n")
-
