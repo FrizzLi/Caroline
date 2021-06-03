@@ -1,7 +1,7 @@
 *.pyc
 *.egg-info
 *.vscode
-*.mp3
+cogs/voice/audio
 venv
 config.json
 cogs/ai_algo/data/solutions
