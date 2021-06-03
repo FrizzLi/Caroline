@@ -8,6 +8,8 @@ from discord.utils import get
 from collections import defaultdict
 from pathlib import Path
 
+from cogs.korean.edu.create_vocab import createVocab as crVocab
+
 
 class Language(commands.Cog):
     def __init__(self, client):
@@ -18,10 +20,10 @@ class Language(commands.Cog):
         self.client = client
         self.config = config
 
-    # TODO: implement together with text_to_json_parser.py
+    # These parameters doesn't need to be in config, they're not so usable
     personalization = True  # NotImplemented
-    unfounded_words_save = False  # NotImplemented
-    show_eng_word = 1  # NotImplemented (0 - write in english)
+    unfounded_save = 0
+    show_eng_word = 1
 
     @property
     def level(self):
@@ -106,6 +108,12 @@ class Language(commands.Cog):
         await ctx.send(
             f"{self.lesson} from {self.level} was saved into {self.review}."
         )
+
+    @commands.command(brief="creates vocab from text file [lesson_only]")
+    async def createVocab(self, ctx, lesson_only=1):
+        lesson = self.lesson if lesson_only else False
+        crVocab(self.level, lesson, self.show_eng_word, self.unfounded_save)
+        await ctx.send("Vocab has been created!")
 
     @commands.command(brief="start listening vocab exercise++", aliases=["el"])
     async def exerciseListening(self, ctx, review=0):
