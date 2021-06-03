@@ -10,11 +10,13 @@ from discord.utils import get
 class Surveillance(commands.Cog):
     def __init__(self, client):
         surv_dir = os.path.dirname(os.path.abspath(__file__))
-        with open(surv_dir + "\\surv_config.json", "r") as cf:
+        with open(f"{surv_dir}\\surv_config.json", "r") as cf:
             config = json.load(cf)
 
         self.client = client
         self.config = config
+
+    # TODO: Maybe create properties like in korean.py? To preserve consistency
 
     # Helping functions
     def get_timeRole(self, member):

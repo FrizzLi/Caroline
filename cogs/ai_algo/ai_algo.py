@@ -52,6 +52,9 @@ class AiAlgo(commands.Cog):
     #     self._points_amount = new_val
     #     self.facts_amount = new_val + 1
 
+    # TODO: no config, cannot sync brief with it.. solution in korean.py
+    # for now, to stop the spam in help command, commenting it
+    '''
     # modifying evolution attributes
     @commands.command(brief=f"{begin_create}")
     async def change_begin_create(self, ctx, begin_create):
@@ -160,9 +163,10 @@ class AiAlgo(commands.Cog):
             True if facts_random_order.lower() == "true" else False
         )
         await ctx.send(f"facts_random_order changed to {facts_random_order}.")
+    '''
 
     # main method for creating gif
-    @commands.command(brief="Creates gif and shows it.")
+    @commands.command(brief="Creates gif and shows it. (pars in file)")
     async def create(self, ctx):
         evo_parameters = dict(
             begin_create=self.begin_create,
