@@ -13,9 +13,16 @@ from cogs.korean.edu.create_vocab import createVocab as crVocab
 
 class Language(commands.Cog):
     def __init__(self, client):
+        # TODO: maybe add other cogs' configs into gitignore too?
         kor_dir = os.path.dirname(os.path.abspath(__file__))
-        with open(f"{kor_dir}\\kor_config.json", "r") as cf:
-            config = json.load(cf)
+        path = f"{kor_dir}\\kor_config.json"
+        if os.path.exists(path):
+            with open(path, "r") as cf:
+                config = json.load(cf)
+        else:
+            config = {"level": "1", "lesson": "1", "review": "default"}
+            with open(path, "w") as cf:
+                json.dump(config, cf)
 
         self.client = client
         self.config = config

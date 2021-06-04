@@ -7,4 +7,5 @@ config.json
 cogs/ai_algo/data/knowledge/*facts.txt
 cogs/ai_algo/data/maps
 cogs/ai_algo/data/solutions
+cogs/korean/kor_config.json
 cogs/voice/audio
