@@ -101,9 +101,9 @@ class Language(commands.Cog):
         with open(path_to_lesson, "r", encoding="utf-8") as cf:
             level_vocab = json.load(cf)
 
-        new_review_vocab = {**review_vocab, **level_vocab[self.lesson]}
+        review_vocab = {**review_vocab, **level_vocab[self.lesson]}
         with open(f"{path_to_review}", "w", encoding="utf-8") as cf:
-            json.dump(new_review_vocab, cf, indent=4, ensure_ascii=False)
+            json.dump(review_vocab, cf, indent=4, ensure_ascii=False)
 
         await ctx.send(
             f"{self.lesson} from {self.level} was saved into {self.review}."
@@ -163,7 +163,13 @@ class Language(commands.Cog):
             name_to_path_dict[word] = audio_path
 
         i = 1
-        msg_counter = await ctx.send(f"{i}. word out of {len(all_vocab)}.")
+        if review:
+            practice = self.review
+        else:
+            practice = f"{self.level} - {self.lesson}"
+        msg_counter = await ctx.send(
+            f"[{practice}]: {i}. word out of {len(all_vocab)}."
+        )
         msg = await ctx.send("STARTING...")
         await msg.add_reaction("✅")  # next: know well
         await msg.add_reaction("⏭️")  # next: know okayish
@@ -175,9 +181,11 @@ class Language(commands.Cog):
         def check(reaction, user):
             return user == ctx.author and reaction.emoji in "🔚⏭️🔁❌✅"
 
+        unknown_words = []
+
         # edit last message with spoiled word
         while True:
-            eng, kor = all_vocab[0]
+            eng, kor = all_vocab[-1]
 
             # handling word that has no audio
             if kor in name_to_path_dict:
@@ -199,11 +207,31 @@ class Language(commands.Cog):
 
             if reaction.emoji == "🔚":
                 await msg.edit(content="Ending listening session.")
+
+                # save unknown words to file for future
+                unknown_words = {k: v for k, v in unknown_words}
+                path = f"{dir_path}\\{ctx.author}\\"
+                if review:
+                    path += f"{self.review}_unknown.json"
+                else:
+                    path += f"{self.level}_unknown.json"
+                    unknown_words = {self.lesson: unknown_words}
+                if os.path.exists(path):
+                    with open(path, "r", encoding="utf-8") as cf:
+                        old_unknown_words = json.load(cf)
+                else:
+                    old_unknown_words = {}
+                unknown_words = {**unknown_words, **old_unknown_words}
+                with open(f"{path}", "w", encoding="utf-8") as cf:
+                    json.dump(unknown_words, cf, indent=4, ensure_ascii=False)
+
+                # save vocab queue to file
                 if review:
                     dict_vocab = {k: v for k, v in all_vocab}
                     with open(full_path, "w", encoding="utf-8") as f:
                         json.dump(dict_vocab, f, indent=4, ensure_ascii=False)
                 break
+
             await msg.edit(content=msg_display)
 
             if reaction.emoji == "🔁":
@@ -215,15 +243,16 @@ class Language(commands.Cog):
             elif reaction.emoji == "⏭️":
                 all_vocab.insert(len(all_vocab) // 2, word_to_move)
             elif reaction.emoji == "❌":
+                unknown_words.append(word_to_move)
                 if review:
                     all_vocab.insert(-10, word_to_move)
                 else:
                     new_index = len(all_vocab) // 5
-                    all_vocab.insert(new_index, word_to_move)
+                    all_vocab.insert(-new_index, word_to_move)
 
             i += 1
             await msg_counter.edit(
-                content=f"{i}. word out of {len(all_vocab)}."
+                content=f"[{practice}]: {i}. word out of {len(all_vocab)}."
             )
 
     # TODO: needs paths fix and polish
