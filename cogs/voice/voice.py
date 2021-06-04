@@ -414,10 +414,8 @@ class Voice(commands.Cog):
     async def ensure_voice(self, ctx):
         voice = get(self.client.voice_clients, guild=ctx.guild)
         if not voice:
-            await ctx.send("Not connected to voice channel.")
             raise commands.CommandError("Not connected to voice channel.")
         elif not self.queuer:
-            await ctx.send("There are no queued songs.")
             raise commands.CommandError("Queue is empty.")
 
     @play.before_invoke
@@ -425,7 +423,6 @@ class Voice(commands.Cog):
         voice = get(self.client.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
         if not voice and not user_voice:
-            await ctx.send("No bot nor you is connected.")
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()

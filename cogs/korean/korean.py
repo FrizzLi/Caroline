@@ -124,11 +124,6 @@ class Language(commands.Cog):
         voice = get(self.client.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
         if not voice and not user_voice:
-            # TODO: delete this await in other commit
-            # search "raise commands.CommandError("
-            await ctx.send(
-                "You or bot have to be connected to voice channel first."
-            )
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
@@ -158,9 +153,9 @@ class Language(commands.Cog):
 
         # load audio files
         audio_paths = f"{dir_path}\\{self.level}\\"
-        if review:  # load all audio files from whole level
+        if review:  # from whole level
             audio_paths = glob.glob(f"{audio_paths}\\*\\*")
-        else:  # load all audio files from one lesson
+        else:  # from one lesson
             audio_paths = glob.glob(f"{audio_paths}\\{self.lesson}\\*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
@@ -213,7 +208,7 @@ class Language(commands.Cog):
 
             if reaction.emoji == "🔁":
                 continue
-            # TODO: pick from the last, not the first
+
             word_to_move = all_vocab.pop()
             if reaction.emoji == "✅":
                 all_vocab.insert(0, word_to_move)
@@ -271,9 +266,6 @@ class Language(commands.Cog):
         voice = get(self.client.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
         if not voice and not user_voice:
-            await ctx.send(
-                "You or bot have to be connected to the voice channel first."
-            )
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
