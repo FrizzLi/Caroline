@@ -73,3 +73,10 @@ if __name__ == "__main__":
 # NOTE: Test scenarios for audio download:
 # Youtube song/playlist + dl while playing,
 # Spotify song/playlist + dl while playing,
+
+# TODO:
+# Polish functionality (fix all bugs) in Caroline
+# - add hint ctx.prefix
+# - write command that shows whats working
+# - add listening up to lvl3
+# - add bigger buttons (need new version of dc or sth)
