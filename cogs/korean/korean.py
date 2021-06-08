@@ -186,7 +186,10 @@ class Language(commands.Cog):
 
         # nobody except the command sender can interact with the "menu"
         def check(reaction, user):
-            return user == ctx.author and reaction.emoji in "🔚⏭️🔁❌✅"
+            return (
+                user == ctx.author
+                and reaction.emoji in ["🔚","⏭️","🔁","❌","✅"]
+            )
 
         unknown_words = []
 
