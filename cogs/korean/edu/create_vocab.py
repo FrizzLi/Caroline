@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 
-def createVocab(level, lesson, eng_show=1, unfounded_save=0):
+def createVocab(level, lesson, text_only, unfounded_save=0):
     def searchWords(koreanWords):
         url = ('https://ko.dict.naver.com/api3/koko/search?' + urllib.parse.urlencode({'query': koreanWords}) + '&range=word&page=1')
         response = urllib.request.urlopen(url)
@@ -89,9 +89,9 @@ def createVocab(level, lesson, eng_show=1, unfounded_save=0):
             for line in f:
                 if line == "\n":
                     continue
-                key, val = line.split(" - ")
-                val = val.strip()
-                key, val = (val, key) if int(eng_show) else (key, val)
+                val, key = line.split(" - ")
+                key = key.strip()
+                # here add code if we want to guess korean form
                 vocabd[lesson_key][key] = val
 
     if vocabd:
@@ -101,6 +101,9 @@ def createVocab(level, lesson, eng_show=1, unfounded_save=0):
                 vocabd = {**old_vocabd, **vocabd}
         with open(f"{level_dir}.json", "w", encoding="utf-8") as f:
             json.dump(vocabd, f, indent=4, sort_keys=True, ensure_ascii=False)
+
+    if text_only:
+        return
 
     # download audio part
     for lesson_name in name_paths:

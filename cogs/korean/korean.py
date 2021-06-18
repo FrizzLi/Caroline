@@ -117,9 +117,9 @@ class Language(commands.Cog):
         )
 
     @commands.command(brief="creates vocab from text file [lesson_only]")
-    async def createVocab(self, ctx, lesson_only=1):
+    async def createVocab(self, ctx, lesson_only=1, text_only=1):
         lesson = self.lesson if lesson_only else False
-        crVocab(self.level, lesson, self.show_eng_word, self.unfounded_save)
+        crVocab(self.level, lesson, text_only, self.unfounded_save)
         await ctx.send("Vocab has been created!")
 
     @commands.command(brief="start listening vocab exercise++", aliases=["el"])
