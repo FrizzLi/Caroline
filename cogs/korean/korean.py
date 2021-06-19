@@ -170,19 +170,19 @@ class Language(commands.Cog):
             name_to_path_dict[word] = audio_path
 
         i = 1
+        n = len(all_vocab)
         if review:
             practice = self.review
         else:
             practice = f"{self.level} - {self.lesson}"
-        msg_counter = await ctx.send(
-            f"[{practice}]: {i}. word out of {len(all_vocab)}."
-        )
-        msg = await ctx.send("STARTING...")
-        await msg.add_reaction("✅")  # next: know well
-        await msg.add_reaction("⏭️")  # next: know okayish
-        await msg.add_reaction("❌")  # next: don't know
-        await msg.add_reaction("🔁")  # repeat
-        await msg.add_reaction("🔚")  # end
+        msg_counter = await ctx.send(f"[{practice}]: {i}. word out of {n}.")
+        msg = await ctx.send("Starting...")
+        msg_stats = await ctx.send("Turning on stats...")
+        await msg_stats.add_reaction("✅")  # next: know well
+        await msg_stats.add_reaction("⏭️")  # next: know okayish
+        await msg_stats.add_reaction("❌")  # next: don't know
+        await msg_stats.add_reaction("🔁")  # repeat
+        await msg_stats.add_reaction("🔚")  # end
 
         # nobody except the command sender can interact with the "menu"
         def check(reaction, user):
@@ -190,8 +190,19 @@ class Language(commands.Cog):
                 user == ctx.author
                 and reaction.emoji in ["🔚","⏭️","🔁","❌","✅"]
             )
+        
+        def computePercentages(good, ok, bad):
+            total = good + ok + bad
+            return (
+                round(good * 100 / total, 1),
+                round(ok * 100 / total, 1),
+                round(bad * 100 / total, 1)
+            )
 
         unknown_words = []
+        good = 0
+        ok = 0
+        bad = 0
 
         # edit last message with spoiled word
         while True:
@@ -212,8 +223,6 @@ class Language(commands.Cog):
             reaction, user = await self.client.wait_for(
                 "reaction_add", check=check
             )
-
-            await msg.remove_reaction(reaction, user)
 
             if reaction.emoji == "🔚":
                 await msg.edit(content="Ending listening session.")
@@ -242,28 +251,34 @@ class Language(commands.Cog):
                         json.dump(dict_vocab, f, indent=4, ensure_ascii=False)
                 break
 
+            if reaction.emoji != "🔁":
+                word_to_move = all_vocab.pop()
+                if reaction.emoji == "✅":
+                    all_vocab.insert(0, word_to_move)
+                    good += 1
+                elif reaction.emoji == "⏭️":
+                    all_vocab.insert(len(all_vocab) // 2, word_to_move)
+                    ok += 1
+                    n += 1
+                elif reaction.emoji == "❌":
+                    unknown_words.append(word_to_move)
+                    if review:
+                        all_vocab.insert(-10, word_to_move)
+                    else:
+                        new_index = len(all_vocab) // 5
+                        all_vocab.insert(-new_index, word_to_move)
+                    bad += 1
+                    n += 1
+
+                i += 1
+                g, o, b = computePercentages(good, ok, bad)
+            stats = f"{g}%,   {o}%,   {b}%"
+            counter = f"{practice}]: {i}. out of {n}"
+
+            await msg_stats.remove_reaction(reaction, user)
+            await msg_stats.edit(content=stats)
+            await msg_counter.edit(content=counter)
             await msg.edit(content=msg_display)
-
-            if reaction.emoji == "🔁":
-                continue
-
-            word_to_move = all_vocab.pop()
-            if reaction.emoji == "✅":
-                all_vocab.insert(0, word_to_move)
-            elif reaction.emoji == "⏭️":
-                all_vocab.insert(len(all_vocab) // 2, word_to_move)
-            elif reaction.emoji == "❌":
-                unknown_words.append(word_to_move)
-                if review:
-                    all_vocab.insert(-10, word_to_move)
-                else:
-                    new_index = len(all_vocab) // 5
-                    all_vocab.insert(-new_index, word_to_move)
-
-            i += 1
-            await msg_counter.edit(
-                content=f"[{practice}]: {i}. word out of {len(all_vocab)}."
-            )
 
     # TODO: needs paths fix and polish
     @commands.command(brief="start vocab exercise", aliases=["e"])
