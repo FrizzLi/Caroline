@@ -175,7 +175,8 @@ class Language(commands.Cog):
             practice = self.review
         else:
             practice = f"{self.level} - {self.lesson}"
-        msg_counter = await ctx.send(f"[{practice}]: {i}. word out of {n}.")
+
+        msg_counter = await ctx.send(f"[{practice}]: {i}. out of {n}.")
         msg = await ctx.send("Starting...")
         msg_stats = await ctx.send("Turning on stats...")
         await msg_stats.add_reaction("✅")  # next: know well
@@ -190,7 +191,7 @@ class Language(commands.Cog):
                 user == ctx.author
                 and reaction.emoji in ["🔚","⏭️","🔁","❌","✅"]
             )
-        
+
         def computePercentages(good, ok, bad):
             total = good + ok + bad
             return (
@@ -205,7 +206,8 @@ class Language(commands.Cog):
         bad = b = 0
 
         # edit last message with spoiled word
-        while True:
+        run = True
+        while run:
             eng, kor = all_vocab[-1]
 
             # handling word that has no audio
@@ -225,7 +227,8 @@ class Language(commands.Cog):
             )
 
             if reaction.emoji == "🔚":
-                await msg.edit(content="Ending listening session.")
+                msg_display = "Ending listening session."
+                run = False
 
                 # save unknown words to file for future
                 unknown_words = {k: v for k, v in unknown_words}
@@ -249,9 +252,8 @@ class Language(commands.Cog):
                     dict_vocab = {k: v for k, v in all_vocab}
                     with open(full_path, "w", encoding="utf-8") as f:
                         json.dump(dict_vocab, f, indent=4, ensure_ascii=False)
-                break
 
-            if reaction.emoji != "🔁":
+            elif reaction.emoji != "🔁":
                 word_to_move = all_vocab.pop()
                 if reaction.emoji == "✅":
                     all_vocab.insert(0, word_to_move)
@@ -272,8 +274,13 @@ class Language(commands.Cog):
 
                 i += 1
                 g, o, b = computePercentages(good, ok, bad)
+
             stats = f"{g}%,   {o}%,   {b}%"
-            counter = f"{practice}]: {i}. out of {n}"
+            counter = f"[{practice}]: {i}. out of {n}"
+            if i >= n:
+                i = 0
+                n = len(all_vocab)
+                good = ok = bad = 0
 
             await msg_stats.remove_reaction(reaction, user)
             await msg_stats.edit(content=stats)
