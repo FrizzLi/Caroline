@@ -200,9 +200,9 @@ class Language(commands.Cog):
             )
 
         unknown_words = []
-        good = 0
-        ok = 0
-        bad = 0
+        good = g = 0
+        ok = o = 0
+        bad = b = 0
 
         # edit last message with spoiled word
         while True:
