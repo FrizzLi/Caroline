@@ -277,10 +277,6 @@ class Language(commands.Cog):
 
             stats = f"{g}%,   {o}%,   {b}%"
             counter = f"[{practice}]: {i}. out of {n}"
-            if i >= n:
-                i = 0
-                n = len(all_vocab)
-                good = ok = bad = 0
 
             await msg_stats.remove_reaction(reaction, user)
             await msg_stats.edit(content=stats)
