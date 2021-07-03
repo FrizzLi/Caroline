@@ -82,17 +82,20 @@ def createVocab(level, lesson, text_only, unfounded_save=0):
 
     # create vocabulary json file from text files.
     vocabd = {}
-    for path in lesson_paths:
-        lesson_key = path.split("\\")[-1][:-4]
-        vocabd[lesson_key] = {}
-        with open(path, encoding="utf-8") as f:
-            for line in f:
-                if line == "\n":
-                    continue
-                val, key = line.split(" - ")
-                key = key.strip()
-                # here add code if we want to guess korean form
-                vocabd[lesson_key][key] = val
+    try:
+        for path in lesson_paths:
+            lesson_key = path.split("\\")[-1][:-4]
+            vocabd[lesson_key] = {}
+            with open(path, encoding="utf-8") as f:
+                for line in f:
+                    if line == "\n":
+                        continue
+                    val, key = line.split(" - ")
+                    key = key.strip()
+                    # here add code if we want to guess korean form
+                    vocabd[lesson_key][key] = val
+    except Exception as e:
+        print(f"{e}: {line}")
 
     if vocabd:
         if os.path.exists(f"{level_dir}.json"):
