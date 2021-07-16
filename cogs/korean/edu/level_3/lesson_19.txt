@@ -1,7 +1,7 @@
-걸리다 - hang, be hung
+걸리다 - trip, stumble
 과식 - overeating
 구급차 - ambulance (vehicle)
-구조 - rescue, constitution/organization/structure
+구조 - rescue, [constitution/organization/structure]
 구조대원 - rescue worker
 깁스 - plaster cast (Bandaging and plastering in order to fix a cracked or broken bone)
 날카롭다 - sharp, pointed
@@ -10,7 +10,7 @@
 박수 - applause, clapping
 발목 - ankle
 배탈 - stomach ache, upset stomach
-베이다 - be/get a cut, be chopped, be hacked
+베이다 - be/get a cut, be chopped, be hacked (get hurted)
 뵙다 - humbly see[meet], meet with
 부러지다 - break, be broken, fracture
 삐다 - have a wrick in, sprain, wrench
@@ -36,5 +36,5 @@
 치료 - cure, treatment
 침착하다 - calm, cool, composed
 토하다 - vomit, throw up, blow out, yell
-퉁퉁 - fatly, swollenly
+퉁퉁 - fatly, swollenly (A word describing a protruding part of something as it has swelled up.)
 피 - blood
