@@ -12,7 +12,7 @@
 반품 - return, take back
 보일러 - boiler
 보증 기간 - warranty period, the term of guarantee
-빼다 - take out, draw, pull out
+빼다 - take out, draw, pull out <-> 넣다;; subtract, take sth (away) from sth
 상담원 - counselor, advisor, consultant, operator, representative
 선 - line, level, [good, goodness, the first]
 설치하다 - install
