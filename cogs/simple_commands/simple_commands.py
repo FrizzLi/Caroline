@@ -42,8 +42,8 @@ class Commands(commands.Cog):
         )
         await ctx.send("Python mode deactivated!")
 
-    @commands.command(brief="Deletes specified number of messages. (clear 5)")
-    async def clear(self, ctx, amount=5):
+    @commands.command(brief="Deletes specified number of messages. (clearr 5)")
+    async def clearr(self, ctx, amount=5):
         channel = ctx.message.channel
         async for message in channel.history(limit=int(amount) + 1):
             await message.delete()
