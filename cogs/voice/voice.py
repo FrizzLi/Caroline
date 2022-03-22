@@ -21,20 +21,6 @@
 #     jump_index = 0
 #     voluming = 0.1
 
-#     ydl_opts = {
-#         "format": "bestaudio/best",
-#         "quiet": True,
-#         "postprocessors": [
-#             {
-#                 "key": "FFmpegExtractAudio",
-#                 "preferredcodec": "mp3",
-#                 "preferredquality": "192",
-#             }
-#         ],
-#     }
-
-#     ffmpeg_options = {"options": "-vn"}
-
 #     def replaceChars(self, track):
 #         track = track.replace('"', "'")
 #         for char in "\\/:*?<>|":
@@ -171,72 +157,49 @@
 #         # self.queuer.append(title)
 #         return title
 
-#     @commands.command(aliases=["q"], brief="Displays queue list of tracks.")
-#     async def queue(self, ctx):
-#         track_list = []
-#         start = 1
-#         if self.pointer > 2 and len(self.queuer) > 10:
-#             start = len(self.queuer[self.pointer - 2 : self.pointer + 8])
-#             start += self.pointer - 11
+# @commands.command(aliases=["p"], brief="Adds track to queue from ytb/spt.")
+#     async def play(self, ctx, *query: str):
 
-#         for index, track_path in enumerate(
-#             self.queuer[start - 1 : start + 9], start=start
-#         ):
-#             pointer = "---> " if self.pointer + 1 == index else "     "
-#             audio_name = os.path.basename(track_path)[:-4]
-#             audio_length = MP3(track_path).info.length
-#             minutes = f"{str(int(audio_length // 60))}m"
-#             seconds = f"{str(int(audio_length % 60))}s"
-#             audio_length = f"({minutes}m {seconds}s)"
-#             row = f"{str(pointer)}{str(index)}. {audio_length} {audio_name}"
-#             track_list.append(row)
+#         # queue playing loop
+#         def check_queue():
+#             if not self.loop_track:
+#                 self.pointer += 1  # next
+#             if self.jump_index:
+#                 self.pointer = self.jump_index - 1  # jump
+#             if self.loop_queue and len(self.queuer) < self.pointer + 1:
+#                 self.pointer = 0  # repeat queue
+#             if len(self.queuer) > self.pointer:
+#                 track_path = self.queuer[self.pointer]  # play
+#                 voice.play(
+#                     discord.FFmpegPCMAudio(
+#                         track_path, executable="C:/ffmpeg/ffmpeg.exe"
+#                     ),
+#                     after=lambda e: check_queue(),
+#                 )
+#                 voice.source = discord.PCMVolumeTransformer(voice.source)
+#                 voice.source.volume = self.voluming
+#             else:  # end
+#                 self.pointer = -1
+#                 self.queuer.clear()
+#             self.jump_index = 0
 
-#         queue_view = "\n".join(track_list)
-#         remains = len(self.queuer[start + 9 :])
-#         remains = f"{remains} remaining track(s)    " if remains else ""
-#         vol = f"volume: {str(int(self.voluming * 100))}%"
-#         loop_q = f"loopqueue: {str(self.loop_queue)}"
-#         loop_t = f"looptrack: {str(self.loop_track)}"
-#         msg = f"ml\n{queue_view}\n\n{remains}{vol}    {loop_q}    {loop_t}\n"
-#         await ctx.send(f"```{msg}```")
+#         # get audio and set the queue
+#         async with ctx.typing():
+#             title = self.setQueue(query)
+#         await ctx.send(f"{title} has been added to the queue.")
 
-#     @commands.command(aliases=["next"], brief="Jump to next/specific track.")
-#     async def jump(self, ctx, index=None):
-#         if index:
-#             self.jump_index = int(index)
-#             track = os.path.basename(self.queuer[self.jump_index - 1])
-#             msg = f"Jumping into {self.jump_index}. track ({track[:-4]})."
-#         else:
-#             msg = "Skipping current track."
-#         await ctx.send(msg)
-#         get(self.client.voice_clients, guild=ctx.guild).stop()
+#         # go to playing loop if there isnt song being played/paused
+#         voice = get(self.client.voice_clients, guild=ctx.guild)
 
-#     @commands.command(brief="Randomizes the position of tracks in queue.")
-#     async def shuffle(self, ctx):
-#         shuffled_remains = self.queuer[self.pointer + 1 :]
-#         random.shuffle(shuffled_remains)
-#         self.queuer = self.queuer[: self.pointer + 1] + shuffled_remains
-#         return await ctx.send(
-#             "Position of remaning audio tracks in queue have been shuffled."
-#         )
+#         # need the streaming tho!
+#         if not voice.is_playing() and not voice.is_paused():
+#             check_queue()
 
-#     @commands.command(brief="Loops the whole queue of tracks.")
-#     async def loopqueue(self, ctx):
-#         if self.loop_queue:
-#             self.loop_queue = False
-#             await ctx.send("queue looping is stopped.")
-#         else:
-#             self.loop_queue = True
-#             await ctx.send("Looping queue.")
 
-#     @commands.command(brief="Loops the currently playing track.")
-#     async def looptrack(self, ctx):
-#         if self.loop_track:
-#             self.loop_track = False
-#             await ctx.send("Track looping is stopped.")
-#         else:
-#             self.loop_track = True
-#             await ctx.send("Looping current track.")
+
+
+
+
 
 #     @commands.command(
 #         aliases=["dl"], brief="DLs a track/playlist from ytb/spt URL. {URL}"
@@ -396,28 +359,42 @@ import youtube_dl
 from youtube_dl import YoutubeDL
 
 ###
-from termcolor import colored
+# from termcolor import colored
 ###
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
 
+#     ydl_opts = {
+#         "format": "bestaudio/best",
+#         "quiet": True,
+#         "postprocessors": [
+#             {
+#                 "key": "FFmpegExtractAudio",
+#                 "preferredcodec": "mp3",
+#                 "preferredquality": "192",
+#             }
+#         ],
+#     }
+
+#     ffmpeg_options = {"options": "-vn"}
+
 ytdlopts = {
-    'format': 'bestaudio/best',
+    'format': 'bestaudio/best',  ##
     'outtmpl': 'downloads/%(extractor)s-%(id)s-%(title)s.%(ext)s',
     'restrictfilenames': True,
-    'noplaylist': True,
+    'noplaylist': False,
     'nocheckcertificate': True,
     'ignoreerrors': False,
     'logtostderr': False,
-    'quiet': True,
+    'quiet': True,  ##
     'no_warnings': True,
     'default_search': 'auto',
     'source_address': '0.0.0.0'  # ipv6 addresses cause issues sometimes
 }
 
 ffmpegopts = {
-    'before_options': '-nostdin',
+    'before_options': '-nostdin',  #
     'options': '-vn'
 }
 
@@ -600,25 +577,8 @@ class Music(commands.Cog):
 
         return player
 
-#     @commands.command(brief="Connects/moves the bot to voice channel.")
-#     async def join(self, ctx, *, name=None):
-#         author_channel = ctx.message.author.voice.channel
-#         channel = (
-#             find(lambda r: r.name == name, ctx.guild.channels)
-#             if name
-#             else author_channel
-#         )
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
-#         if not voice:
-#             await channel.connect()
-#             await ctx.send(f"Joined {channel}.")
-#         elif voice.channel == channel:
-#             await ctx.send("I'm already there.")
-#         else:
-#             await voice.move_to(channel)
-#             await ctx.send(f"Moved from {voice.channel} to {channel}.")
-
-    @commands.command(name='join', aliases=['connect', 'j'], description="connects to voice")
+    # TODO: add brief="Connects/moves the bot to voice channel."?
+    @commands.command(name='join', aliases=['j'], description="connects to voice")
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
         Parameters
@@ -628,6 +588,15 @@ class Music(commands.Cog):
             will be made.
         This command also handles moving the bot to different channels.
         """
+
+        """Connect to voice. This command also handles moving the bot to different channels.
+
+        Args:
+            channel (discord.VoiceChannel, optional): The channel to connect to. 
+                If a channel is not specified, an attempt to join the voice channel you are in will be made.
+        """
+
+        # TODO: how does channel var is translated from str to discord.VoiceChannel in code.. what does that pretyping?
         if not channel:
             try:
                 channel = ctx.author.voice.channel
@@ -640,6 +609,7 @@ class Music(commands.Cog):
 
         if vc:
             if vc.channel.id == channel.id:
+                await ctx.send("I'm already in the channel.")  # TODO: style
                 return
             try:
                 await vc.move_to(channel)
@@ -650,56 +620,10 @@ class Music(commands.Cog):
                 await channel.connect()
             except asyncio.TimeoutError:
                 raise VoiceConnectionError(f'Connecting to channel: <{channel}> timed out.')
-        if (random.randint(0, 1) == 0):
-            await ctx.message.add_reaction('👍')
+        
+        await ctx.message.add_reaction('👍')
         await ctx.send(f'**Joined `{channel}`**')
-
-# @commands.command(aliases=["p"], brief="Adds track to queue from ytb/spt.")
-#     async def play(self, ctx, *query: str):
-
-#         # queue playing loop
-#         def check_queue():
-#             if not self.loop_track:
-#                 self.pointer += 1  # next
-#             if self.jump_index:
-#                 self.pointer = self.jump_index - 1  # jump
-#             if self.loop_queue and len(self.queuer) < self.pointer + 1:
-#                 self.pointer = 0  # repeat queue
-#             if len(self.queuer) > self.pointer:
-#                 track_path = self.queuer[self.pointer]  # play
-#                 voice.play(
-#                     discord.FFmpegPCMAudio(
-#                         track_path, executable="C:/ffmpeg/ffmpeg.exe"
-#                     ),
-#                     after=lambda e: check_queue(),
-#                 )
-#                 voice.source = discord.PCMVolumeTransformer(voice.source)
-#                 voice.source.volume = self.voluming
-#             else:  # end
-#                 self.pointer = -1
-#                 self.queuer.clear()
-#             self.jump_index = 0
-
-#         # get audio and set the queue
-#         async with ctx.typing():
-#             title = self.setQueue(query)
-#         await ctx.send(f"{title} has been added to the queue.")
-
-#         # go to playing loop if there isnt song being played/paused
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
-
-#         # need the streaming tho!
-#         if not voice.is_playing() and not voice.is_paused():
-#             check_queue()
-
-##########
-# def play(self, ctx, *, query):
-#     """Plays a file from the local filesystem"""
-
-#     source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(query))
-#     ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
-
-#     await ctx.send('Now playing: {}'.format(query))
+        # await ctx.send(f"Joined {channel}.")
 
     @commands.command(name='play', aliases=['sing','p'], description="streams music")
     async def play_(self, ctx, *, search: str):
@@ -729,53 +653,49 @@ class Music(commands.Cog):
 
         await player.queue.put(source)
 
-#     @commands.command(brief="Pauses currently playing track.")
-#     async def pause(self, ctx):
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
-#         if voice.is_playing():
-#             voice.pause()
-#             return await ctx.send("Track is paused.")
-#         await ctx.send("There is no track being played.")
 
+
+
+
+    # TODO: brief="Pauses currently playing track.
     @commands.command(name='pause', description="pauses music")
     async def pause_(self, ctx):
         """Pause the currently playing song."""
+
         vc = ctx.voice_client
 
         if not vc or not vc.is_playing():
-            embed = discord.Embed(title="", description="I am currently not playing anything", color=discord.Color.green())
+            embed = discord.Embed(title="", description="I am currently not playing anything", color=discord.Color.green()) # TODO: styl
             return await ctx.send(embed=embed)
         elif vc.is_paused():
+            await ctx.send("The track is already paused.")  # TODO: style
             return
 
         vc.pause()
         await ctx.send("Paused ⏸️")
 
-#     @commands.command(brief="Resumes paused track.")
-#     async def resume(self, ctx):
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
-#         if voice.is_paused():
-#             voice.resume()
-#             return await ctx.send("Track is resumed.")
-#         await ctx.send("There is no track paused.")
-
+    # TODO: brief="Resumes paused track."
     @commands.command(name='resume', description="resumes music")
     async def resume_(self, ctx):
         """Resume the currently paused song."""
+
         vc = ctx.voice_client
 
         if not vc or not vc.is_connected():
-            embed = discord.Embed(title="", description="I'm not connected to a voice channel", color=discord.Color.green())
+            embed = discord.Embed(title="", description="I'm not connected to a voice channel", color=discord.Color.green()) # TODO: styl
             return await ctx.send(embed=embed)
         elif not vc.is_paused():
+            await ctx.send("The track is being played already.")  # TODO: style
             return
 
         vc.resume()
         await ctx.send("Resuming ⏯️")
 
+    # TODO: jump.. add skip to.. number song!
     @commands.command(name='skip', description="skips to next song in queue")
     async def skip_(self, ctx):
         """Skip the song."""
+
         vc = ctx.voice_client
 
         if not vc or not vc.is_connected():
@@ -788,8 +708,8 @@ class Music(commands.Cog):
             return
 
         vc.stop()
-    
-    @commands.command(name='remove', aliases=['rm', 'rem'], description="removes specified song from queue")
+
+    @commands.command(name='remove', aliases=['rm'], description="removes specified song from queue")
     async def remove_(self, ctx, pos : int=None):
         """Removes specified song from queue"""
 
@@ -826,6 +746,35 @@ class Music(commands.Cog):
         player.queue._queue.clear()
         await ctx.send('**Cleared**')
 
+# @commands.command(aliases=["q"], brief="Displays queue list of tracks.")
+#     async def queue(self, ctx):
+#         track_list = []
+#         start = 1
+#         if self.pointer > 2 and len(self.queuer) > 10:
+#             start = len(self.queuer[self.pointer - 2 : self.pointer + 8])
+#             start += self.pointer - 11
+
+#         for index, track_path in enumerate(
+#             self.queuer[start - 1 : start + 9], start=start
+#         ):
+#             pointer = "---> " if self.pointer + 1 == index else "     "
+#             audio_name = os.path.basename(track_path)[:-4]
+#             audio_length = MP3(track_path).info.length
+#             minutes = f"{str(int(audio_length // 60))}m"
+#             seconds = f"{str(int(audio_length % 60))}s"
+#             audio_length = f"({minutes}m {seconds}s)"
+#             row = f"{str(pointer)}{str(index)}. {audio_length} {audio_name}"
+#             track_list.append(row)
+
+#         queue_view = "\n".join(track_list)
+#         remains = len(self.queuer[start + 9 :])
+#         remains = f"{remains} remaining track(s)    " if remains else ""
+#         vol = f"volume: {str(int(self.voluming * 100))}%"
+#         loop_q = f"loopqueue: {str(self.loop_queue)}"
+#         loop_t = f"looptrack: {str(self.loop_track)}"
+#         msg = f"ml\n{queue_view}\n\n{remains}{vol}    {loop_q}    {loop_t}\n"
+#         await ctx.send(f"```{msg}```")
+
     @commands.command(name='queue', aliases=['q', 'playlist', 'que'], description="shows the queue")
     async def queue_info(self, ctx):
         """Retrieve a basic queue of upcoming songs."""
@@ -859,9 +808,10 @@ class Music(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='np', aliases=['song', 'current', 'currentsong', 'playing'], description="shows the current playing song")
+    @commands.command(name='np', description="shows the current playing song")
     async def now_playing_(self, ctx):
         """Display information about the currently playing song."""
+
         vc = ctx.voice_client
 
         if not vc or not vc.is_connected():
@@ -887,25 +837,14 @@ class Music(commands.Cog):
         embed.set_author(icon_url=self.bot.user.avatar_url, name=f"Now Playing 🎶")
         await ctx.send(embed=embed)
 
-#     @commands.command(brief="Check or change the current volume. [%]")
-#     async def volume(self, ctx, vol=None):
-#         if ctx.voice_client is None:
-#             return await ctx.send("Not connected to a voice channel.")
-#         if vol:
-#             self.voluming = int(vol) / 100
-#             ctx.voice_client.source.volume = self.voluming
-#             msg = f"Volume changed to {int(self.voluming * 100)}%."
-#         else:
-#             msg = f"Volume: {int(self.voluming * 100)}%"
-#         await ctx.send(msg)
-
+    # TODO: brief="Check or change the current volume. [%]"
     @commands.command(name='volume', aliases=['vol', 'v'], description="changes Kermit's volume")
     async def change_volume(self, ctx, *, vol: float=None):
         """Change the player volume.
-        Parameters
-        ------------
-        volume: float or int [Required]
-            The volume to set the player to in percentage. This must be between 1 and 100.
+
+        Args:
+            volume: float or int [Required]
+                The volume to set the player to in percentage. This must be between 1 and 100.
         """
         vc = ctx.voice_client
 
@@ -921,35 +860,16 @@ class Music(commands.Cog):
             embed = discord.Embed(title="", description="Please enter a value between 1 and 100", color=discord.Color.green())
             return await ctx.send(embed=embed)
 
-        player = self.get_player(ctx)
+        player = self.get_player(ctx)  # TODO: what is this for?
 
         if vc.source:
             vc.source.volume = vol / 100
 
-        player.volume = vol / 100
+        player.volume = vol / 100  # TODO: ... ^
         embed = discord.Embed(title="", description=f'**`{ctx.author}`** set the volume to **{vol}%**', color=discord.Color.green())
         await ctx.send(embed=embed)
 
-#     @commands.command(brief="Stops current playing track and clears queue.")
-#     async def stop(self, ctx):
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
-#         self.queuer.clear()
-#         self.loop_queue = False
-#         voice.stop()
-#         return await ctx.send("Track is stopped and queue is cleared.")
-
-#     @commands.command(brief="Disconnects the bot from voice channel.")
-#     async def leave(self, ctx):
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
-#         if not voice:
-#             return await ctx.send("Not connected to voice channel.")
-#         self.queuer.clear()
-#         self.loop_queue = False
-#         voice.stop()
-#         await voice.disconnect()
-#         await ctx.send(f"Left {voice.channel}.")
-
-    @commands.command(name='leave', aliases=["stop", "dc", "disconnect", "bye"], description="stops music and disconnects from voice")
+    @commands.command(name='leave', aliases=["stop"], description="stops music and disconnects from voice")
     async def leave_(self, ctx):
         """Stop the currently playing song and destroy the player.
         !Warning!
@@ -961,12 +881,69 @@ class Music(commands.Cog):
             embed = discord.Embed(title="", description="I'm not connected to a voice channel", color=discord.Color.green())
             return await ctx.send(embed=embed)
 
-        if (random.randint(0, 1) == 0):
-            await ctx.message.add_reaction('👋')
-        await ctx.send('**Successfully disconnected**')
+        await ctx.message.add_reaction('👋')
 
         await self.cleanup(ctx.guild)
-###
+
+        await ctx.send('**Successfully disconnected**')
+        # await ctx.send(f"Left {voice.channel}.")
+
+    @commands.command(brief="Stops current playing track and clears queue.")  # descr?
+    async def stopp(self, ctx):
+        #voice = get(self.client.voice_clients, guild=ctx.guild)
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = discord.Embed(title="", description="I'm not connected to a voice channel", color=discord.Color.green())
+            return await ctx.send(embed=embed)
+
+        #self.queuer.clear()
+        #self.loop_queue = False
+        player = self.get_player(ctx)
+        player.queue._queue.clear()
+        vc.stop()
+
+#     @commands.command(aliases=["next"], brief="Jump to next/specific track.")
+#     async def jump(self, ctx, index=None):
+#         if index:
+#             self.jump_index = int(index)
+#             track = os.path.basename(self.queuer[self.jump_index - 1])
+#             msg = f"Jumping into {self.jump_index}. track ({track[:-4]})."
+#         else:
+#             msg = "Skipping current track."
+#         await ctx.send(msg)
+#         get(self.client.voice_clients, guild=ctx.guild).stop()
+
+#     @commands.command(brief="Randomizes the position of tracks in queue.")
+#     async def shuffle(self, ctx):
+#         shuffled_remains = self.queuer[self.pointer + 1 :]
+#         random.shuffle(shuffled_remains)
+#         self.queuer = self.queuer[: self.pointer + 1] + shuffled_remains
+#         return await ctx.send(
+#             "Position of remaning audio tracks in queue have been shuffled."
+#         )
+
+#     @commands.command(brief="Loops the whole queue of tracks.")
+#     async def loopqueue(self, ctx):
+#         if self.loop_queue:
+#             self.loop_queue = False
+#             await ctx.send("queue looping is stopped.")
+#         else:
+#             self.loop_queue = True
+#             await ctx.send("Looping queue.")
+
+#     @commands.command(brief="Loops the currently playing track.")
+#     async def looptrack(self, ctx):
+#         if self.loop_track:
+#             self.loop_track = False
+#             await ctx.send("Track looping is stopped.")
+#         else:
+#             self.loop_track = True
+#             await ctx.send("Looping current track.")
+
+
+
+### TODO: research colorings
 
 # def music_player_main(voice_channel,server):
 #     vc = await voice_channel.connect()
@@ -1016,5 +993,15 @@ class Music(commands.Cog):
 #             continue
 
 ###
+
+##########
+# def play(self, ctx, *, query):
+#     """Plays a file from the local filesystem"""
+
+#     source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(query))
+#     ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+#     await ctx.send('Now playing: {}'.format(query))
+
 def setup(bot):
     bot.add_cog(Music(bot))
