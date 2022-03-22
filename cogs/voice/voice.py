@@ -436,18 +436,20 @@ class YTDLSource(discord.PCMVolumeTransformer):
         data = await loop.run_in_executor(None, to_run)
 
         if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
+            first_item = data['entries'][0]
+            data = data['entries']
+        else:
+            data = [data]
 
-        embed = discord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=discord.Color.green())
+        embed = discord.Embed(title="", description=f"Queued [{first_item['title']}]({first_item['webpage_url']}) [{ctx.author.mention}]", color=discord.Color.green())
         await ctx.send(embed=embed)
 
         if download:
-            source = ytdl.prepare_filename(data)
+            source = ytdl.prepare_filename(data)    # TODO: resolve [data]
         else:
-            return {'webpage_url': data['webpage_url'], 'requester': ctx.author, 'title': data['title']}
+            return data
 
-        return cls(discord.FFmpegPCMAudio(source), data=data, requester=ctx.author)
+        return cls(discord.FFmpegPCMAudio(source), data=data, requester=ctx.author)  # TODO: resolve [data] into data[0]
 
     @classmethod
     async def regather_stream(cls, data, *, loop):
@@ -620,7 +622,7 @@ class Music(commands.Cog):
                 await channel.connect()
             except asyncio.TimeoutError:
                 raise VoiceConnectionError(f'Connecting to channel: <{channel}> timed out.')
-        
+
         await ctx.message.add_reaction('👍')
         await ctx.send(f'**Joined `{channel}`**')
         # await ctx.send(f"Joined {channel}.")
@@ -649,11 +651,11 @@ class Music(commands.Cog):
 
         # If download is False, source will be a dict which will be used later to regather the stream.
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
-        source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
+        data = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
 
-        await player.queue.put(source)
-
-
+        for entry in data:
+            source = {'webpage_url': entry['webpage_url'], 'requester': ctx.author, 'title': entry['title']}
+            await player.queue.put(source)
 
 
 
