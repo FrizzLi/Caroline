@@ -3,21 +3,23 @@
         "logs": 556514691069902870
     },
     "bypass_channels": [
-        "🔬secret-terminal",
+        "\u00f0\u0178\u201d\u00acsecret-terminal",
         "\u26e9weeboviny",
-        "🎥surveillance"
+        "\u00f0\u0178\u017d\u00a5surveillance",
+        "\ud83d\udd2csecret-terminal",
+        "\ud83d\udcbbterminal"
     ],
     "logs": {
-        "member_join": "1",
-        "member_remove": "1",
-        "member_role": "1",
-        "member_update": "1",
-        "member_voice": "1",
-        "msg_delete": "1",
-        "msg_edit": "1",
-        "msg_post": "1",
+        "member_join": "0",
+        "member_remove": "0",
+        "member_role": "0",
+        "member_update": "0",
+        "member_voice": "0",
+        "msg_delete": "0",
+        "msg_edit": "0",
+        "msg_post": "0",
         "on_typing": "0",
-        "reaction_add": "1",
-        "reaction_remove": "1"
+        "reaction_add": "0",
+        "reaction_remove": "0"
     }
 }

@@ -67,5 +67,5 @@ class Commands(commands.Cog):
         await self.client.close()
 
 
-def setup(client):
-    client.add_cog(Commands(client))
+async def setup(client):
+    await client.add_cog(Commands(client))

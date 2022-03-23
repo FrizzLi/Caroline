@@ -205,8 +205,8 @@ class AiAlgo(commands.Cog):
             await ctx.message.channel.send(file=File(f))
 
 
-def setup(client):
-    client.add_cog(AiAlgo(client))
+async def setup(client):
+    await client.add_cog(AiAlgo(client))
 
 
 if __name__ == "__main__":

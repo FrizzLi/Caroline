@@ -7,7 +7,6 @@
 # from discord.ext import commands
 # from discord.utils import get, find
 # from mutagen.mp3 import MP3
-# from typing import Any
 
 
 # class Voice(commands.Cog):
@@ -358,6 +357,8 @@ from functools import partial
 import youtube_dl
 from youtube_dl import YoutubeDL
 
+from typing import Any
+
 ###
 # from termcolor import colored
 ###
@@ -378,25 +379,28 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 #     }
 
 #     ffmpeg_options = {"options": "-vn"}
+# TODO: research props
+
+# ffmpegopts = {
+#     'before_options': '-nostdin',
+#     'options': '-vn'
+# }
 
 ytdlopts = {
-    'format': 'bestaudio/best',  ##
+    'format': 'bestaudio/best',
     'outtmpl': 'downloads/%(extractor)s-%(id)s-%(title)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': False,
     'nocheckcertificate': True,
     'ignoreerrors': False,
     'logtostderr': False,
-    'quiet': True,  ##
+    'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
     'source_address': '0.0.0.0'  # ipv6 addresses cause issues sometimes
 }
 
-ffmpegopts = {
-    'before_options': '-nostdin',  #
-    'options': '-vn'
-}
+
 
 ytdl = YoutubeDL(ytdlopts)
 
@@ -471,7 +475,7 @@ class MusicPlayer:
     When the bot disconnects from the Voice it's instance will be destroyed.
     """
 
-    __slots__ = ('bot', '_guild', '_channel', '_cog', 'queue', 'next', 'current', 'np', 'volume')
+    __slots__ = ('bot', '_guild', '_channel', '_cog', 'queue', 'dummy_queue', 'next', 'current', 'np', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
 
     def __init__(self, ctx):
         self.bot = ctx.bot
@@ -479,12 +483,18 @@ class MusicPlayer:
         self._channel = ctx.channel
         self._cog = ctx.cog
 
-        self.queue = asyncio.Queue()
+        self.dummy_queue = asyncio.Queue()
         self.next = asyncio.Event()
 
         self.np = None  # Now playing message
-        self.volume = .5
+        self.volume = .05
         self.current = None
+
+        self.queue = []  # type: Any
+        self.current_pointer = 0
+        self.next_pointer = 0
+        self.loop_queue = False
+        self.loop_track = False
 
         ctx.bot.loop.create_task(self.player_loop())
 
@@ -498,7 +508,14 @@ class MusicPlayer:
             try:
                 # Wait for the next song. If we timeout cancel the player and disconnect...
                 async with timeout(300):  # 5 minutes...
-                    source = await self.queue.get()
+                    # source = await self.dummy_queue.get()
+                    await self.dummy_queue.get()
+                    self.current_pointer = self.next_pointer
+                    source = self.queue[self.current_pointer]
+                    if not self.loop_track:
+                        self.next_pointer += 1
+                    if self.loop_queue and self.next_pointer >= len(self.queue):
+                        self.next_pointer = 0
             except asyncio.TimeoutError:
                 return self.destroy(self._guild)
 
@@ -582,20 +599,12 @@ class Music(commands.Cog):
     # TODO: add brief="Connects/moves the bot to voice channel."?
     @commands.command(name='join', aliases=['j'], description="connects to voice")
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
-        """Connect to voice.
-        Parameters
-        ------------
-        channel: discord.VoiceChannel [Optional]
-            The channel to connect to. If a channel is not specified, an attempt to join the voice channel you are in
-            will be made.
-        This command also handles moving the bot to different channels.
-        """
-
         """Connect to voice. This command also handles moving the bot to different channels.
 
         Args:
-            channel (discord.VoiceChannel, optional): The channel to connect to. 
-                If a channel is not specified, an attempt to join the voice channel you are in will be made.
+            channel: discord.VoiceChannel [Optional]
+                The channel to connect to. If a channel is not specified, an attempt to join the voice channel you are in
+                will be made.
         """
 
         # TODO: how does channel var is translated from str to discord.VoiceChannel in code.. what does that pretyping?
@@ -625,17 +634,17 @@ class Music(commands.Cog):
 
         await ctx.message.add_reaction('👍')
         await ctx.send(f'**Joined `{channel}`**')
-        # await ctx.send(f"Joined {channel}.")
+        # TODO: style # await ctx.send(f"Joined {channel}.")
 
     @commands.command(name='play', aliases=['sing','p'], description="streams music")
     async def play_(self, ctx, *, search: str):
         """Request a song and add it to the queue.
         This command attempts to join a valid voice channel if the bot is not already in one.
         Uses YTDL to automatically search and retrieve a song.
-        Parameters
-        ------------
-        search: str [Required]
-            The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
+        
+        Args:
+            search: str [Required]
+                The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
         await ctx.trigger_typing()
 
@@ -644,20 +653,17 @@ class Music(commands.Cog):
         if not vc:
             await ctx.invoke(self.connect_)
 
-        # elif ctx.author not in ctx.guild.voice_client.channel.members:
-        #     return await ctx.send(":notes: Please join my voice channel to execute this command.", delete_after=20)
-
         player = self.get_player(ctx)
 
-        # If download is False, source will be a dict which will be used later to regather the stream.
+        # If download is False, source will be a list of entries which will be used to regather the stream.
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
         data = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
 
         for entry in data:
             source = {'webpage_url': entry['webpage_url'], 'requester': ctx.author, 'title': entry['title']}
-            await player.queue.put(source)
-
-
+            player.queue.append(source)
+            await player.dummy_queue.put(True)
+            # player.current_t.set()
 
     # TODO: brief="Pauses currently playing track.
     @commands.command(name='pause', description="pauses music")
@@ -667,7 +673,7 @@ class Music(commands.Cog):
         vc = ctx.voice_client
 
         if not vc or not vc.is_playing():
-            embed = discord.Embed(title="", description="I am currently not playing anything", color=discord.Color.green()) # TODO: styl
+            embed = discord.Embed(title="", description="I am currently not playing anything", color=discord.Color.green()) # TODO: style
             return await ctx.send(embed=embed)
         elif vc.is_paused():
             await ctx.send("The track is already paused.")  # TODO: style
@@ -723,17 +729,17 @@ class Music(commands.Cog):
 
         player = self.get_player(ctx)
         if pos == None:
-            player.queue._queue.pop()
+            player.queue.pop()
         else:
             try:
-                s = player.queue._queue[pos-1]
-                del player.queue._queue[pos-1]
+                s = player.queue[pos-1]
+                del player.queue[pos-1]
                 embed = discord.Embed(title="", description=f"Removed [{s['title']}]({s['webpage_url']}) [{s['requester'].mention}]", color=discord.Color.green())
                 await ctx.send(embed=embed)
             except:
                 embed = discord.Embed(title="", description=f'Could not find a track for "{pos}"', color=discord.Color.green())
                 await ctx.send(embed=embed)
-    
+
     @commands.command(name='clear', aliases=['clr', 'cl', 'cr'], description="clears entire queue")
     async def clear_(self, ctx):
         """Deletes entire queue of upcoming songs."""
@@ -745,39 +751,10 @@ class Music(commands.Cog):
             return await ctx.send(embed=embed)
 
         player = self.get_player(ctx)
-        player.queue._queue.clear()
+        player.queue.clear()
         await ctx.send('**Cleared**')
 
-# @commands.command(aliases=["q"], brief="Displays queue list of tracks.")
-#     async def queue(self, ctx):
-#         track_list = []
-#         start = 1
-#         if self.pointer > 2 and len(self.queuer) > 10:
-#             start = len(self.queuer[self.pointer - 2 : self.pointer + 8])
-#             start += self.pointer - 11
-
-#         for index, track_path in enumerate(
-#             self.queuer[start - 1 : start + 9], start=start
-#         ):
-#             pointer = "---> " if self.pointer + 1 == index else "     "
-#             audio_name = os.path.basename(track_path)[:-4]
-#             audio_length = MP3(track_path).info.length
-#             minutes = f"{str(int(audio_length // 60))}m"
-#             seconds = f"{str(int(audio_length % 60))}s"
-#             audio_length = f"({minutes}m {seconds}s)"
-#             row = f"{str(pointer)}{str(index)}. {audio_length} {audio_name}"
-#             track_list.append(row)
-
-#         queue_view = "\n".join(track_list)
-#         remains = len(self.queuer[start + 9 :])
-#         remains = f"{remains} remaining track(s)    " if remains else ""
-#         vol = f"volume: {str(int(self.voluming * 100))}%"
-#         loop_q = f"loopqueue: {str(self.loop_queue)}"
-#         loop_t = f"looptrack: {str(self.loop_track)}"
-#         msg = f"ml\n{queue_view}\n\n{remains}{vol}    {loop_q}    {loop_t}\n"
-#         await ctx.send(f"```{msg}```")
-
-    @commands.command(name='queue', aliases=['q', 'playlist', 'que'], description="shows the queue")
+    @commands.command(name='queue', aliases=['q'], description="shows the queue")
     async def queue_info(self, ctx):
         """Retrieve a basic queue of upcoming songs."""
         vc = ctx.voice_client
@@ -787,7 +764,7 @@ class Music(commands.Cog):
             return await ctx.send(embed=embed)
 
         player = self.get_player(ctx)
-        if player.queue.empty():
+        if not player.queue:
             embed = discord.Embed(title="", description="queue is empty", color=discord.Color.green())
             return await ctx.send(embed=embed)
 
@@ -802,13 +779,40 @@ class Music(commands.Cog):
             duration = "%02dm %02ds" % (minutes, seconds)
 
         # Grabs the songs in the queue...
-        upcoming = list(itertools.islice(player.queue._queue, 0, int(len(player.queue._queue))))
+        upcoming = list(itertools.islice(player.queue, 0, int(len(player.queue))))
         fmt = '\n'.join(f"`{(upcoming.index(_)) + 1}.` [{_['title']}]({_['webpage_url']}) | ` {duration} Requested by: {_['requester']}`\n" for _ in upcoming)
         fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt + f"\n**{len(upcoming)} songs in queue**"
         embed = discord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=discord.Color.green())
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)
+
+        # track_list = []
+        # start = 1
+        # if self.current_pointer > 2 and len(self.queue) > 10:
+        #     start = len(self.queue[self.current_pointer - 2 : self.current_pointer + 8])
+        #     start += self.current_pointer - 11
+
+        # for index, track_path in enumerate(
+        #     self.queue[start - 1 : start + 9], start=start
+        # ):
+        #     current_pointer = "---> " if self.current_pointer + 1 == index else "     "
+        #     audio_name = "lorem"  # os.path.basename(track_path)[:-4]
+        #     audio_length = "95"  # MP3(track_path).info.length
+        #     minutes = f"{str(int(audio_length // 60))}m"
+        #     seconds = f"{str(int(audio_length % 60))}s"
+        #     audio_length = f"({minutes}m {seconds}s)"
+        #     row = f"{str(current_pointer)}{str(index)}. {audio_length} {audio_name}"
+        #     track_list.append(row)
+
+        # queue_view = "\n".join(track_list)
+        # remains = len(self.queue[start + 9 :])
+        # remains = f"{remains} remaining track(s)    " if remains else ""
+        # vol = f"volume: {str(int(self.voluming * 100))}%"
+        # loop_q = f"loopqueue: {str(self.loop_queue)}"
+        # loop_t = f"looptrack: {str(self.loop_track)}"
+        # msg = f"ml\n{queue_view}\n\n{remains}{vol}    {loop_q}    {loop_t}\n"
+        # await ctx.send(f"```{msg}```")
 
     @commands.command(name='np', description="shows the current playing song")
     async def now_playing_(self, ctx):
@@ -902,7 +906,7 @@ class Music(commands.Cog):
         #self.queuer.clear()
         #self.loop_queue = False
         player = self.get_player(ctx)
-        player.queue._queue.clear()
+        player.queue.clear()
         vc.stop()
 
 #     @commands.command(aliases=["next"], brief="Jump to next/specific track.")
@@ -1005,5 +1009,5 @@ class Music(commands.Cog):
 
 #     await ctx.send('Now playing: {}'.format(query))
 
-def setup(bot):
-    bot.add_cog(Music(bot))
+async def setup(bot):
+    await bot.add_cog(Music(bot))

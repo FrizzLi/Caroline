@@ -404,8 +404,8 @@ class Language(commands.Cog):
         await ctx.send(f"Exiting {lesson} exercise..")
 
 
-def setup(client):
-    client.add_cog(Language(client))
+async def setup(client):
+    await client.add_cog(Language(client))
 
 
 # TODO: competitive mode, stats summary after session, knowledge visualization
