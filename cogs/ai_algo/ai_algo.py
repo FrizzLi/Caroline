@@ -17,8 +17,8 @@ else:
 
 
 class AiAlgo(commands.Cog):
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, bot):
+        self.bot = bot
 
     # walls uses: query, fname, max_runs, points_amount
     # terrain uses: fname, max_runs, points_amount
@@ -205,8 +205,8 @@ class AiAlgo(commands.Cog):
             await ctx.message.channel.send(file=File(f))
 
 
-async def setup(client):
-    await client.add_cog(AiAlgo(client))
+async def setup(bot):
+    await bot.add_cog(AiAlgo(bot))
 
 
 if __name__ == "__main__":

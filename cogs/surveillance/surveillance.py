@@ -8,12 +8,12 @@ from discord.utils import get
 
 
 class Surveillance(commands.Cog):
-    def __init__(self, client):
+    def __init__(self, bot):
         surv_dir = os.path.dirname(os.path.abspath(__file__))
         with open(f"{surv_dir}\\surv_config.json", "r") as cf:
             config = json.load(cf)
 
-        self.client = client
+        self.bot = bot
         self.config = config
 
     # TODO: Maybe create properties like in korean.py? To preserve consistency
@@ -29,7 +29,7 @@ class Surveillance(commands.Cog):
         return time, top_role
 
     def get_logsChannel(self):
-        return self.client.get_channel(self.config["IDs"]["logs"])
+        return self.bot.get_channel(self.config["IDs"]["logs"])
 
     async def cond_write(self, msg, member_type):
         if self.config["logs"][member_type] != "0":
@@ -37,7 +37,7 @@ class Surveillance(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # await ctx.client.process_commands(message)
+        # await ctx.bot.process_commands(message)
 
         # Dont read bot's messages
         if "Skynet" in [y.name for y in message.author.roles]:
@@ -130,7 +130,7 @@ class Surveillance(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        role = get(self.client.guilds[0].roles, name="Member")
+        role = get(self.bot.guilds[0].roles, name="Member")
         await member.add_roles(role)
 
         time, top_role = self.get_timeRole(member)
@@ -391,8 +391,8 @@ class Surveillance(commands.Cog):
             await ctx.send(embed=embed)
 
 
-async def setup(client):
-    await client.add_cog(Surveillance(client))
+async def setup(bot):
+    await bot.add_cog(Surveillance(bot))
 
 
 # NotImplemented
@@ -400,9 +400,9 @@ async def setup(client):
 """
 messages = 0
 async def update_stats():
-    await client.wait_until_ready()
+    await bot.wait_until_ready()
 
-    while not client.is_closed():
+    while not bot.is_closed():
         try:
             with open("stats.txt", "a") as f:
                 time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -413,7 +413,7 @@ async def update_stats():
         await asyncio.sleep(60)
 
 IN MAIN FUNCTION:
-client.loop.create_task(update_stats())
+bot.loop.create_task(update_stats())
 """
 
 # add experience for each message user sent

@@ -10,8 +10,8 @@
 
 
 # class Voice(commands.Cog):
-#     def __init__(self, client):
-#         self.client = client
+#     def __init__(self, bot):
+#         self.bot = bot
 
 #     queuer = []  # type: Any
 #     pointer = -1
@@ -188,7 +188,7 @@
 #         await ctx.send(f"{title} has been added to the queue.")
 
 #         # go to playing loop if there isnt song being played/paused
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
+#         voice = get(self.bot.voice_clients, guild=ctx.guild)
 
 #         # need the streaming tho!
 #         if not voice.is_playing() and not voice.is_paused():
@@ -276,7 +276,7 @@
 #     @loopqueue.before_invoke
 #     @looptrack.before_invoke
 #     async def ensure_voice(self, ctx):
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
+#         voice = get(self.bot.voice_clients, guild=ctx.guild)
 #         if not voice:
 #             raise commands.CommandError("Not connected to voice channel.")
 #         elif not self.queuer:
@@ -284,7 +284,7 @@
 
 #     @play.before_invoke
 #     async def ensure_voice_play(self, ctx):
-#         voice = get(self.client.voice_clients, guild=ctx.guild)
+#         voice = get(self.bot.voice_clients, guild=ctx.guild)
 #         user_voice = ctx.message.author.voice
 #         if not voice and not user_voice:
 #             raise commands.CommandError("No bot nor you is connected.")
@@ -319,11 +319,11 @@
 #         )
 
 
-# def setup(client):
-#     client.add_cog(Voice(client))
+# def setup(bot):
+#     bot.add_cog(Voice(bot))
 
 
-# # ctx.voice_client vs get(self.client.voice_clients, guild=ctx.guild)
+# # ctx.voice_client vs get(self.bot.voice_clients, guild=ctx.guild)
 
 
 
@@ -896,7 +896,7 @@ class Music(commands.Cog):
 
     @commands.command(brief="Stops current playing track and clears queue.")  # descr?
     async def stopp(self, ctx):
-        #voice = get(self.client.voice_clients, guild=ctx.guild)
+        #voice = get(self.bot.voice_clients, guild=ctx.guild)
         vc = ctx.voice_client
 
         if not vc or not vc.is_connected():
@@ -918,7 +918,7 @@ class Music(commands.Cog):
 #         else:
 #             msg = "Skipping current track."
 #         await ctx.send(msg)
-#         get(self.client.voice_clients, guild=ctx.guild).stop()
+#         get(self.bot.voice_clients, guild=ctx.guild).stop()
 
 #     @commands.command(brief="Randomizes the position of tracks in queue.")
 #     async def shuffle(self, ctx):

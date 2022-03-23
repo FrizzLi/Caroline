@@ -12,7 +12,7 @@ from cogs.korean.edu.create_vocab import createVocab as crVocab
 
 
 class Language(commands.Cog):
-    def __init__(self, client):
+    def __init__(self, bot):
         # TODO: maybe add other cogs' configs into gitignore too?
         kor_dir = os.path.dirname(os.path.abspath(__file__))
         path = f"{kor_dir}\\kor_config.json"
@@ -24,7 +24,7 @@ class Language(commands.Cog):
             with open(path, "w") as cf:
                 json.dump(config, cf)
 
-        self.client = client
+        self.bot = bot
         self.config = config
 
     # These parameters doesn't need to be in config, they're not so usable
@@ -128,15 +128,15 @@ class Language(commands.Cog):
         level that is set in the settings."""
 
         # TODO: this could be placed in a wrapper (voice.py) (?)
-        voice = get(self.client.voice_clients, guild=ctx.guild)
+        voice = get(self.bot.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
         if not voice and not user_voice:
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
-        voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
+        voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
 
-        await self.client.change_presence(activity=discord.Game(name="Korean"))
+        await self.bot.change_presence(activity=discord.Game(name="Korean"))
 
         # get vocab
         dir_path = os.path.dirname(os.path.abspath(__file__)) + "\\edu"
@@ -222,7 +222,7 @@ class Language(commands.Cog):
                 msg_display = f"{kor} = ||{eng}||"
 
             await msg.edit(content=msg_display)
-            reaction, user = await self.client.wait_for(
+            reaction, user = await self.bot.wait_for(
                 "reaction_add", check=check
             )
 
@@ -294,10 +294,10 @@ class Language(commands.Cog):
                 f'Vocabulary practice mode activated! Start by writing lesson \
                 name: {", ".join(all_vocab.keys())}, Exit by "{ctx.prefix}"'
             )
-            await self.client.change_presence(
+            await self.bot.change_presence(
                 activity=discord.Game(name="Korean vocabulary")
             )
-            response = await self.client.wait_for(
+            response = await self.bot.wait_for(
                 "message",
                 check=lambda message: message.author == ctx.author
                 and message.channel == ctx.channel,
@@ -320,13 +320,13 @@ class Language(commands.Cog):
         incorrect_words = set()
 
         # get audio
-        voice = get(self.client.voice_clients, guild=ctx.guild)
+        voice = get(self.bot.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
         if not voice and not user_voice:
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
-        voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
+        voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
         audio_paths = glob.glob(f"cogs/edu/{self.level}/{lesson}/*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
@@ -339,7 +339,7 @@ class Language(commands.Cog):
             await ctx.send(
                 f"{guessing}"
             )  # response = input(guessing + '   ')  # DISCORD INPUT
-            response = await self.client.wait_for(
+            response = await self.bot.wait_for(
                 "message",
                 check=lambda message: message.author == ctx.author
                 and message.channel == ctx.channel,
@@ -404,8 +404,8 @@ class Language(commands.Cog):
         await ctx.send(f"Exiting {lesson} exercise..")
 
 
-async def setup(client):
-    await client.add_cog(Language(client))
+async def setup(bot):
+    await bot.add_cog(Language(bot))
 
 
 # TODO: competitive mode, stats summary after session, knowledge visualization

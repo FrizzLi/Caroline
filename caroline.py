@@ -9,12 +9,12 @@ from discord.ext import commands
 with open("config.json", "r") as f:
     gconfig = json.load(f)
 
-#intents = discord.Intents().all()
+intents = discord.Intents().all()
 prefix = "?"
-client = commands.Bot(command_prefix=prefix)
+bot = commands.Bot(command_prefix=prefix, intents=intents)
 
 
-@client.event
+@bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.BadArgument):
         await ctx.send("BadArgument! [{}]".format(error))
@@ -24,34 +24,34 @@ async def on_command_error(ctx, error):
         await ctx.send(error)
 
 
-@client.event
+@bot.event
 async def on_ready():
-    await client.change_presence(
+    await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.listening,
             name=f"{prefix}help",
         ),
-        # status=discord.Status.invisible
+        status=discord.Status.invisible
     )
     print(
-        f"Logged in as {client.user.name} with {discord.__version__} version."
+        f"Logged in as {bot.user.name} with {discord.__version__} version."
     )
 
 
 
-@client.command(brief=[f for f in os.listdir("cogs")])
+@bot.command(brief=[f for f in os.listdir("cogs")])
 async def load(ctx, cog: str):
     try:
-        client.load_extension(f"cogs.{cog}.{cog}")
+        bot.load_extension(f"cogs.{cog}.{cog}")
         await ctx.send(f"Loaded cog: {cog}")
     except Exception as error:
         await ctx.send(f"{cog} cannot be loaded. [{error}]")
 
 
-@client.command()
+@bot.command()
 async def unload(ctx, cog: str):
     try:
-        client.unload_extension(f"cogs.{cog}.{cog}")
+        bot.unload_extension(f"cogs.{cog}.{cog}")
         await ctx.send(f"Unloaded cog: {cog}")
     except Exception as error:
         await ctx.send(f"{cog} cannot be unloaded. [{error}]")
@@ -65,15 +65,15 @@ async def load_extensions():
         if dir_name in py_files:
             try:
                 path = py_files[dir_name].replace("\\", ".").replace(".py", "")
-                await client.load_extension(path)
+                await bot.load_extension(path)
                 print(f"{dir_name} module has been loaded.")
             except Exception as e:
                 print(f"{dir_name} module cannot be loaded. [{e}]")
 
 async def main():
-    async with client:
+    async with bot:
         await load_extensions()
-        await client.start(gconfig["token"])
+        await bot.start(gconfig["token"])
 
 if __name__ == "__main__":
     asyncio.run(main())
