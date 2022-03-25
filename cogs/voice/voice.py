@@ -70,7 +70,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data['title'] = entries[0]['title']
             data['webpage_url'] = entries[0]['webpage_url']
 
-        embed = discord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=discord.Color.green())
+        description = f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]"
+        embed = discord.Embed(title="", description=description, color=discord.Color.green())
         await ctx.send(embed=embed)
 
         if download:
@@ -147,6 +148,8 @@ class MusicPlayer:
             except (asyncio.TimeoutError, IndexError):  # fix indexError...
                 return self.destroy(self._guild)
 
+            source_duration = source['duration']
+            # lets try without this?
             if not isinstance(source, YTDLSource):
                 # Source was probably a stream (not downloaded)
                 # So we should regather to prevent stream expiration
@@ -161,7 +164,8 @@ class MusicPlayer:
             self.current = source
 
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-            embed = discord.Embed(title="Now playing", description=f"[{source.title}]({source.web_url}) [{source.requester.mention}]", color=discord.Color.green())
+            description = f"[{source.title}]({source.web_url})\n[{source.requester}] | `{source_duration}`"
+            embed = discord.Embed(title="Now Playing 🎶", description=description, color=discord.Color.green())
             if self.np:
                 await self.np.delete()
             self.np = await self._channel.send(embed=embed)
@@ -230,6 +234,21 @@ class Music(commands.Cog):
 
         return player
 
+    def get_readable_duration(self, duration):
+        """Get duration in hours, minutes and seconds."""
+
+        seconds = duration % (24 * 3600)
+        hour = seconds // 3600
+        seconds %= 3600
+        minutes = seconds // 60
+        seconds %= 60
+        if hour > 0:
+            duration = "%dh %02dm %02ds" % (hour, minutes, seconds)
+        else:
+            duration = "%02dm %02ds" % (minutes, seconds)
+
+        return duration
+
     @commands.command(name='join')
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
@@ -285,7 +304,12 @@ class Music(commands.Cog):
             # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
             entries = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
             for entry in entries:
-                source = {'webpage_url': entry['webpage_url'], 'requester': ctx.author, 'title': entry['title']}
+                source = {
+                    'webpage_url': entry['webpage_url'],
+                    'requester': ctx.author.mention,
+                    'title': entry['title'],
+                    'duration': self.get_readable_duration(entry['duration'])
+                }
                 player.queue.append(source)
                 await player.dummy_queue.put(True)
 
@@ -384,13 +408,6 @@ class Music(commands.Cog):
         vc = ctx.voice_client
         player = self.get_player(ctx)
 
-        # # Grabs the songs in the queue...
-        # upcoming = list(itertools.islice(player.queue, 0, int(len(player.queue))))
-        # fmt = '\n'.join(f"`{(upcoming.index(_)) + 1}.` [{_['title']}]({_['webpage_url']}) | ` {duration} Requested by: {_['requester']}`\n" for _ in upcoming)
-        # fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt + f"\n**{len(upcoming)} songs in queue**"
-        # embed = discord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=discord.Color.green())
-        # embed.set_footer(text=f"{ctx.author.display_name}")  # icon_url=ctx.author.avatar_url
-        # await ctx.send(embed=embed)
 
         track_list = []
         start = 1
@@ -402,31 +419,21 @@ class Music(commands.Cog):
             player.queue[start - 1 : start + 9], start=start
         ):
             current_pointer = "---> " if player.current_pointer + 1 == index else "     "
-            audio_name = source['title']  # TODO: DL (os.path.basename(track_path)[:-4])
-
-            seconds = vc.source.duration % (24 * 3600)  # change
-            hour = seconds // 3600
-            seconds %= 3600
-            minutes = seconds // 60
-            seconds %= 60
-            if hour > 0:
-                duration = "%dh %02dm %02ds" % (hour, minutes, seconds)
-            else:
-                duration = "%02dm %02ds" % (minutes, seconds)
-
+            audio_name = source['title']  
+            # TODO: DL (os.path.basename(track_path)[:-4])
             # audio_length = "95"  # MP3(track_path).info.length
 
-            row = f"{str(current_pointer)}{str(index)}.\t{duration} {audio_name}"
+            row = f"{current_pointer}{index}.\t{source['duration']} {audio_name}"
             track_list.append(row)
 
         queue_view = "\n".join(track_list)
         remains = len(player.queue[start + 9 :])
         remains = f"{remains} remaining track(s)    " if remains else ""
-        vol = f"volume: {str(int(player.volume * 100))}%"
-        loop_q = f"loopqueue: {str(player.loop_queue)}"
-        loop_t = f"looptrack: {str(player.loop_track)}"
-        msg = f"ml\n{queue_view}\n\n{remains}{vol}    {loop_q}    {loop_t}\n"
-        await ctx.send(f"```{msg}```")
+        vol = f"volume: {int(player.volume * 100)}%"
+        loop_q = f"loopqueue: {player.loop_queue}"
+        loop_t = f"looptrack: {player.loop_track}"
+        msg = f"```ml\n{queue_view}\n\n{remains}{vol}    {loop_q}    {loop_t}\n```"
+        await ctx.send(msg)
 
     @commands.command(name='np')
     async def now_playing_(self, ctx):
@@ -450,8 +457,9 @@ class Music(commands.Cog):
         else:
             duration = "%02dm %02ds" % (minutes, seconds)
 
-        embed = discord.Embed(title="", description=f"[{vc.source.title}]({vc.source.web_url}) [{vc.source.requester.mention}] | `{duration}`", color=discord.Color.green())
-        embed.set_author(name=f"Now Playing 🎶")  # (icon_url=self.bot.user.avatar_url)
+        description = f"[{vc.source.title}]({vc.source.web_url})\nRequested by: {vc.source.requester}] | `{source['duration']}`"
+        embed = discord.Embed(title="Now Playing 🎶", description=description, color=discord.Color.green())
+        # embed.set_author(name=f"Now Playing 🎶")  # (icon_url=self.bot.user.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command(name='volume', aliases=['vol'])
