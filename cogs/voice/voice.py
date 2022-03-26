@@ -175,6 +175,10 @@ class MusicPlayer:
             self.queue_view = await self._channel.send(msg)
             self.np = await self._channel.send(embed=embed)
 
+            # TODO: edit when no msg, if somebody add or do sth, delete and send anew;; add thumbnail
+            # TODO: stop, fix loop pointer after stop, clean classes
+            # TODO: leave after everyone leaves, no timeout, no leave
+
             await self.next.wait()
 
             # Make sure the FFmpeg process is cleaned up.
