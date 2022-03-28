@@ -150,6 +150,9 @@ class MusicPlayer:
                 return self.destroy(self._guild)
 
             source_duration = source['duration']
+            thumbnail = source['thumbnail']
+            view_count = source['view_count']
+
             # lets try without this?
             if not isinstance(source, YTDLSource):
                 # Source was probably a stream (not downloaded)
@@ -166,19 +169,32 @@ class MusicPlayer:
 
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-            if self.np:
+            description = f"[{source.title}]({source.web_url})\n{self.get_queue_info()}"
+            embed = discord.Embed(
+                title="Now Playing 🎶",
+                description=description,
+                color=discord.Color.green()
+            )
+            # embed.set_thumbnail(url=thumbnail)
+            embed.add_field(name='Requested by:', value=source.requester)
+            embed.add_field(name='Duration: ', value=source_duration)
+            embed.add_field(name='Views: ', value=f'{view_count:,}')
+
+            if not self.np:
+                # self.queue_view = await self._channel.send(msg)
+                self.np = await self._channel.send(embed=embed)
+            elif self.np.channel.last_message_id == self.np.id:
+                # self.queue_view = await self.queue_view.edit(msg)
+                self.np = await self.np.edit(embed=embed)
+            else:
+                # await self.queue_view.delete()
                 await self.np.delete()
-                await self.queue_view.delete()
-            msg = self.get_queue_info()
-            description = f"[{source.title}]({source.web_url})\nRequested by: [{source.requester}] | `{source_duration}`"
-            embed = discord.Embed(title="Now Playing 🎶", description=description, color=discord.Color.green())
-            self.queue_view = await self._channel.send(msg)
-            self.np = await self._channel.send(embed=embed)
+                # self.queue_view = await self._channel.send(msg)
+                self.np = await self._channel.send(embed=embed)
 
-            # TODO: edit when no msg, if somebody add or do sth, delete and send anew;; add thumbnail
-            # TODO: stop, fix loop pointer after stop, clean classes
+            # TODO: edit when no msg, if somebody add or do sth, delete and send anew;; add thumbnail DONE!!!
             # TODO: leave after everyone leaves, no timeout, no leave
-
+            # TODO: stop, fix loop pointer after stop, clean classes
             await self.next.wait()
 
             # Make sure the FFmpeg process is cleaned up.
@@ -278,15 +294,18 @@ class Music(commands.Cog):
     def get_readable_duration(self, duration):
         """Get duration in hours, minutes and seconds."""
 
-        seconds = duration % (24 * 3600)
-        hour = seconds // 3600
+        seconds = int(duration % (24 * 3600))
+        hour = int(seconds // 3600)
         seconds %= 3600
-        minutes = seconds // 60
+        minutes = int(seconds // 60)
         seconds %= 60
-        if hour > 0:
-            duration = "%dh %02dm %02ds" % (hour, minutes, seconds)
-        else:
-            duration = "%02dm %02ds" % (minutes, seconds)
+
+        duration = ""
+        if hour:
+            duration = f"{hour}h "
+        if minutes:
+            duration += f"{minutes}m "
+        duration += f"{seconds}s"
 
         return duration
 
@@ -349,7 +368,9 @@ class Music(commands.Cog):
                     'webpage_url': entry['webpage_url'],
                     'requester': ctx.author.mention,
                     'title': entry['title'],
-                    'duration': self.get_readable_duration(entry['duration'])
+                    'duration': self.get_readable_duration(entry['duration']),
+                    'thumbnail': entry['thumbnail'],
+                    'view_count': entry['view_count']
                 }
                 player.queue.append(source)
                 await player.dummy_queue.put(True)
