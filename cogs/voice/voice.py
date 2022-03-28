@@ -189,7 +189,6 @@ class MusicPlayer:
                 await self.np.delete()
                 self.np = await self._channel.send(embed=embed)
 
-            # TODO: leave after everyone leaves, no timeout, no leave
             # TODO: stop, fix loop pointer after stop, clean classes
             await self.next.wait()
 
@@ -319,6 +318,16 @@ class Music(commands.Cog):
 
         return duration
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        """Leave the channel when all other members leave."""
+
+        voice_state = member.guild.voice_client
+
+        # Checking if the bot is connected to a channel and if there is only 1 member connected to it (the bot itself)
+        if voice_state is not None and len(voice_state.channel.members) == 1:
+            await self.cleanup(member.guild)
+
     @commands.command(name='join')
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
@@ -334,7 +343,8 @@ class Music(commands.Cog):
             try:
                 channel = ctx.author.voice.channel
             except AttributeError:
-                return await ctx.send("```No channel to join. Specify a valid channel or join one.```")
+                await ctx.send("```No channel to join. Specify a valid channel or join one.```")
+                return 1
 
         vc = ctx.voice_client
         if vc:
@@ -367,7 +377,9 @@ class Music(commands.Cog):
 
             vc = ctx.voice_client
             if not vc:
-                await ctx.invoke(self.connect_)
+                error = await ctx.invoke(self.connect_)
+                if error:
+                    return
             player = self.get_player(ctx)
 
             # If download is False, source will be a list of entries which will be used to regather the stream.
