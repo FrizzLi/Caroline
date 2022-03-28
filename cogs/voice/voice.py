@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 import random
 import asyncio
@@ -189,7 +190,6 @@ class MusicPlayer:
                 await self.np.delete()
                 self.np = await self._channel.send(embed=embed)
 
-            # TODO: stop, fix loop pointer after stop, clean classes
             await self.next.wait()
 
             # Make sure the FFmpeg process is cleaned up.
@@ -233,8 +233,8 @@ class MusicPlayer:
         remains = len(player.queue[start + 9 :])
         # remains = f"{remains} remaining track(s)    " if remains else ""
         vol = f"{int(player.volume * 100)}%"
-        loop_q = "⭕" if player.loop_queue else "❌"
-        loop_t = "⭕" if player.loop_track else "❌"
+        loop_q = "✅" if player.loop_queue else "❌"
+        loop_t = "✅" if player.loop_track else "❌"
         msg = f"{queue_view}\n\n{remains}\n{vol}\n{loop_q}\n{loop_t}\n"
 
         return queue_view, remains, vol, loop_q, loop_t
@@ -328,7 +328,7 @@ class Music(commands.Cog):
         if voice_state is not None and len(voice_state.channel.members) == 1:
             await self.cleanup(member.guild)
 
-    @commands.command(name='join')
+    @app_commands.command(name='join')
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
         This command also handles moving the bot to different channels.
@@ -362,7 +362,7 @@ class Music(commands.Cog):
 
         await ctx.message.add_reaction('👌')
 
-    @commands.command(name='play', aliases=['p'])
+    @app_commands.command(name='play')
     async def play_(self, ctx, *, search: str):
         """Request a song and add it to the queue.
         This command attempts to join a valid voice channel if the bot is not already in one.
@@ -397,7 +397,7 @@ class Music(commands.Cog):
                 player.queue.append(source)
                 await player.dummy_queue.put(True)
 
-    @commands.command(name='pause')
+    @app_commands.command(name='pause')
     async def pause_(self, ctx):
         """Pause the currently playing song."""
 
@@ -410,7 +410,7 @@ class Music(commands.Cog):
         vc.pause()
         await ctx.message.add_reaction('👌')
 
-    @commands.command(name='resume')
+    @app_commands.command(name='resume')
     async def resume_(self, ctx):
         """Resume the currently paused song."""
 
@@ -423,7 +423,7 @@ class Music(commands.Cog):
         vc.resume()
         await ctx.message.add_reaction('👌')
 
-    @commands.command(name='skip')
+    @app_commands.command(name='skip')
     async def skip_(self, ctx):
         """Skips the song."""
 
@@ -439,7 +439,7 @@ class Music(commands.Cog):
         vc.stop()
         await ctx.message.add_reaction('👌')
 
-    @commands.command(name="jump")
+    @app_commands.command(name="jump")
     async def jump_(self, ctx, pos: int):
         """Jumps to specific track after currently played song finishes."""
 
@@ -450,7 +450,7 @@ class Music(commands.Cog):
         player.next_pointer = pos-2
         await ctx.message.add_reaction('👌')
 
-    @commands.command(name='remove', aliases=['rm'])
+    @app_commands.command(name='remove')
     async def remove_(self, ctx, pos: int=None):
         """Removes specified song from queue."""
 
@@ -473,7 +473,7 @@ class Music(commands.Cog):
         await ctx.message.add_reaction('👌')
         await ctx.send(embed=embed)
 
-    @commands.command(name='clear')
+    @app_commands.command(name='clear')
     async def clear_(self, ctx):
         """Deletes entire queue of upcoming songs."""
 
@@ -543,7 +543,7 @@ class Music(commands.Cog):
     #     # embed.set_author(name=f"Now Playing 🎶")  # (icon_url=self.bot.user.avatar_url)
     #     await ctx.send(embed=embed)
 
-    @commands.command(name='volume', aliases=['vol'])
+    @app_commands.command(name='volume')
     async def change_volume(self, ctx, *, vol: int=None):
         """Change the player volume.
 
@@ -566,7 +566,7 @@ class Music(commands.Cog):
         player.volume = vol / 100
         await ctx.send(f'**`{ctx.author}`** set the volume from **{int(old_vol)}%** to **{vol}%**')
 
-    @commands.command(name='leave')
+    @app_commands.command(name='leave')
     async def leave_(self, ctx):
         """Stop the currently playing song and disconnects from voice.
         !Warning!
@@ -595,7 +595,7 @@ class Music(commands.Cog):
     #     # await player.dummy_queue.task_done()
     #     vc.stop()
 
-    @commands.command()
+    @app_commands.command()
     async def shuffle(self, ctx):
         """Randomizes the position of tracks in queue."""
 
@@ -607,7 +607,7 @@ class Music(commands.Cog):
 
         await ctx.message.add_reaction('👋')
 
-    @commands.command()
+    @app_commands.command()
     async def loopqueue(self, ctx):
         """Loops the whole queue of tracks."""
 
@@ -616,7 +616,7 @@ class Music(commands.Cog):
 
         await ctx.message.add_reaction('👋')
 
-    @commands.command()
+    @app_commands.command()
     async def looptrack(self, ctx):
         """Loops the currently playing track."""
 
@@ -684,4 +684,4 @@ class Music(commands.Cog):
 #         # ###await commands.wait_for("button_click")
         
 async def setup(bot):
-    await bot.add_cog(Music(bot))
+    await bot.add_cog(Music(bot), guilds=[discord.Object(id=553636358137053199)])
