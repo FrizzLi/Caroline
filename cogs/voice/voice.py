@@ -102,7 +102,7 @@ class MusicPlayer:
     When the bot disconnects from the Voice it's instance will be destroyed.
     """
 
-    __slots__ = ('bot', '_guild', '_channel', '_cog', 'queue', 'queue_view', 'dummy_queue', 'next', 'current', 'np', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
+    __slots__ = ('bot', '_guild', '_channel', '_cog', 'queue', 'dummy_queue', 'next', 'current', 'np', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
 
     def __init__(self, ctx):
         self.bot = ctx.bot
@@ -114,7 +114,6 @@ class MusicPlayer:
         self.next = asyncio.Event()
 
         self.np = None  # Now playing message
-        self.queue_view = None
         self.volume = .02
         self.current = None
 
@@ -150,7 +149,7 @@ class MusicPlayer:
                 return self.destroy(self._guild)
 
             source_duration = source['duration']
-            thumbnail = source['thumbnail']
+            # thumbnail = source['thumbnail']
             view_count = source['view_count']
 
             # lets try without this?
@@ -168,31 +167,28 @@ class MusicPlayer:
             self.current = source
 
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-
-            description = f"[{source.title}]({source.web_url})\n{self.get_queue_info()}"
+            # description = self.get_queue_info(source),   🔂🔁🔉
+            queue_view, remains, vol, loop_q, loop_t = self.get_queue_info(source)
+            # embed.set_thumbnail(url=thumbnail)
             embed = discord.Embed(
-                title="Now Playing 🎶",
-                description=description,
+                description=queue_view,
                 color=discord.Color.green()
             )
-            # embed.set_thumbnail(url=thumbnail)
-            embed.add_field(name='Requested by:', value=source.requester)
-            embed.add_field(name='Duration: ', value=source_duration)
-            embed.add_field(name='Views: ', value=f'{view_count:,}')
+            embed.add_field(name='Remaining track(s)', value=remains)
+            embed.add_field(name="Volume", value=vol)
+            embed.add_field(name="Queue/Track Loop", value=f"{loop_q}/{loop_t}")
+            embed.add_field(name='Requested by', value=source.requester)
+            embed.add_field(name='Duration', value=source_duration, inline=True)
+            embed.add_field(name='Views', value=f'{view_count:,}', inline=True)
 
             if not self.np:
-                # self.queue_view = await self._channel.send(msg)
                 self.np = await self._channel.send(embed=embed)
             elif self.np.channel.last_message_id == self.np.id:
-                # self.queue_view = await self.queue_view.edit(msg)
                 self.np = await self.np.edit(embed=embed)
             else:
-                # await self.queue_view.delete()
                 await self.np.delete()
-                # self.queue_view = await self._channel.send(msg)
                 self.np = await self._channel.send(embed=embed)
 
-            # TODO: edit when no msg, if somebody add or do sth, delete and send anew;; add thumbnail DONE!!!
             # TODO: leave after everyone leaves, no timeout, no leave
             # TODO: stop, fix loop pointer after stop, clean classes
             await self.next.wait()
@@ -206,9 +202,10 @@ class MusicPlayer:
 
         return self.bot.loop.create_task(self._cog.cleanup(guild))
 
-    def get_queue_info(self):
+    def get_queue_info(self, source):
         """Display information about player and queue of songs."""
 
+        # f"[{source.title}]({source.web_url})\n{self.get_queue_info(source)}"
         player = self
         track_list = []
         start = 1
@@ -216,26 +213,34 @@ class MusicPlayer:
             start = len(player.queue[player.current_pointer - 2 : player.current_pointer + 8])
             start += player.current_pointer - 11
 
-        for index, source in enumerate(
+        for index, queue_source in enumerate(
             player.queue[start - 1 : start + 9], start=start
         ):
-            current_pointer = "---> " if player.current_pointer + 1 == index else "     "
-            audio_name = source['title']  
+            # current_pointer = "---> " if player.current_pointer + 1 == index else "     "
+            audio_name = queue_source['title']  
             # TODO: DL (os.path.basename(track_path)[:-4])
             # audio_length = "95"  # MP3(track_path).info.length
 
-            row = f"{current_pointer}{index}.\t{source['duration']} {audio_name}"
+            row = f"`{index}. `"
+            if player.current_pointer + 1 > index:
+                row += f"**{audio_name}**"
+            elif player.current_pointer + 1 == index:
+                row += f"**[{source.title}]({source.web_url})**"
+            else:
+                row += audio_name
             track_list.append(row)
 
-        queue_view = "\n".join(track_list)
+        queue_view = "\n".join(track_list) + "\n"
         remains = len(player.queue[start + 9 :])
-        remains = f"{remains} remaining track(s)    " if remains else ""
-        vol = f"volume: {int(player.volume * 100)}%"
-        loop_q = f"loopqueue: {player.loop_queue}"
-        loop_t = f"looptrack: {player.loop_track}"
-        msg = f"```ml\n{queue_view}\n\n{remains}{vol}    {loop_q}    {loop_t}\n```"
+        # remains = f"{remains} remaining track(s)    " if remains else ""
+        vol = f"{int(player.volume * 100)}%"
+        loop_q = "⭕" if player.loop_queue else "❌"
+        loop_t = "⭕" if player.loop_track else "❌"
+        msg = f"{queue_view}\n\n{remains}\n{vol}\n{loop_q}\n{loop_t}\n"
 
-        return msg
+        return queue_view, remains, vol, loop_q, loop_t
+
+        # return msg
 
 
 class Music(commands.Cog):
@@ -302,10 +307,15 @@ class Music(commands.Cog):
 
         duration = ""
         if hour:
-            duration = f"{hour}h "
+            duration = f"{hour}h"
         if minutes:
-            duration += f"{minutes}m "
-        duration += f"{seconds}s"
+            if hour:
+                duration += " "
+            duration += f"{minutes}m"
+        if seconds:
+            if hour or minutes:
+                duration += " "
+            duration += f"{seconds}s"
 
         return duration
 
@@ -425,7 +435,7 @@ class Music(commands.Cog):
         if 0 < pos > len(player.queue):
             return await ctx.send(f"```Could not find a track at '{pos}' index.```")
 
-        player.next_pointer = pos-1
+        player.next_pointer = pos-2
         await ctx.message.add_reaction('👌')
 
     @commands.command(name='remove', aliases=['rm'])
