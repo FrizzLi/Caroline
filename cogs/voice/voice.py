@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from discord.ui import Button, View
 import random
 import asyncio
 import itertools
@@ -103,13 +104,15 @@ class MusicPlayer:
     When the bot disconnects from the Voice it's instance will be destroyed.
     """
 
-    __slots__ = ('bot', '_guild', '_channel', '_cog', 'queue', 'dummy_queue', 'next', 'current', 'np', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
+    __slots__ = ('bot', '_guild', '_channel', '_cog', 'ctx', 'music', 'queue', 'dummy_queue', 'next', 'current', 'np', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
 
-    def __init__(self, ctx):
+    def __init__(self, ctx, music):
         self.bot = ctx.bot
         self._guild = ctx.guild
         self._channel = ctx.channel
         self._cog = ctx.cog
+        self.ctx = ctx
+        self.music = music
 
         self.dummy_queue = asyncio.Queue()
         self.next = asyncio.Event()
@@ -150,8 +153,8 @@ class MusicPlayer:
                 return self.destroy(self._guild)
 
             source_duration = source['duration']
-            # thumbnail = source['thumbnail']
             view_count = source['view_count']
+            # thumbnail = source['thumbnail']
 
             # lets try without this?
             if not isinstance(source, YTDLSource):
@@ -159,6 +162,8 @@ class MusicPlayer:
                 # So we should regather to prevent stream expiration
                 try:
                     source = await YTDLSource.regather_stream(source, loop=self.bot.loop)
+                    source.duration = source_duration
+                    source.view_count = view_count
                 except Exception as e:
                     await self._channel.send(f'There was an error processing your song.\n'
                                              f'```css\n[{e}]\n```')
@@ -166,29 +171,17 @@ class MusicPlayer:
 
             source.volume = self.volume
             self.current = source
-
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-            # description = self.get_queue_info(source),   🔂🔁🔉
-            queue_view, remains, vol, loop_q, loop_t = self.get_queue_info(source)
-            # embed.set_thumbnail(url=thumbnail)
-            embed = discord.Embed(
-                description=queue_view,
-                color=discord.Color.green()
-            )
-            embed.add_field(name='Remaining track(s)', value=remains)
-            embed.add_field(name="Volume", value=vol)
-            embed.add_field(name="Queue/Track Loop", value=f"{loop_q}/{loop_t}")
-            embed.add_field(name='Requested by', value=source.requester)
-            embed.add_field(name='Duration', value=source_duration, inline=True)
-            embed.add_field(name='Views', value=f'{view_count:,}', inline=True)
+
+            view = MyView(self, source)
 
             if not self.np:
-                self.np = await self._channel.send(embed=embed)
+                self.np = await self._channel.send(embed=view.embed, view=view)  # maybe just view
             elif self.np.channel.last_message_id == self.np.id:
-                self.np = await self.np.edit(embed=embed)
+                self.np = await self.np.edit(embed=view.embed, view=view)
             else:
                 await self.np.delete()
-                self.np = await self._channel.send(embed=embed)
+                self.np = await self._channel.send(embed=view.embed, view=view)
 
             await self.next.wait()
 
@@ -196,11 +189,13 @@ class MusicPlayer:
             source.cleanup()
             self.current = None
 
+    # def set_queue_view(self):
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
 
         return self.bot.loop.create_task(self._cog.cleanup(guild))
 
+    # TODO: think.. can be as a command too!
     def get_queue_info(self, source):
         """Display information about player and queue of songs."""
 
@@ -290,7 +285,7 @@ class Music(commands.Cog):
         try:
             player = self.players[ctx.guild.id]
         except KeyError:
-            player = MusicPlayer(ctx)
+            player = MusicPlayer(ctx, self)
             self.players[ctx.guild.id] = player
 
         return player
@@ -328,7 +323,7 @@ class Music(commands.Cog):
         if voice_state is not None and len(voice_state.channel.members) == 1:
             await self.cleanup(member.guild)
 
-    @app_commands.command(name='join')
+    @commands.command(name='join')
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
         This command also handles moving the bot to different channels.
@@ -362,7 +357,7 @@ class Music(commands.Cog):
 
         await ctx.message.add_reaction('👌')
 
-    @app_commands.command(name='play')
+    @commands.command(name='play')
     async def play_(self, ctx, *, search: str):
         """Request a song and add it to the queue.
         This command attempts to join a valid voice channel if the bot is not already in one.
@@ -397,7 +392,7 @@ class Music(commands.Cog):
                 player.queue.append(source)
                 await player.dummy_queue.put(True)
 
-    @app_commands.command(name='pause')
+    @commands.command(name='pause')
     async def pause_(self, ctx):
         """Pause the currently playing song."""
 
@@ -410,7 +405,7 @@ class Music(commands.Cog):
         vc.pause()
         await ctx.message.add_reaction('👌')
 
-    @app_commands.command(name='resume')
+    @commands.command(name='resume')
     async def resume_(self, ctx):
         """Resume the currently paused song."""
 
@@ -423,7 +418,7 @@ class Music(commands.Cog):
         vc.resume()
         await ctx.message.add_reaction('👌')
 
-    @app_commands.command(name='skip')
+    @commands.command(name='skip')
     async def skip_(self, ctx):
         """Skips the song."""
 
@@ -439,7 +434,7 @@ class Music(commands.Cog):
         vc.stop()
         await ctx.message.add_reaction('👌')
 
-    @app_commands.command(name="jump")
+    @commands.command(name="jump")
     async def jump_(self, ctx, pos: int):
         """Jumps to specific track after currently played song finishes."""
 
@@ -450,7 +445,7 @@ class Music(commands.Cog):
         player.next_pointer = pos-2
         await ctx.message.add_reaction('👌')
 
-    @app_commands.command(name='remove')
+    @commands.command(name='remove')
     async def remove_(self, ctx, pos: int=None):
         """Removes specified song from queue."""
 
@@ -473,7 +468,7 @@ class Music(commands.Cog):
         await ctx.message.add_reaction('👌')
         await ctx.send(embed=embed)
 
-    @app_commands.command(name='clear')
+    @commands.command(name='clear')
     async def clear_(self, ctx):
         """Deletes entire queue of upcoming songs."""
 
@@ -543,7 +538,7 @@ class Music(commands.Cog):
     #     # embed.set_author(name=f"Now Playing 🎶")  # (icon_url=self.bot.user.avatar_url)
     #     await ctx.send(embed=embed)
 
-    @app_commands.command(name='volume')
+    @commands.command(name='volume')
     async def change_volume(self, ctx, *, vol: int=None):
         """Change the player volume.
 
@@ -566,7 +561,7 @@ class Music(commands.Cog):
         player.volume = vol / 100
         await ctx.send(f'**`{ctx.author}`** set the volume from **{int(old_vol)}%** to **{vol}%**')
 
-    @app_commands.command(name='leave')
+    @commands.command(name='leave')
     async def leave_(self, ctx):
         """Stop the currently playing song and disconnects from voice.
         !Warning!
@@ -595,8 +590,8 @@ class Music(commands.Cog):
     #     # await player.dummy_queue.task_done()
     #     vc.stop()
 
-    @app_commands.command()
-    async def shuffle(self, ctx):
+    @commands.command(name='shuffle')
+    async def shuffle_(self, ctx):
         """Randomizes the position of tracks in queue."""
 
         player = self.get_player(ctx)
@@ -605,83 +600,200 @@ class Music(commands.Cog):
         random.shuffle(shuffled_remains)
         player.queue = player.queue[: player.current_pointer + 1] + shuffled_remains
 
-        await ctx.message.add_reaction('👋')
+        await ctx.message.add_reaction('👌')
 
-    @app_commands.command()
-    async def loopqueue(self, ctx):
+    @commands.command(name='loopq')
+    async def loop_queue_(self, ctx):
         """Loops the whole queue of tracks."""
 
         player = self.get_player(ctx)
-        player.loop_track = not player.loop_queue
+        player.loop_queue = not player.loop_queue
 
-        await ctx.message.add_reaction('👋')
+        await ctx.message.add_reaction('👌')
 
-    @app_commands.command()
-    async def looptrack(self, ctx):
+    @commands.command(name='loopt')
+    async def loop_track_(self, ctx):
         """Loops the currently playing track."""
 
         player = self.get_player(ctx)
         player.loop_track = not player.loop_track
 
-        await ctx.message.add_reaction('👋')
+        await ctx.message.add_reaction('👌')
 
-# class MyButton(Button):
-#     def __init__(self):
-#         super().__init__()
 
-#     async def button_callback(self, interaction):
-#             # await interaction.response.send_message("Hi!!", view=None) (gets removed)
-#             await interaction.response.edit_message("Hi!!")
 
-#             await interaction.followup.send("Hiiiii")
 
-# import discord.ui import Button, View
-# class MyView(View):
-#     def __init__(self, ctx):
-#         super().__init__(timeout=5)
-#         self.ctx = ctx
 
-#     @discord.ui.button(label="Click heere!", style=discord.ButtonStyle.green, emoji="▶️")
-#     async def button_callback(self, button, interaction):
-#         button.label = "WOW!"
-#         button.disabled = True
-#         await interaction.response.edit_message(view=self)
 
-#     async def on_timeout(self):
-#         await self.ctx.send("Timeout!")
+
+
+
+
+
+
+
+
+
+
+
+
+    @commands.command()
+    async def hell(self, ctx):
+        button1 = MyButton()
+        button2 = Button(emoji="⏸️")
+        button3 = Button(label="Go to Google", url="https://google.com")
+
+        async def button_callback(interaction):
+            # await interaction.response.send_message("Hi!!", view=None) (gets removed)
+            await interaction.response.edit_message("Hi!!")
+            await interaction.response.edit_message(content="Hi!!")
+            await interaction.followup.send("Hiiiii")
+        button1.callback = button_callback
+        # IF NEED TO RESPOND FAST - 13:55
+
+        view = View(timeout=10)  # select menus, text input
+        view.add_item(button1)
+        view.add_item(button2)
+        view.add_item(button3)
+        # view.remove_item()
+        embed = discord.Embed(title="sss", description="I'm not connected to a voice channel", color=discord.Color.green())
+        await ctx.send(embed=embed, view=view)
+        # await ctx.send("Hello!", view=view)
+
+
+
+
+
+
+class MyButton(Button):
+    def __init__(self):
+        super().__init__(label="Play me!", style=discord.ButtonStyle.green, emoji="▶️")
+
+    async def button_callback(self, interaction):  # MUST BE callback only
+            # await interaction.response.send_message("Hi!!", view=None) (gets removed)
+            await interaction.response.edit_message("Hi!!")
+            await interaction.followup.send("Hiiiii")
+
+class MyView(View):
+    def __init__(self, music_player, source):
+        super().__init__()
+        self.music_player = music_player
+        self.source = source
+        self.embed = self.generate_embed_message()
+
+    def generate_embed_message(self):
+        tracks, remains, vol, loop_q, loop_t = self.get_queue_info()
+        # embed.set_thumbnail(url=thumbnail)
+        embed = discord.Embed(
+            description=tracks,
+            color=discord.Color.green()
+        )
+        embed.add_field(name='Remaining track(s)', value=remains)
+        embed.add_field(name="Volume", value=vol)
+        embed.add_field(name="Queue/Track Loop", value=f"{loop_q} / {loop_t}")
+        embed.add_field(name='Requested by', value=self.source.requester)
+        embed.add_field(name='Duration', value=self.source.duration, inline=True)
+        embed.add_field(name='Views', value=f'{self.source.view_count:,}', inline=True)
+
+        return embed
+
+        # TODO: think.. can be as a command too!
+    def get_queue_info(self):
+        """Display information about player and queue of songs."""
+
+        # f"[{source.title}]({source.web_url})\n{self.get_queue_info(source)}"
+        player = self.music_player
+        track_list = []
+        start = 1
+        if player.current_pointer > 2 and len(player.queue) > 10:
+            start = len(player.queue[player.current_pointer - 2 : player.current_pointer + 8])
+            start += player.current_pointer - 11
+
+        for index, queue_source in enumerate(
+            player.queue[start - 1 : start + 9], start=start
+        ):
+            # current_pointer = "---> " if player.current_pointer + 1 == index else "     "
+            audio_name = queue_source['title']  
+            # TODO: DL (os.path.basename(track_path)[:-4])
+            # audio_length = "95"  # MP3(track_path).info.length
+
+            row = f"`{index}. `"
+            if player.current_pointer + 1 > index:
+                row += f"**{audio_name}**"
+            elif player.current_pointer + 1 == index:
+                row += f"**[{self.source.title}]({self.source.web_url})**"
+            else:
+                row += audio_name
+            track_list.append(row)
+
+        tracks = "\n".join(track_list) + "\n"
+        remains = len(player.queue[start + 9 :])
+        # remains = f"{remains} remaining track(s)    " if remains else ""
+        vol = f"{int(player.volume * 100)}%"
+        loop_q = "✅" if player.loop_queue else "❌"
+        loop_t = "✅" if player.loop_track else "❌"
+        msg = f"{tracks}\n\n{remains}\n{vol}\n{loop_q}\n{loop_t}\n"
+
+        return tracks, remains, vol, loop_q, loop_t
+
+        # return msg
+    # label="Click heere!", style=discord.ButtonStyle.green,
+    # @discord.ui.button(emoji="⏮️")
+    # async def prev_callback(self, button, interaction):
+    #     # button.label = "WOW!"
+    #     # button.disabled = True
+    #     await interaction.response.edit_message(view=self)
+
+    @discord.ui.button(emoji="⏸️")
+    async def res_pau_callback(self, interaction, button):
+        if button.emoji.name == "⏸️":
+            error = await self.music_player.ctx.invoke(self.music_player.music.pause_)
+            if not error:
+                button.emoji.name = "▶️"
+        elif button.emoji.name == "▶️":
+            error = await self.music_player.ctx.invoke(self.music_player.music.resume_)
+            if not error:
+                button.emoji.name = "⏸️"
+        
+        self.generate_embed_message()
+        await interaction.response.edit_message(view=self)
     
-#     # async def on_error(self, error, item, interaction):
-#     #     await interaction.response.send_message(str(error))
+    @discord.ui.button(emoji="⏭️")
+    async def skip_callback(self, interaction, button):
+        await self.music_player.ctx.invoke(self.music_player.music.skip_)
+        self.generate_embed_message()
+        await interaction.response.edit_message(view=self)
+    
+    @discord.ui.button(emoji="🔁")
+    async def loop_q_callback(self, interaction, button):
+        await self.music_player.ctx.invoke(self.music_player.music.loop_queue_)
+        embed = self.generate_embed_message()
+        await interaction.response.edit_message(embed=embed, view=self)
+    
+    @discord.ui.button(emoji="🔂")
+    async def loop_t_callback(self, interaction, button):
+        await self.music_player.ctx.invoke(self.music_player.music.loop_track_)
+        embed = self.generate_embed_message()
+        await interaction.response.edit_message(embed=embed, view=self)
+    
+    @discord.ui.button(emoji="🎲")
+    async def shuffle_callback(self, interaction, button):
+        await self.music_player.ctx.invoke(self.music_player.music.shuffle_)
+        embed = self.generate_embed_message()
+        await interaction.response.edit_message(embed=embed, view=self)
 
-#     # async def interaction_check(self, interaction) -> bool:
-#     if interaction.user != self.ctx.author:
-#         await interaction.response.send_message("Hey! You cant use that!", ephemeral=True)
-#         return False
-#     else:
-#         return True
+    # async def on_timeout(self):
+    #     await self.ctx.send("Timeout!")
+    
+    # # async def on_error(self, error, item, interaction):
+    # #     await interaction.response.send_message(str(error))
 
-#     @commands.command()
-#     async def hell(self, ctx):
-#         button1 = MyButton(label="Play me!", style=discord.ButtonStyle.green, emoji="▶️")
-#         button2 = Button(emoji="⏸️")
-#         button3 = Button(label="Go to Google", url="https://google.com")
+    # # async def interaction_check(self, interaction) -> bool:
+    # if interaction.user != self.ctx.author:
+    #     await interaction.response.send_message("Hey! You cant use that!", ephemeral=True)
+    #     return False
+    # else:
+    #     return True
 
-#         async def button_callback(interaction):
-#             # await interaction.response.send_message("Hi!!", view=None) (gets removed)
-#             await interaction.response.edit_message("Hi!!")
-
-#             await interaction.followup.send("Hiiiii")
-        
-#         button1.callback = button_callback
-#         view = View(timeout=10)  # select menus, text input
-#         view.add_item(button1)
-#         view.add_item(button2)
-#         view.add_item(button3)
-#         # view.remove_item()
-#         await ctx.send("Hello!", view=view)
-
-#         # ###await self.bot.wait_for("button_click")
-#         # ###await commands.wait_for("button_click")
-        
 async def setup(bot):
     await bot.add_cog(Music(bot), guilds=[discord.Object(id=553636358137053199)])
