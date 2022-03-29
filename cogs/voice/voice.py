@@ -462,8 +462,8 @@ class Music(commands.Cog):
         s = player.queue[pos-1]
         del player.queue[pos-1]
         embed = discord.Embed(
-            description=f"Removed [{s['title']}]({s['webpage_url']}) [{s['requester'].mention}]",
-            color=discord.Color.green(),
+            description=f"Removed [{s['title']}]({s['webpage_url']})",
+            color=discord.Color.green()
         )
         await ctx.message.add_reaction('👌')
         await ctx.send(embed=embed)
@@ -797,3 +797,5 @@ class MyView(View):
 
 async def setup(bot):
     await bot.add_cog(Music(bot), guilds=[discord.Object(id=553636358137053199)])
+
+# clear, remove, jump, volume;;; leave/join [CMD!!!]
