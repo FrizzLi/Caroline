@@ -40,8 +40,8 @@ class Surveillance(commands.Cog):
         # await ctx.bot.process_commands(message)
 
         # Dont read bot's messages
-        if "Skynet" in [y.name for y in message.author.roles]:
-            return
+        # if "Skynet" in [y.name for y in message.author.roles]: !!!!!!!!!!!!!!!'User' object has no attribute roles
+        #     return
 
         if not message.content:  # can happen on on_member_join
             return

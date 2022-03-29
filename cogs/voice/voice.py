@@ -61,7 +61,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return self.__getattribute__(item)
 
     @classmethod
-    async def create_source(cls, ctx, search: str, *, loop, download=False):
+    async def create_source(cls, interaction, search: str, *, loop, download=False):
         loop = loop or asyncio.get_event_loop()
 
         to_run = partial(ytdl.extract_info, url=search, download=download)
@@ -72,16 +72,17 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data['title'] = entries[0]['title']
             data['webpage_url'] = entries[0]['webpage_url']
 
-        description = f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]"
+        description = f"Queued [{data['title']}]({data['webpage_url']}) [{interaction.user.mention}]"
         embed = discord.Embed(title="", description=description, color=discord.Color.green())
-        await ctx.send(embed=embed)
+        await interaction.channel.last_message.delete()
+        await interaction.followup.send(embed=embed)
 
         if download:
             source = ytdl.prepare_filename(entries)    # TODO: resolve [data]
         else:
             return entries
 
-        return cls(discord.FFmpegPCMAudio(source), data=entries, requester=ctx.author)  # TODO: resolve [data] into data[0]
+        return cls(discord.FFmpegPCMAudio(source), data=entries, requester=interaction.user)  # TODO: resolve [data] into data[0],, mention??
 
     @classmethod
     async def regather_stream(cls, data, *, loop):
@@ -104,14 +105,14 @@ class MusicPlayer:
     When the bot disconnects from the Voice it's instance will be destroyed.
     """
 
-    __slots__ = ('bot', '_guild', '_channel', '_cog', 'ctx', 'music', 'queue', 'dummy_queue', 'next', 'current', 'np', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
+    __slots__ = ('bot', '_guild', '_channel', '_cog', 'interaction', 'music', 'queue', 'dummy_queue', 'next', 'current', 'np', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
 
-    def __init__(self, ctx, music):
-        self.bot = ctx.bot
-        self._guild = ctx.guild
-        self._channel = ctx.channel
-        self._cog = ctx.cog
-        self.ctx = ctx
+    def __init__(self, interaction, music):
+        self.bot = interaction.client  # interaction.client
+        self._guild = interaction.guild  # interaction.guild
+        self._channel = interaction.channel  # interaction.channel
+        # self._cog = ctx.cog
+        self.interaction = interaction
         self.music = music
 
         self.dummy_queue = asyncio.Queue()
@@ -127,7 +128,7 @@ class MusicPlayer:
         self.loop_queue = False
         self.loop_track = False
 
-        ctx.bot.loop.create_task(self.player_loop())
+        interaction.client.loop.create_task(self.player_loop())  # interaction.client
 
     async def player_loop(self):
         """Our main player loop."""
@@ -193,7 +194,7 @@ class MusicPlayer:
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
 
-        return self.bot.loop.create_task(self._cog.cleanup(guild))
+        return self.bot.loop.create_task(self.music.cleanup(guild))  # self.bot.loop.create_task(self.music.cleanup(guild))
 
     # TODO: think.. can be as a command too!
     def get_queue_info(self, source):
@@ -257,36 +258,36 @@ class Music(commands.Cog):
         except KeyError:
             pass
 
-    async def __local_check(self, ctx):
-        """A local check which applies to all commands in this cog."""
+    # async def __local_check(self, ctx):
+    #     """A local check which applies to all commands in this cog."""
 
-        if not ctx.guild:
-            raise commands.NoPrivateMessage
-        return True
+    #     if not ctx.guild:
+    #         raise commands.NoPrivateMessage
+    #     return True
 
-    async def __error(self, ctx, error):
-        """A local error handler for all errors arising from commands in this cog."""
+    # async def __error(self, ctx, error):
+    #     """A local error handler for all errors arising from commands in this cog."""
 
-        if isinstance(error, commands.NoPrivateMessage):
-            try:
-                return await ctx.send('This command can not be used in Private Messages.')
-            except discord.HTTPException:
-                pass
-        elif isinstance(error, InvalidVoiceChannel):
-            await ctx.send('Error connecting to Voice Channel. '
-                           'Please make sure you are in a valid channel or provide me with one')
+    #     if isinstance(error, commands.NoPrivateMessage):
+    #         try:
+    #             return await ctx.send('This command can not be used in Private Messages.')
+    #         except discord.HTTPException:
+    #             pass
+    #     elif isinstance(error, InvalidVoiceChannel):
+    #         await ctx.send('Error connecting to Voice Channel. '
+    #                        'Please make sure you are in a valid channel or provide me with one')
 
-        print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+    #     print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+    #     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
-    def get_player(self, ctx):
+    def get_player(self, interaction):  # self, interaction
         """Retrieve the guild player, or generate one."""
 
         try:
-            player = self.players[ctx.guild.id]
+            player = self.players[interaction.guild_id]  # interaction.guild_id
         except KeyError:
-            player = MusicPlayer(ctx, self)
-            self.players[ctx.guild.id] = player
+            player = MusicPlayer(interaction, self)  # interaction
+            self.players[interaction.guild_id] = player  # interaction.guild_id
 
         return player
 
@@ -323,8 +324,10 @@ class Music(commands.Cog):
         if voice_state is not None and len(voice_state.channel.members) == 1:
             await self.cleanup(member.guild)
 
-    @commands.command(name='join')
-    async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
+    # @app_commands.command(name='join')
+    # async def connect_(self, interaction: discord.Interaction, *, channel: discord.VoiceChannel=None):
+    @app_commands.command(name='join')
+    async def connect_(self, interaction, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
         This command also handles moving the bot to different channels.
 
@@ -336,15 +339,16 @@ class Music(commands.Cog):
 
         if not channel:
             try:
-                channel = ctx.author.voice.channel
+                channel = interaction.user.voice.channel  # interaction.user.voice.channel
             except AttributeError:
-                await ctx.send("```No channel to join. Specify a valid channel or join one.```")
+                await interaction.response.send_message("```No channel to join. Specify a valid channel or join one.```")
+                # await interaction.response.send_message("```No channel to join. Specify a valid channel or join one.```")
                 return 1
 
-        vc = ctx.voice_client
+        vc = interaction.guild.voice_client  # interaction.guild.voice_client
         if vc:
             if vc.channel.id == channel.id:
-                return await ctx.send("```I'm already in the channel.```")
+                return await interaction.response.send_message("```I'm already in the channel.```")  # await interaction.response.send_message("```I'm already in the channel.```")
             try:
                 await vc.move_to(channel)
             except asyncio.TimeoutError:
@@ -355,10 +359,10 @@ class Music(commands.Cog):
             except asyncio.TimeoutError:
                 raise VoiceConnectionError(f'Connecting to channel: <{channel}> timed out.')
 
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')  # DELETE....
 
-    @commands.command(name='play')
-    async def play_(self, ctx, *, search: str):
+    @app_commands.command(name='play')
+    async def play_(self, interaction, *, search: str):
         """Request a song and add it to the queue.
         This command attempts to join a valid voice channel if the bot is not already in one.
         Uses YTDL to automatically search, retrieves a song and streams it.
@@ -368,63 +372,72 @@ class Music(commands.Cog):
                 The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
 
-        async with ctx.typing():
+        # async with ctx.typing():
+        # a=2
 
-            vc = ctx.voice_client
-            if not vc:
-                error = await ctx.invoke(self.connect_)
-                if error:
-                    return
-            player = self.get_player(ctx)
+        vc = interaction.guild.voice_client  # interaction.guild.voice_client
+        if not vc:
+            channel = interaction.user.voice.channel  # interaction.user.voice.channel
+            await channel.connect()
+            # await self.connect_()
+            # error = await ctx.invoke(self.connect_)
+            # if error:
+            #     return
+        # else:
+        #     vc = vc[0]
+        a = 2
+        player = self.get_player(interaction)  # interaction
+        await interaction.response.send_message("```...Looking for song(s)...```")
+        # If download is False, source will be a list of entries which will be used to regather the stream.
+        # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
+        entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False)
+        for entry in entries:
+            source = {
+                'webpage_url': entry['webpage_url'],
+                'requester': interaction.user.mention,
+                'title': entry['title'],
+                'duration': self.get_readable_duration(entry['duration']),
+                'thumbnail': entry['thumbnail'],
+                'view_count': entry['view_count']
+            }
+            player.queue.append(source)
+            await player.dummy_queue.put(True)
 
-            # If download is False, source will be a list of entries which will be used to regather the stream.
-            # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
-            entries = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
-            for entry in entries:
-                source = {
-                    'webpage_url': entry['webpage_url'],
-                    'requester': ctx.author.mention,
-                    'title': entry['title'],
-                    'duration': self.get_readable_duration(entry['duration']),
-                    'thumbnail': entry['thumbnail'],
-                    'view_count': entry['view_count']
-                }
-                player.queue.append(source)
-                await player.dummy_queue.put(True)
+        # await interaction.channel.last_message.delete()
 
     @commands.command(name='pause')
-    async def pause_(self, ctx):
+    async def pause_(self, interaction):
         """Pause the currently playing song."""
 
-        vc = ctx.voice_client
+        vc = interaction.guild.voice_client  # interaction.guild.voice_client
         if not vc or not vc.is_playing():
-            return await ctx.send("```I'm not currently playing anything.```")
+            return await interaction.response.send_message("```I'm not currently playing anything.```")  # await interaction.response.send_message("```I'm not currently playing anything.```")
         elif vc.is_paused():
-            return await ctx.send("```The track is already paused.```")
+            return await interaction.response.send_message("```The track is already paused.```")  # await interaction.response.send_message("```The track is already paused.```")
 
         vc.pause()
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')  # DELETE
 
     @commands.command(name='resume')
-    async def resume_(self, ctx):
+    async def resume_(self, interaction):
         """Resume the currently paused song."""
 
-        vc = ctx.voice_client
+        vc = interaction.guild.voice_client  # interaction.guild.voice_client
         if not vc or not vc.is_connected():
-            return await ctx.send("```I'm not connected to a voice channel.```")
+            return await interaction.response.send_message("```I'm not connected to a voice channel.```")  # await interaction.response.send_message
         elif not vc.is_paused():
-            return await ctx.send("```The track is being played already.```")
+            return await interaction.response.send_message("```The track is being played already.```")  # await interaction.response.send_message
 
         vc.resume()
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')
 
     @commands.command(name='skip')
-    async def skip_(self, ctx):
+    async def skip_(self, interaction):
         """Skips the song."""
 
-        vc = ctx.voice_client
+        vc = interaction.guild.voice_client  # interaction.guild.voice_client
         if not vc or not vc.is_connected():
-            return await ctx.send("```I'm not connected to a voice channel.```")
+            return await interaction.response.send_message("```I'm not connected to a voice channel.```")  # await interaction.response.send_message
 
         if vc.is_paused():
             pass
@@ -432,32 +445,32 @@ class Music(commands.Cog):
             return
 
         vc.stop()
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')  # DELETE
 
-    @commands.command(name="jump")
-    async def jump_(self, ctx, pos: int):
+    @app_commands.command(name="jump")
+    async def jump_(self, interaction, pos: int):
         """Jumps to specific track after currently played song finishes."""
 
-        player = self.get_player(ctx)
+        player = self.get_player(interaction)  # interaction
         if 0 < pos > len(player.queue):
-            return await ctx.send(f"```Could not find a track at '{pos}' index.```")
+            return await interaction.response.send_message(f"```Could not find a track at '{pos}' index.```")  # # await interaction.response.send_message
 
         player.next_pointer = pos-2
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')
 
-    @commands.command(name='remove')
-    async def remove_(self, ctx, pos: int=None):
+    @app_commands.command(name='remove')
+    async def remove_(self, interaction, pos: int=None):
         """Removes specified song from queue."""
 
-        vc = ctx.voice_client
+        vc = interaction.guild.voice_client  # interaction.guild.voice_client
         if not vc or not vc.is_connected():
-            return await ctx.send("```I'm not connected to a voice channel.```")
+            return await interaction.response.send_message("```I'm not connected to a voice channel.```")
 
-        player = self.get_player(ctx)
+        player = self.get_player(interaction)
         if pos == None:
             pos = len(player.queue)
         elif 0 < pos > len(player.queue):
-            return await ctx.send(f"```Could not find a track at '{pos}' index.```")
+            return await interaction.response.send_message(f"```Could not find a track at '{pos}' index.```")
 
         s = player.queue[pos-1]
         del player.queue[pos-1]
@@ -465,20 +478,20 @@ class Music(commands.Cog):
             description=f"Removed [{s['title']}]({s['webpage_url']})",
             color=discord.Color.green()
         )
-        await ctx.message.add_reaction('👌')
-        await ctx.send(embed=embed)
+        # await ctx.message.add_reaction('👌')
+        await interaction.response.send_message(embed=embed)
 
-    @commands.command(name='clear')
-    async def clear_(self, ctx):
+    @app_commands.command(name='clear')
+    async def clear_(self, interaction):
         """Deletes entire queue of upcoming songs."""
 
-        vc = ctx.voice_client
+        vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
-            return await ctx.send("```I'm not connected to a voice channel.```")
+            return await interaction.response.send_message("```I'm not connected to a voice channel.```")
 
-        player = self.get_player(ctx)
+        player = self.get_player(interaction)
         player.queue.clear()
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')
 
     # @commands.command(name='queue', aliases=['q', 'info'])
     # async def queue_info(self, ctx):
@@ -538,8 +551,8 @@ class Music(commands.Cog):
     #     # embed.set_author(name=f"Now Playing 🎶")  # (icon_url=self.bot.user.avatar_url)
     #     await ctx.send(embed=embed)
 
-    @commands.command(name='volume')
-    async def change_volume(self, ctx, *, vol: int=None):
+    @app_commands.command(name='volume')
+    async def change_volume(self, interaction, *, vol: int=None):
         """Change the player volume.
 
         Args:
@@ -547,32 +560,32 @@ class Music(commands.Cog):
                 The volume to set the player to in percentage. This must be between 1 and 100.
         """
 
-        player = self.get_player(ctx)
+        player = self.get_player(interaction)
         if vol is None:
-            return await ctx.send(f"The volume is currently at **{int(player.volume*100)}%**.")
+            return await interaction.response.send_message(f"The volume is currently at **{int(player.volume*100)}%**.")
         if not 0 < vol < 101:
-            return await ctx.send("```Please enter a value between 1 and 100```")
+            return await interaction.response.send_message("```Please enter a value between 1 and 100```")
 
-        vc = ctx.voice_client
+        vc = interaction.guild.voice_client
         if vc and vc.is_connected() and vc.source:
             vc.source.volume = vol / 100
 
         old_vol = player.volume * 100
         player.volume = vol / 100
-        await ctx.send(f'**`{ctx.author}`** set the volume from **{int(old_vol)}%** to **{vol}%**')
+        await interaction.response.send_message(f'**`{interaction.user}`** set the volume from **{int(old_vol)}%** to **{vol}%**')
 
-    @commands.command(name='leave')
-    async def leave_(self, ctx):
+    @app_commands.command(name='leave')
+    async def leave_(self, interaction):
         """Stop the currently playing song and disconnects from voice.
         !Warning!
             This will destroy the player assigned to your guild, also deleting any queued songs and settings.
         """
-        vc = ctx.voice_client
+        vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
-            return await ctx.send("```I'm not connected to a voice channel.```")
+            return await interaction.response.send_message("```I'm not connected to a voice channel.```")
 
-        await ctx.message.add_reaction('👋')
-        await self.cleanup(ctx.guild)
+        # await ctx.message.add_reaction('👋')
+        await self.cleanup(interaction.guild)  # OK???
 
     # @commands.command(name='stop')
     # async def stop_(self, ctx):
@@ -591,34 +604,34 @@ class Music(commands.Cog):
     #     vc.stop()
 
     @commands.command(name='shuffle')
-    async def shuffle_(self, ctx):
+    async def shuffle_(self, interaction):
         """Randomizes the position of tracks in queue."""
 
-        player = self.get_player(ctx)
+        player = self.get_player(interaction)
         shuffled_remains = player.queue[player.current_pointer + 1 :]
 
         random.shuffle(shuffled_remains)
         player.queue = player.queue[: player.current_pointer + 1] + shuffled_remains
 
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')
 
     @commands.command(name='loopq')
-    async def loop_queue_(self, ctx):
+    async def loop_queue_(self, interaction):
         """Loops the whole queue of tracks."""
 
-        player = self.get_player(ctx)
+        player = self.get_player(interaction)
         player.loop_queue = not player.loop_queue
 
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')
 
     @commands.command(name='loopt')
-    async def loop_track_(self, ctx):
+    async def loop_track_(self, interaction):
         """Loops the currently playing track."""
 
-        player = self.get_player(ctx)
+        player = self.get_player(interaction)
         player.loop_track = not player.loop_track
 
-        await ctx.message.add_reaction('👌')
+        # await ctx.message.add_reaction('👌')
 
 
 
@@ -747,11 +760,11 @@ class MyView(View):
     @discord.ui.button(emoji="⏸️")
     async def res_pau_callback(self, interaction, button):
         if button.emoji.name == "⏸️":
-            error = await self.music_player.ctx.invoke(self.music_player.music.pause_)
+            error = await self.music_player.music.pause_(interaction)  # ctx.invoke(self.music_player.music.pause_)
             if not error:
                 button.emoji.name = "▶️"
         elif button.emoji.name == "▶️":
-            error = await self.music_player.ctx.invoke(self.music_player.music.resume_)
+            error = await self.music_player.music.resume_(interaction)  # .invoke(self.music_player.music.resume_)
             if not error:
                 button.emoji.name = "⏸️"
         
@@ -760,25 +773,25 @@ class MyView(View):
     
     @discord.ui.button(emoji="⏭️")
     async def skip_callback(self, interaction, button):
-        await self.music_player.ctx.invoke(self.music_player.music.skip_)
+        await self.music_player.music.skip_(interaction)  # .invoke(self.music_player.music.skip_)
         self.generate_embed_message()
         await interaction.response.edit_message(view=self)
     
     @discord.ui.button(emoji="🔁")
     async def loop_q_callback(self, interaction, button):
-        await self.music_player.ctx.invoke(self.music_player.music.loop_queue_)
+        await self.music_player.music.loop_queue_(interaction)  # .invoke(self.music_player.music.loop_queue_)
         embed = self.generate_embed_message()
         await interaction.response.edit_message(embed=embed, view=self)
     
     @discord.ui.button(emoji="🔂")
     async def loop_t_callback(self, interaction, button):
-        await self.music_player.ctx.invoke(self.music_player.music.loop_track_)
+        await self.music_player.music.loop_track_(interaction)  # ctx.invoke(self.music_player.music.loop_track_)
         embed = self.generate_embed_message()
         await interaction.response.edit_message(embed=embed, view=self)
     
     @discord.ui.button(emoji="🎲")
     async def shuffle_callback(self, interaction, button):
-        await self.music_player.ctx.invoke(self.music_player.music.shuffle_)
+        await self.music_player.music.shuffle_(interaction)  # ctx.invoke(self.music_player.music.shuffle_)
         embed = self.generate_embed_message()
         await interaction.response.edit_message(embed=embed, view=self)
 
