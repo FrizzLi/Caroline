@@ -14,7 +14,7 @@ class MyBot(commands.Bot):
         super().__init__(
             command_prefix="?",
             intents=discord.Intents().all(),
-            application_id=655460915281657877
+            application_id=gconfig['app_id']
         )
 
     # async def close(self):
@@ -85,7 +85,7 @@ class MyBot(commands.Bot):
                 except Exception as e:
                     print(f"{dir_name} module cannot be loaded. [{e}]")
         # Change 456 to your server/guild id
-        await bot.tree.sync(guild=discord.Object(id=553636358137053199))
+        await bot.tree.sync(guild=discord.Object(id=gconfig['server_id']))
 
 # async def main():
 #     bot = MyBot()
