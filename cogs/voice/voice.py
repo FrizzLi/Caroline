@@ -5,7 +5,7 @@ import youtube_dl
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import View  # Button, Select
+from discord.ui import View
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -35,16 +35,26 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         self.title = data.get('title')
         self.web_url = data.get('webpage_url')
-        self.duration = data.get('duration')
-
-        # YTDL info dicts (data) have other useful information you might want
-        # https://github.com/rg3/youtube-dl/blob/master/README.md
+        self.duration = self._get_readable_duration(data.get('duration'))
+        self.view_count = data.get('view_count')
 
     def __getitem__(self, item: str):
         """Allows us to access attributes similar to a dict.
         This is only useful when you are NOT downloading.
         """
         return self.__getattribute__(item)
+
+    def _get_readable_duration(self, duration):
+        """Get duration in hours, minutes and seconds."""
+
+        m, s = divmod(duration, 60)
+        h, m = divmod(m, 60)
+        h = (f'{int(h)}h ' if h else '') + (' ' if m or s else '')
+        m = (f'{int(m)}m ' if m else '') + (' ' if s else '')
+        s = f'{int(s)}s' if s else ''
+        duration = h + m + s
+
+        return duration
 
     @classmethod
     async def create_source(cls, interaction, search: str, *, loop, download=False):
@@ -53,21 +63,21 @@ class YTDLSource(discord.PCMVolumeTransformer):
         to_run = functools.partial(ytdl.extract_info, url=search, download=download)
         data = await loop.run_in_executor(None, to_run)
 
-        entries = data['entries'] if 'entries' in data else [data]
-        if 'entries' not in data or len(data['entries']) == 1:  # TODO: sometimes one song is treated as playlist with one entry
-            data['title'] = entries[0]['title']
-            data['webpage_url'] = entries[0]['webpage_url']
+        if len(data['entries']) == 1:
+            data['title'] = data['entries'][0]['title']
+            data['webpage_url'] = data['entries'][0]['webpage_url']
 
         description = f"Queued [{data['title']}]({data['webpage_url']}) [{interaction.user.mention}]"
         embed = discord.Embed(title="", description=description, color=discord.Color.green())
         await interaction.followup.send(embed=embed)
 
+        # TODO: resolve download
         if download:
-            source = ytdl.prepare_filename(entries)    # TODO: resolve [data]
+            source = ytdl.prepare_filename(data['entries'])
         else:
-            return entries
+            return data['entries']
 
-        return cls(discord.FFmpegPCMAudio(source), data=entries, requester=interaction.user)  # TODO: resolve [data] into data[0],, mention??
+        return cls(discord.FFmpegPCMAudio(source), data=data['entries'], requester=interaction.user)
 
     @classmethod
     async def regather_stream(cls, data, *, loop):
@@ -90,7 +100,7 @@ class MusicPlayer:
     When the bot disconnects from the Voice it's instance will be destroyed.
     """
 
-    __slots__ = ('interaction', 'music', 'dummy_queue', 'next', 'np_msg', 'volume', 'current', 'queue', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
+    __slots__ = ('interaction', 'music', 'dummy_queue', 'next', 'np_msg', 'volume', 'queue', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
 
     def __init__(self, interaction, music):
         self.interaction = interaction
@@ -101,7 +111,6 @@ class MusicPlayer:
 
         self.np_msg = None
         self.volume = .02
-        self.current = None
         self.queue = []
         self.current_pointer = 0
         self.next_pointer = -1
@@ -123,40 +132,37 @@ class MusicPlayer:
 
                 if not self.loop_track:
                     self.next_pointer += 1
-                if self.loop_queue and self.next_pointer >= len(self.queue):
-                    self.next_pointer = 0
+                if self.next_pointer >= len(self.queue):
+                    if self.loop_queue:
+                        self.next_pointer = 0
+                    else:
+                        continue
+
                 self.current_pointer = self.next_pointer
                 source = self.queue[self.current_pointer]
 
-            except (asyncio.TimeoutError, IndexError):  # TODO: fix indexError...
+            except asyncio.TimeoutError:
                 return self.destroy(self.interaction.guild)
 
-            source_duration = source['duration']
-            view_count = source['view_count']
-            # thumbnail = source['thumbnail']
-
-            # TODO: try without this piece
             if not isinstance(source, YTDLSource):
                 # Source was probably a stream (not downloaded)
                 # So we should regather to prevent stream expiration
                 try:
                     source = await YTDLSource.regather_stream(source, loop=self.interaction.client.loop)
-                    source.duration = source_duration
-                    source.view_count = view_count
-                except Exception as e:  # TODO: too general exception
+                except Exception as e:
                     await self.interaction.channel.send(
                         f'There was an error processing your song.\n```css\n[{e}]\n```'
                     )
                     continue
 
             source.volume = self.volume
-            self.current = source
-            self.interaction.guild.voice_client.play(source, after=lambda _: self.interaction.client.loop.call_soon_threadsafe(self.next.set))
+            self.interaction.guild.voice_client.play(
+                source, after=lambda _: self.interaction.client.loop.call_soon_threadsafe(self.next.set)
+            )
 
             view = MyView(self, source)
-
             if not self.np_msg:
-                self.np_msg = await self.interaction.channel.send(view.msg, view=view)  # TODO: try only view
+                self.np_msg = await self.interaction.channel.send(view.msg, view=view)
             elif self.np_msg.channel.last_message_id == self.np_msg.id:
                 self.np_msg = await self.np_msg.edit(view.msg, view=view)
             else:
@@ -167,7 +173,7 @@ class MusicPlayer:
 
             # Make sure the FFmpeg process is cleaned up.
             source.cleanup()
-            self.current = None
+            self.dummy_queue.put(True)
 
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
@@ -206,18 +212,6 @@ class Music(commands.Cog):
 
         return player
 
-    def _get_readable_duration(self, duration):
-        """Get duration in hours, minutes and seconds."""
-
-        m, s = divmod(duration, 60)
-        h, m = divmod(m, 60)
-        h = (f'{int(h)}h ' if h else '') + ' ' if m or s else ''
-        m = (f'{int(m)}m ' if m else '') + ' ' if s else ''
-        s = f'{int(s)}s' if s else ''
-        duration = h + m + s
-
-        return duration
-
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         """Leave the channel when all other members leave."""
@@ -253,7 +247,7 @@ class Music(commands.Cog):
             try:
                 await vc.move_to(channel)
                 embed = discord.Embed(
-                    description=f"Moving to channel: <{channel}>.",
+                    description=f"Moved to channel: **{channel}**.",
                     color=discord.Color.green()
                 )
                 await interaction.response.send_message(embed=embed)
@@ -263,7 +257,7 @@ class Music(commands.Cog):
             try:
                 await channel.connect()
                 embed = discord.Embed(
-                    description=f"Connecting to channel: <{channel}>.",
+                    description=f"Connected to channel: **{channel}**.",
                     color=discord.Color.green()
                 )
                 await interaction.response.send_message(embed=embed)
@@ -284,33 +278,31 @@ class Music(commands.Cog):
         vc = interaction.guild.voice_client
         if not vc:
             channel = interaction.user.voice.channel
-            await channel.connect()  # TODO: use join function?
+            await channel.connect()  # simplified cuz cannot invoke connect_
 
-        player = self.get_player(interaction)
         await interaction.response.send_message("...Looking for song(s)... wait...")
 
         # If download is False, source will be a list of entries which will be used to regather the stream.
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
         entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False)
+        player = self.get_player(interaction)
         for entry in entries:
             source = {
                 'webpage_url': entry['webpage_url'],
-                'requester': interaction.user.nick,  # mention for no old_msg
+                'requester': interaction.user.nick,  # TODO: mention instead of nick for no old_msg
                 'title': entry['title'],
-                'duration': self._get_readable_duration(entry['duration']),
-                'thumbnail': entry['thumbnail'],
-                'view_count': entry['view_count']
             }
             player.queue.append(source)
-            await player.dummy_queue.put(True)
+
+        await player.dummy_queue.put(True)
 
     @app_commands.command(name="jump")
     async def jump_(self, interaction, pos: int):
         """Jumps to specific track after currently played song finishes."""
 
         player = self.get_player(interaction)
-        if 0 < pos > len(player.queue):
-            return await interaction.response.send_message(f"```Could not find a track at '{pos}' index.```")
+        if pos > len(player.queue):
+            return await interaction.response.send_message(f"Could not find a track at '{pos}' index.")
 
         player.next_pointer = pos-2
 
@@ -331,11 +323,13 @@ class Music(commands.Cog):
         player = self.get_player(interaction)
         if pos is None:
             pos = len(player.queue)
-        elif 0 < pos > len(player.queue):
+        elif pos > len(player.queue):
             return await interaction.response.send_message(f"Could not find a track at '{pos}' index.")
 
         s = player.queue[pos-1]
         del player.queue[pos-1]
+        if pos <= self.current_pointer:
+            self.next_pointer -= 1
 
         embed = discord.Embed(
             description=f"Removed {pos}. song [{s['title']}]({s['webpage_url']}).",
@@ -395,7 +389,6 @@ class Music(commands.Cog):
             This will destroy the player assigned to your guild, also deleting any queued songs and settings.
         """
 
-        # TODO: fix stop playing
         vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
             return await interaction.response.send_message("I'm not connected to a voice channel.")
@@ -497,9 +490,9 @@ class MyView(View):
             msg = (
                 f"```ml\n{tracks}\n"
                 f"{remains}     currently playing track:\n"
-                f"{loop_q}              {req}\n"
-                f"{loop_t}              {dur}\n"
-                f"{vol}                   {views}```"
+                f"{loop_q}           {req}\n"
+                f"{loop_t}           {dur}\n"
+                f"{vol}                {views}```"
             )
         else:
             msg = discord.Embed(description=tracks, color=discord.Color.green())
@@ -543,9 +536,8 @@ class MyView(View):
         track_list = []
         if self.old_msg:
             for row_index, track in enumerate(queue[s-1:s+9], start=s):
-                row = "---> " if pointer + 1 == row_index else "     "
-                row += f"{f'{row_index}. '[:4]}"
-                row += track['title']
+                row = f"{f'{row_index}. '[:4]}{track['title']}"
+                row = f"---> {row} <---" if pointer + 1 == row_index else f"     {row}"
                 track_list.append(row)
         else:
             for row_index, track in enumerate(queue[s-1:s+9], start=s):
