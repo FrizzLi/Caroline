@@ -69,11 +69,12 @@ class MusicPlayer:
                     continue
 
             source.volume = self.volume
+            if voice_client:
+                voice_client.play(
+                    source, after=lambda _: self.interaction.client.loop.call_soon_threadsafe(self.next.set)
+                )
             if not voice_client:
                 return
-            voice_client.play(
-                source, after=lambda _: self.interaction.client.loop.call_soon_threadsafe(self.next.set)
-            )
 
             view = PlayerView(self, source)
             if not self.np_msg:
