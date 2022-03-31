@@ -125,7 +125,7 @@ class Music(commands.Cog):
 
     @app_commands.command(name="jump")
     async def jump_(self, interaction, index: int):
-        """Jumps to specific track after currently played song finishes."""
+        """Jumps to specific track after currently playing song finishes."""
 
         player = self.get_player(interaction)
         if 0 >= index or index > len(player.queue):
@@ -141,7 +141,7 @@ class Music(commands.Cog):
 
     @app_commands.command(name='remove')
     async def remove_(self, interaction, index: int=None):
-        """Removes specified song from queue."""
+        """Removes specified or lastly added song from the queue."""
 
         vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
@@ -186,7 +186,7 @@ class Music(commands.Cog):
 
     @app_commands.command(name='volume')
     async def change_volume(self, interaction, *, volume: int=None):
-        """Change the player volume in percentages.
+        """Change or see the volume of player in percentages.
 
         Args:
             volume: int
@@ -214,10 +214,7 @@ class Music(commands.Cog):
 
     @app_commands.command(name='leave')
     async def leave_(self, interaction):
-        """Stop the currently playing song and disconnects from voice.
-        !Warning!
-            This will destroy the player assigned to your guild, also deleting any queued songs and settings.
-        """
+        """Stop the currently playing song, clears queue and disconnects from voice."""
 
         vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
