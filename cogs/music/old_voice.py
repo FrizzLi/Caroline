@@ -194,12 +194,6 @@
 #         if not voice.is_playing() and not voice.is_paused():
 #             check_queue()
 
-
-
-
-
-
-
 #     @commands.command(
 #         aliases=["dl"], brief="DLs a track/playlist from ytb/spt URL. {URL}"
 #     )
@@ -326,3 +320,29 @@
 
 # # ctx.voice_client vs get(self.bot.voice_clients, guild=ctx.guild)
 
+# ###################### NEW ###############
+
+
+# MAYBE HELPFUL FUNCTIONS !!! (was already in src code)
+# async def __local_check(self, ctx):
+#     """A local check which applies to all commands in this cog."""
+
+#     if not ctx.guild:
+#         raise commands.NoPrivateMessage
+#     return True
+# import sys
+# import traceback
+# async def __error(self, ctx, error):
+#     """A local error handler for all errors arising from commands in this cog."""
+
+#     if isinstance(error, commands.NoPrivateMessage):
+#         try:
+#             return await ctx.send('This command can not be used in Private Messages.')
+#         except discord.HTTPException:
+#             pass
+#     elif isinstance(error, InvalidVoiceChannel):
+#         await ctx.send('Error connecting to Voice Channel. '
+#                        'Please make sure you are in a valid channel or provide me with one')
+
+#     print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+#     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
