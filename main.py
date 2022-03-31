@@ -6,15 +6,12 @@ import asyncio
 
 from discord.ext import commands
 
-with open("config.json", "r") as f:
-    gconfig = json.load(f)
-
 class MyBot(commands.Bot):
     def __init__(self):
         super().__init__(
             command_prefix="?",
             intents=discord.Intents().all(),
-            application_id=gconfig['app_id']
+            application_id=os.environ.get("CAROLINE_ID")
         )
 
     # async def close(self):
@@ -85,20 +82,12 @@ class MyBot(commands.Bot):
                 except Exception as e:
                     print(f"{dir_name} module cannot be loaded. [{e}]")
         # Change 456 to your server/guild id
-        await bot.tree.sync(guild=discord.Object(id=gconfig['server_id']))
+        await bot.tree.sync(guild=discord.Object(id=os.environ.get("SERVER_ID")))
 
-# async def main():
-#     bot = MyBot()
-#     async with bot:
-#         await bot.start(gconfig["token"])
-
-# if __name__ == "__main__":
-#     # bot = MyBot()
-#     asyncio.run(main())
-
-
+# import keep_alive
+# keep_alive.keep_alive()
 bot = MyBot()
-bot.run(gconfig["token"])
+bot.run(os.environ.get("CAROLINE_TOKEN"))
 
 # NOTE: Test scenarios for audio download:
 # Youtube song/playlist + dl while playing,

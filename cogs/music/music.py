@@ -1,5 +1,6 @@
 import random
 import asyncio
+import os
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -288,7 +289,9 @@ class Music(commands.Cog):
 
 
 async def setup(bot):
-    import json
-    with open("config.json", "r") as f:
-        gconfig = json.load(f)
-    await bot.add_cog(Music(bot), guilds=[discord.Object(id=gconfig['server_id'])])
+    await bot.add_cog(
+        Music(bot), 
+        guilds=[discord.Object(
+            id=os.environ.get("SERVER_ID")
+        )]
+    )
