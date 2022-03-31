@@ -40,7 +40,7 @@ class Music(commands.Cog):
         return player
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):  # TODO: try without before, after
+    async def on_voice_state_update(self, member, before, after):
         """Leave the channel when all other members leave."""
 
         voice_state = member.guild.voice_client
@@ -102,12 +102,12 @@ class Music(commands.Cog):
                 The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
 
+        await interaction.response.send_message("...Looking for song(s)... wait...")
+
         vc = interaction.guild.voice_client
         if not vc:
             channel = interaction.user.voice.channel
             await channel.connect()  # simplified cuz cannot invoke connect_
-
-        await interaction.response.send_message("...Looking for song(s)... wait...")
 
         # If download is False, source will be a list of entries which will be used to regather the stream.
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.

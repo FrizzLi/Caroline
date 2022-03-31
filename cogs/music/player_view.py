@@ -1,10 +1,11 @@
 import discord
-from discord.ui import View
+from discord.ui import View, Button
 
 
 class PlayerView(View):
     def __init__(self, player, source):
         super().__init__()
+        self.add_item(Button(label="Current playing track link", url=source.web_url))
         self.player = player
         self.np = source
         self.old_msg = True
@@ -17,8 +18,8 @@ class PlayerView(View):
         if self.old_msg:
             remains = f"{remains} remaining track(s)"
             vol = f"Volume: {volume}"
-            loop_q = f"Loop Queue: {loop_q}"
-            loop_t = f"Loop Track: {loop_t}"
+            loop_q = f"(🔁) Loop Queue: {loop_q}"
+            loop_t = f"(🔂) Loop Track: {loop_t}"
             req = f"Requester: '{self.np.requester}'"
             dur = f"Duration: {self.np.duration}"
             views = f'Views: {self.np.view_count:,}'
@@ -102,7 +103,7 @@ class PlayerView(View):
         await interaction.response.edit_message(view=self)
 
     @discord.ui.button(emoji="⏭️")
-    async def skip_callback(self, interaction, button):  # TODO: try without button
+    async def skip_callback(self, interaction, button):
         await self.player.music.skip_(interaction)
         await interaction.response.edit_message(view=self)
 
@@ -118,8 +119,13 @@ class PlayerView(View):
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
 
-    @discord.ui.button(emoji="🎲")
+    @discord.ui.button(emoji="🔀")
     async def shuffle_callback(self, interaction, button):
         await self.player.music.shuffle_(interaction)
+        msg = self.generate_message()
+        await interaction.response.edit_message(content=msg, view=self)
+
+    @discord.ui.button(label="Refresh")
+    async def refresh_callback(self, interaction, button):
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
