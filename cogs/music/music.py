@@ -124,23 +124,23 @@ class Music(commands.Cog):
         await player.dummy_queue.put(True)
 
     @app_commands.command(name="jump")
-    async def jump_(self, interaction, pos: int):
+    async def jump_(self, interaction, index: int):
         """Jumps to specific track after currently played song finishes."""
 
         player = self.get_player(interaction)
-        if pos > len(player.queue):
-            return await interaction.response.send_message(f"Could not find a track at '{pos}' index.")
+        if 0 >= index or index > len(player.queue):
+            return await interaction.response.send_message(f"Could not find a track at '{index}' index.")
 
-        player.next_pointer = pos-2
+        player.next_pointer = index-2
 
         embed = discord.Embed(
-            description=f"Jumped to a {pos}. song. It will be played after current one finishes.",
+            description=f"Jumped to a {index}. song. It will be played after current one finishes.",
             color=discord.Color.green()
         )
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='remove')
-    async def remove_(self, interaction, pos: int=None):
+    async def remove_(self, interaction, index: int=None):
         """Removes specified song from queue."""
 
         vc = interaction.guild.voice_client
@@ -148,18 +148,21 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if pos is None:
-            pos = len(player.queue)
-        elif pos > len(player.queue):
-            return await interaction.response.send_message(f"Could not find a track at '{pos}' index.")
+        if not player.queue:
+            return await interaction.response.send_message("There is no queue.")
 
-        s = player.queue[pos-1]
-        del player.queue[pos-1]
-        if pos <= player.current_pointer:
+        if index is None:
+            index = len(player.queue)
+        elif index > len(player.queue):
+            return await interaction.response.send_message(f"Could not find a track at '{index}' index.")
+
+        s = player.queue[index-1]
+        del player.queue[index-1]
+        if index-1 <= player.next_pointer:
             player.next_pointer -= 1
 
         embed = discord.Embed(
-            description=f"Removed {pos}. song [{s['title']}]({s['webpage_url']}).",
+            description=f"Removed {index}. song [{s['title']}]({s['webpage_url']}).",
             color=discord.Color.green()
         )
         await interaction.response.send_message(embed=embed)
@@ -182,8 +185,8 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='volume')
-    async def change_volume(self, interaction, *, vol: int=None):
-        """Change the player volume.
+    async def change_volume(self, interaction, *, volume: int=None):
+        """Change the player volume in percentages.
 
         Args:
             volume: int
@@ -191,20 +194,20 @@ class Music(commands.Cog):
         """
 
         player = self.get_player(interaction)
-        if vol is None:
-            return await interaction.response.send_message(f"The volume is currently at **{player.volume*100}%**.")
-        elif not 0 < vol < 101:
+        if volume is None:
+            return await interaction.response.send_message(f"The volume is currently at **{int(player.volume*100)}%**.")
+        elif not 0 < volume < 101:
             return await interaction.response.send_message("Please enter a value between 1 and 100.")
 
         vc = interaction.guild.voice_client
         if vc and vc.is_connected() and vc.source:
-            vc.source.volume = vol / 100
+            vc.source.volume = volume / 100
 
-        old_vol = player.volume * 100
-        player.volume = vol / 100
+        old_volume = player.volume * 100
+        player.volume = volume / 100
 
         embed = discord.Embed(
-            description=f'The volume has been set from **{int(old_vol)}%** to **{vol}%**',
+            description=f'The volume has been set from **{int(old_volume)}%** to **{volume}%**',
             color=discord.Color.green()
         )
         await interaction.response.send_message(embed=embed)
