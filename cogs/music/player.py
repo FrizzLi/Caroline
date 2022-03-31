@@ -42,11 +42,12 @@ class MusicPlayer:
                 await self.dummy_queue.get()
 
                 if not self.loop_track:
-                    self.next_pointer += 1
+                    self.next_pointer += 1  # next song
                 if self.next_pointer >= len(self.queue):
                     if self.loop_queue:
-                        self.next_pointer = 0
+                        self.next_pointer = 0  # queue loop
                     else:
+                        self.next_pointer = len(self.queue) - 1  # return to last song's index
                         continue
 
                 self.current_pointer = self.next_pointer
@@ -84,7 +85,7 @@ class MusicPlayer:
 
             # Make sure the FFmpeg process is cleaned up.
             source.cleanup()
-            self.dummy_queue.put(True)
+            await self.dummy_queue.put(True)
 
     def destroy(self, guild):
         """Disconnect and cleanup the player."""

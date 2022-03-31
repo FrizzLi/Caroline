@@ -46,9 +46,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         m, s = divmod(duration, 60)
         h, m = divmod(m, 60)
-        h = (f'{int(h)}h ' if h else '') + (' ' if m or s else '')
-        m = (f'{int(m)}m ' if m else '') + (' ' if s else '')
-        s = f'{int(s)}s' if s else ''
+        h = (f'{int(h)}h' if h else '')
+        m = (' ' if h and m else '') + (f'{int(m)}m' if m else '')
+        s = (' ' if h or m else '') + (f'{int(s)}s' if s else '')
         duration = h + m + s
 
         return duration
@@ -60,9 +60,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
         to_run = functools.partial(ytdl.extract_info, url=search, download=download)
         data = await loop.run_in_executor(None, to_run)
 
-        if len(data['entries']) == 1:
-            data['title'] = data['entries'][0]['title']
-            data['webpage_url'] = data['entries'][0]['webpage_url']
+        if 'entries' in data:
+            if len(data['entries']) == 1:  # for search single song
+                data['title'] = data['entries'][0]['title']
+                data['webpage_url'] = data['entries'][0]['webpage_url']
+        else:  # for URL single song
+            data['entries'] = [data]
 
         description = f"Queued [{data['title']}]({data['webpage_url']}) [{interaction.user.mention}]"
         embed = discord.Embed(title="", description=description, color=discord.Color.green())

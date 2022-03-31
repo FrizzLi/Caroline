@@ -26,8 +26,8 @@ class PlayerView(View):
             msg = (
                 f"```ml\n{tracks}\n"
                 f"{remains}     currently playing track:\n"
-                f"{loop_q}           {req}\n"
-                f"{loop_t}           {dur}\n"
+                f"{loop_q}            {req}\n"
+                f"{loop_t}            {dur}\n"
                 f"{vol}                {views}```"
             )
         else:
