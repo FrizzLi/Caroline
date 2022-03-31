@@ -204,7 +204,7 @@ class Music(commands.Cog):
         player.volume = vol / 100
 
         embed = discord.Embed(
-            description=f'The volume has been set from **{old_vol}%** to **{vol}%**',
+            description=f'The volume has been set from **{int(old_vol)}%** to **{vol}%**',
             color=discord.Color.green()
         )
         await interaction.response.send_message(embed=embed)
@@ -228,7 +228,6 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-    @commands.command(name='pause')
     async def pause_(self, interaction):
         """Pause the currently playing song."""
 
@@ -240,7 +239,6 @@ class Music(commands.Cog):
 
         vc.pause()
 
-    @commands.command(name='resume')
     async def resume_(self, interaction):
         """Resume the currently paused song."""
 
@@ -252,7 +250,6 @@ class Music(commands.Cog):
 
         vc.resume()
 
-    @commands.command(name='skip')
     async def skip_(self, interaction):
         """Skips the song."""
 
@@ -267,21 +264,18 @@ class Music(commands.Cog):
 
         vc.stop()
 
-    @commands.command(name='loopq')
     async def loop_queue_(self, interaction):
         """Loops the queue of tracks."""
 
         player = self.get_player(interaction)
         player.loop_queue = not player.loop_queue
 
-    @commands.command(name='loopt')
     async def loop_track_(self, interaction):
         """Loops the currently playing track."""
 
         player = self.get_player(interaction)
         player.loop_track = not player.loop_track
 
-    @commands.command(name='shuffle')
     async def shuffle_(self, interaction):
         """Randomizes the position of tracks in queue."""
 

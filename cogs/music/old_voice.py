@@ -346,3 +346,62 @@
 
 #     print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
 #     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
+
+# HELPFUL FOR MAKING BUTTONS/VIEW
+# class MyButton(Button):
+#     def __init__(self):
+#         super().__init__(label="Play me!", style=discord.ButtonStyle.green, emoji="▶️")
+
+#     async def button_callback(self, interaction):  # MUST BE callback only
+#             # await interaction.response.send_message("Hi!!", view=None) (gets removed)
+#             await interaction.response.edit_message("Hi!!")
+#             await interaction.followup.send("Hiiiii")
+
+#     @commands.command()
+#     async def hell(self, ctx):
+#         button1 = MyButton()
+#         button2 = Button(emoji="⏸️")
+#         button3 = Button(label="Go to Google", url="https://google.com")
+
+#         async def button_callback(interaction):
+#             # await interaction.response.send_message("Hi!!", view=None) (gets removed)
+#             await interaction.response.edit_message("Hi!!")
+#             await interaction.response.edit_message(content="Hi!!")
+#             await interaction.followup.send("Hiiiii")
+#         button1.callback = button_callback
+#         # IF NEED TO RESPOND FAST - 13:55
+
+#         view = View(timeout=10)  # select menus, text input
+#         view.add_item(button1)
+#         view.add_item(button2)
+#         view.add_item(button3)
+#         # view.remove_item()
+#         embed = discord.Embed(title="sss", description="I'm not connected to a voice channel", color=discord.Color.green())
+#         await ctx.send(embed=embed, view=view)
+#         # await ctx.send("Hello!", view=view)
+
+#     @commands.command()
+#     async def hello(self, ctx):
+#         button1 = MyButton()
+
+# class MyView2(View):
+# label="Click heere!", style=discord.ButtonStyle.green,
+# @discord.ui.button(emoji="⏮️")
+# async def prev_callback(self, button, interaction):
+#     # button.label = "WOW!"
+#     # button.disabled = True
+#     await interaction.response.edit_message(view=self)
+
+# async def on_timeout(self):
+#     await self.ctx.send("Timeout!")
+
+# # async def on_error(self, error, item, interaction):
+# #     await interaction.response.send_message(str(error))
+
+# # async def interaction_check(self, interaction) -> bool:
+# if interaction.user != self.ctx.author:
+#     await interaction.response.send_message("Hey! You cant use that!", ephemeral=True)
+#     return False
+# else:
+#     return True
