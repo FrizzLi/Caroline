@@ -88,7 +88,7 @@ class MusicPlayer:
             await self.next.wait()
 
             # Make sure the FFmpeg process is cleaned up.
-            source.cleanup()
+            # source.cleanup()
             await self.dummy_queue.put(True)
 
     def destroy(self, guild):

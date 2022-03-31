@@ -76,7 +76,7 @@ class MyBot(commands.Bot):
         for dir_name in os.listdir("cogs"):
             if dir_name in py_files:
                 try:
-                    path = py_files[dir_name].replace("\\", ".").replace(".py", "")
+                    path = py_files[dir_name].replace("\\", ".").replace(".py", "").replace("/", ".")
                     await bot.load_extension(path)
                     print(f"{dir_name} module has been loaded.")
                 except Exception as e:
