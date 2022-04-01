@@ -2,7 +2,7 @@ import asyncio
 
 from cogs.music.source import YTDLSource
 from cogs.music.player_view import PlayerView
-
+from discord.errors import ClientException
 
 class MusicPlayer:
     """A class which is assigned to each guild using the bot for Music.
@@ -37,8 +37,6 @@ class MusicPlayer:
         voice_client = self.interaction.guild.voice_client
 
         while not self.interaction.client.is_closed():
-            self.next.clear()
-
             try:
                 await self.dummy_queue.get()
 
@@ -69,11 +67,12 @@ class MusicPlayer:
                     continue
 
             source.volume = self.volume
-            if voice_client:
+            try:
                 voice_client.play(
                     source, after=lambda _: self.interaction.client.loop.call_soon_threadsafe(self.next.set)
                 )
-            if not voice_client:
+            except ClientException as e:
+                print(e)
                 return
 
             view = PlayerView(self, source)
@@ -88,8 +87,11 @@ class MusicPlayer:
             await self.next.wait()
 
             # Make sure the FFmpeg process is cleaned up.
-            # source.cleanup()
-            await self.dummy_queue.put(True)
+            source.cleanup()
+            self.next.clear()
+
+            if self.current_pointer < len(self.queue):
+                await self.dummy_queue.put(True)
 
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
