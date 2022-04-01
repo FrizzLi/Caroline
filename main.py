@@ -84,8 +84,8 @@ class MyBot(commands.Bot):
         # Change 456 to your server/guild id
         await bot.tree.sync(guild=discord.Object(id=os.environ.get("SERVER_ID")))
 
-# import keep_alive
-# keep_alive.keep_alive()
+import keep_alive
+keep_alive.keep_alive()
 bot = MyBot()
 bot.run(os.environ.get("CAROLINE_TOKEN"))
 
