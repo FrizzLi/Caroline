@@ -177,7 +177,9 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        player.queue.clear()
+        player.queue = [player.queue[player.current_pointer]]
+        player.current_pointer = 0
+        player.next_pointer = 0
 
         embed = discord.Embed(
             description="Queue has been cleared.",
