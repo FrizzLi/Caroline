@@ -87,7 +87,10 @@ class MusicPlayer:
             await self.next.wait()
 
             # Make sure the FFmpeg process is cleaned up.
-            source.cleanup()
+            try:  # host in replit cannot process cleanup... 
+                source.cleanup()
+            except ValueError as e:
+                print(e)
             self.next.clear()
 
             if self.current_pointer < len(self.queue):
