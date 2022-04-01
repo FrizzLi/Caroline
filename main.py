@@ -86,8 +86,8 @@ class MyBot(commands.Bot):
 
 try:
     import flask
-    import keep_alive
-    keep_alive.keep_alive()
+    from keep_alive import keep_alive
+    keep_alive()
     prefix = "?"
 except ModuleNotFoundError:
     print("No flask found, running locally!")
