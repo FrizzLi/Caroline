@@ -9,7 +9,7 @@ from discord.ext import commands
 class MyBot(commands.Bot):
     def __init__(self):
         super().__init__(
-            command_prefix="?",
+            command_prefix=";",
             intents=discord.Intents().all(),
             application_id=os.environ.get("CAROLINE_ID")
         )
@@ -84,8 +84,13 @@ class MyBot(commands.Bot):
         # Change 456 to your server/guild id
         await bot.tree.sync(guild=discord.Object(id=os.environ.get("SERVER_ID")))
 
-# import keep_alive
-# keep_alive.keep_alive()
+try:
+    import flask
+    import keep_alive
+    keep_alive.keep_alive()
+except ModuleNotFoundError:
+    print("No flask found, running locally!")
+
 bot = MyBot()
 bot.run(os.environ.get("CAROLINE_TOKEN"))
 
