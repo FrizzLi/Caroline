@@ -4,8 +4,8 @@ from discord.ui import View, Button
 
 class PlayerView(View):
     def __init__(self, player, source):
-        super().__init__()
-        self.add_item(Button(label="Current playing track link", url=source.web_url))
+        super().__init__(timeout=None)
+        self.add_item(Button(label="Current playing track link", url=source.web_url, row=1))
         self.player = player
         self.np = source
         self.old_msg = True
@@ -89,7 +89,11 @@ class PlayerView(View):
 
         return track_list
 
-    @discord.ui.button(emoji="⏸️")
+    async def on_error(self, error, item, interaction):
+        msg = f"Item '{item}' has failed the dispatch. Error: {error}."
+        await interaction.response.send_message(msg)
+
+    @discord.ui.button(emoji="⏸️", row=0)
     async def play_callback(self, interaction, button):
         if button.emoji.name == "⏸️":
             error = await self.player.music.pause_(interaction)
@@ -102,30 +106,30 @@ class PlayerView(View):
 
         await interaction.response.edit_message(view=self)
 
-    @discord.ui.button(emoji="⏭️")
+    @discord.ui.button(emoji="⏭️", row=0)
     async def skip_callback(self, interaction, button):
         await self.player.music.skip_(interaction)
         await interaction.response.edit_message(view=self)
 
-    @discord.ui.button(emoji="🔁")
+    @discord.ui.button(emoji="🔁", row=0)
     async def loop_q_callback(self, interaction, button):
         await self.player.music.loop_queue_(interaction)
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
 
-    @discord.ui.button(emoji="🔂")
+    @discord.ui.button(emoji="🔂", row=0)
     async def loop_t_callback(self, interaction, button):
         await self.player.music.loop_track_(interaction)
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
 
-    @discord.ui.button(emoji="🔀")
+    @discord.ui.button(emoji="🔀", row=0)
     async def shuffle_callback(self, interaction, button):
         await self.player.music.shuffle_(interaction)
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
 
-    @discord.ui.button(label="Refresh")
+    @discord.ui.button(label="Refresh", row=1)
     async def refresh_callback(self, interaction, button):
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
