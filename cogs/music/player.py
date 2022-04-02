@@ -21,7 +21,7 @@ class MusicPlayer:
         self.next = asyncio.Event()
 
         self.np_msg = None
-        self.volume = .02
+        self.volume = .2
         self.queue = []
         self.current_pointer = 0
         self.next_pointer = -1
