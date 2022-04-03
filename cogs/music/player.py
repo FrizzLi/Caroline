@@ -11,18 +11,17 @@ class MusicPlayer:
     When the bot disconnects from the Voice it's instance will be destroyed.
     """
 
-    __slots__ = ('interaction', 'music', 'dummy_queue', 'next', 'np_msg', 'volume', 'queue', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
+    __slots__ = ('interaction', 'music', 'queue', 'next', 'np_msg', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
 
     def __init__(self, interaction, music):
         self.interaction = interaction
         self.music = music
 
-        self.dummy_queue = asyncio.Queue()
+        self.queue = asyncio.Queue()
         self.next = asyncio.Event()
 
         self.np_msg = None
         self.volume = .2
-        self.queue = []
         self.current_pointer = 0
         self.next_pointer = -1
         self.loop_queue = False
@@ -37,20 +36,20 @@ class MusicPlayer:
         voice_client = self.interaction.guild.voice_client
 
         while not self.interaction.client.is_closed():
-            try:
-                await self.dummy_queue.get()
+            self.next.clear()
 
+            try:
                 if not self.loop_track:
                     self.next_pointer += 1  # next song
-                if self.next_pointer >= len(self.queue):
+                if self.next_pointer >= self.queue.qsize():
                     if self.loop_queue:
                         self.next_pointer = 0  # queue loop
                     else:
-                        self.next_pointer = len(self.queue) - 1  # return to last song's index
+                        self.next_pointer = self.queue.qsize() - 1  # return to last song's index
                         continue
 
                 self.current_pointer = self.next_pointer
-                source = self.queue[self.current_pointer]
+                source = self.queue._queue[self.current_pointer]
 
             except asyncio.TimeoutError:
                 return self.destroy(self.interaction.guild)
@@ -91,10 +90,6 @@ class MusicPlayer:
                 source.cleanup()
             except ValueError as e:
                 print(e)
-            self.next.clear()
-
-            if self.current_pointer < len(self.queue):
-                await self.dummy_queue.put(True)
 
     def destroy(self, guild):
         """Disconnect and cleanup the player."""

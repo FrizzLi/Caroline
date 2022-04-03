@@ -88,9 +88,8 @@ class Music(commands.Cog):
                 'requester': interaction.user.display_name,
                 'title': entry['title'],
             }
-            player.queue.append(source)
+            await player.queue.put(source)
 
-        await player.dummy_queue.put(True)
 
     @app_commands.command(name='volume')
     async def change_volume(self, interaction, *, volume: int=None):
@@ -187,9 +186,9 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if not player.queue:
+        if player.queue.empty():
             return await interaction.response.send_message("There is no queue.")
-        if 0 >= index or index > len(player.queue):
+        if 0 >= index or index > player.queue.qsize():
             return await interaction.response.send_message(f"Could not find a track at '{index}' index.")
 
         player.next_pointer = index-2
@@ -209,15 +208,15 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if not player.queue:
+        if player.queue.empty():
             return await interaction.response.send_message("There is no queue.")
         if index is None:
-            index = len(player.queue)
-        elif 0 >= index > len(player.queue):
+            index = player.queue.qsize()
+        elif 0 >= index > player.queue.qsize():
             return await interaction.response.send_message(f"Could not find a track at '{index}' index.")
 
-        s = player.queue[index-1]
-        del player.queue[index-1]
+        s = player.queue._queue[index-1]
+        del player.queue._queue[index-1]
         if index-1 <= player.next_pointer:
             player.next_pointer -= 1
 
@@ -236,12 +235,13 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if not player.queue:
+        if player.queue.empty():
             return await interaction.response.send_message("There is no queue.")
 
-        player.queue = [player.queue[player.current_pointer]]
+        player.queue._queue.clear()
         player.current_pointer = 0
-        player.next_pointer = 0
+        player.next_pointer = -1
+        vc.stop()
 
         embed = discord.Embed(
             description="Queue has been cleared.",
@@ -258,7 +258,7 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if not player.queue:
+        if player.queue.empty():
             return await interaction.response.send_message("There is no queue.")
         if not vc.is_playing():
             return await interaction.response.send_message("I'm not currently playing anything.")
@@ -275,10 +275,8 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if not player.queue:
+        if player.queue.empty():
             return await interaction.response.send_message("There is no queue.")
-        if not vc.is_playing():
-            return await interaction.response.send_message("I'm not currently playing anything.")
         elif not vc.is_paused():
             return await interaction.response.send_message("The track is already being played.")
 
@@ -292,7 +290,7 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if not player.queue:
+        if player.queue.empty():
             return await interaction.response.send_message("There is no queue.")
         if not vc.is_playing():
             return await interaction.response.send_message("I'm not currently playing anything.")
@@ -307,14 +305,13 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if not player.queue:
+        if player.queue.empty():
             return await interaction.response.send_message("There is no queue.")
 
-        shuffled_remains = player.queue[player.current_pointer+1:]
-        random.shuffle(shuffled_remains)
-
-        player.queue = player.queue[:player.current_pointer+1] + shuffled_remains
-
+        non_shuffled = list(player.queue._queue)[:player.current_pointer+1]
+        shuffled = list(player.queue._queue)[player.current_pointer+1:]
+        random.shuffle(shuffled)
+        player.queue._queue = non_shuffled + shuffled
 
     async def loop_queue_(self, interaction):
         """Loops the queue of tracks."""

@@ -57,7 +57,7 @@ class PlayerView(View):
         track_list = self._get_track_list(first_row_index)
 
         tracks = "\n".join(track_list) + "\n"
-        remains = len(player.queue[first_row_index+9:])
+        remains = len(list(player.queue._queue)[first_row_index+9:])
         volume = f"{int(player.volume * 100)}%"
         loop_q = "✅" if player.loop_queue else "❌"
         loop_t = "✅" if player.loop_track else "❌"
@@ -65,7 +65,7 @@ class PlayerView(View):
         return tracks, remains, volume, loop_q, loop_t
 
     def _get_first_row_index(self):
-        queue = self.player.queue
+        queue = list(self.player.queue._queue)
         pointer = self.player.current_pointer
 
         s = 1
@@ -76,19 +76,14 @@ class PlayerView(View):
         return s
 
     def _get_track_list(self, s):
-        queue = self.player.queue
+        queue = list(self.player.queue._queue)
         pointer = self.player.current_pointer
 
         track_list = []
         for row_index, track in enumerate(queue[s-1:s+9], start=s):
-            row = f"`{f'{row_index}. '[:3]}`"
-            if pointer + 1 > row_index:
-                row += f"**{track['title']}**"
-            elif pointer + 1 == row_index:
-                row += f"**[{self.np.title}]({self.np.web_url})**"
-            else:
-                row += track['title']
-            track_list.append(row)
+                row = f"{f'{row_index}. '[:4]}{track['title']}"
+                row = f"---> {row} <---" if pointer + 1 == row_index else f"     {row}"
+                track_list.append(row)
 
         return track_list
 
