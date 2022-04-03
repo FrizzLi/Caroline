@@ -10,3 +10,4 @@ cogs/ai_algo/data/solutions
 cogs/korean/kor_config.json
 cogs/voice/audio
 cogs/korean/edu/*#*
+.env
