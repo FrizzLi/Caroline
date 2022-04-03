@@ -36,7 +36,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         self.title = data.get('title')
         self.web_url = data.get('webpage_url')
-        self.duration = self._get_readable_duration(data.get('duration'))
+        self.duration = data.get('duration')
         self.view_count = data.get('view_count')
 
     def __getitem__(self, item: str):
@@ -44,18 +44,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
         This is only useful when you are NOT downloading.
         """
         return self.__getattribute__(item)
-
-    def _get_readable_duration(self, duration):
-        """Get duration in hours, minutes and seconds."""
-
-        m, s = divmod(duration, 60)
-        h, m = divmod(m, 60)
-        h = (f'{int(h)}h' if h else '')
-        m = (' ' if h and m else '') + (f'{int(m)}m' if m else '')
-        s = (' ' if h or m else '') + (f'{int(s)}s' if s else '')
-        duration = h + m + s
-
-        return duration
 
     @classmethod
     async def create_source(cls, interaction, search: str, *, loop, download=False):

@@ -1,3 +1,5 @@
+from timeit import default_timer as timer
+
 import discord
 from discord.ui import View, Button
 
@@ -9,19 +11,36 @@ class PlayerView(View):
         self.player = player
         self.np = source
         self.old_msg = True
+        self.start_timestamp = timer()
         self.msg = self.generate_message()
+
+    def _get_readable_duration(self, duration):
+        """Get duration in hours, minutes and seconds."""
+
+        m, s = divmod(int(duration), 60)
+        h, m = divmod(m, 60)
+        h = (f'{int(h)}h' if h else '')
+        m = (' ' if h and m else '') + (f'{int(m)}m' if m else '')
+        s = (' ' if h or m else '') + (f'{int(s)}s' if s else '')
+        duration = h + m + s
+
+        return duration
 
     def generate_message(self):
         """Display information about player and queue of songs."""
 
         tracks, remains, volume, loop_q, loop_t = self._get_page_info()
+        end_timestamp = timer()
+        duration_left = self.np.duration - (end_timestamp - self.start_timestamp)
+        duration = self._get_readable_duration(duration_left)
+
         if self.old_msg:
             remains = f"{remains} remaining track(s)"
             vol = f"Volume: {volume}"
             loop_q = f"(🔁) Loop Queue: {loop_q}"
             loop_t = f"(🔂) Loop Track: {loop_t}"
             req = f"Requester: '{self.np.requester}'"
-            dur = f"Duration: {self.np.duration}"
+            dur = f"Duration: {duration} (refreshable)"
             views = f'Views: {self.np.view_count:,}'
 
             msg = (

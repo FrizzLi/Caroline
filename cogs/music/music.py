@@ -125,7 +125,7 @@ class Music(commands.Cog):
         for entry in entries:
             source = {
                 'webpage_url': entry['webpage_url'],
-                'requester': interaction.user.nick,  # TODO: mention instead of nick for no old_msg
+                'requester': interaction.user.display_name,
                 'title': entry['title'],
             }
             player.queue.append(source)

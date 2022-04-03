@@ -1,8 +1,8 @@
 import asyncio
+from discord.errors import ClientException
 
 from cogs.music.source import YTDLSource
 from cogs.music.player_view import PlayerView
-from discord.errors import ClientException
 
 class MusicPlayer:
     """A class which is assigned to each guild using the bot for Music.
