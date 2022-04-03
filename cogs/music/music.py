@@ -89,7 +89,7 @@ class Music(commands.Cog):
                 'requester': interaction.user.display_name,
                 'title': entry['title'],
             }
-            await player.queue.append(source)
+            player.queue.append(source)
 
         if send_signal:
             player.next.set()

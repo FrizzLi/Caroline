@@ -57,7 +57,7 @@ class PlayerView(View):
         track_list = self._get_track_list(first_row_index)
 
         tracks = "\n".join(track_list) + "\n"
-        remains = len(player.queue.[first_row_index+9:])
+        remains = len(player.queue[first_row_index+9:])
         volume = f"{int(player.volume * 100)}%"
         loop_q = "✅" if player.loop_queue else "❌"
         loop_t = "✅" if player.loop_track else "❌"
