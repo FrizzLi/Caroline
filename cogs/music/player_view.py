@@ -10,7 +10,6 @@ class PlayerView(View):
         self.add_item(Button(label="Current playing track link", url=source.web_url, row=1))
         self.player = player
         self.np = source
-        self.old_msg = True
         self.start_timestamp = timer()
         self.msg = self.generate_message()
 
@@ -34,30 +33,21 @@ class PlayerView(View):
         duration_left = self.np.duration - (end_timestamp - self.start_timestamp)
         duration = self._get_readable_duration(duration_left)
 
-        if self.old_msg:
-            remains = f"{remains} remaining track(s)"
-            vol = f"Volume: {volume}"
-            loop_q = f"(🔁) Loop Queue: {loop_q}"
-            loop_t = f"(🔂) Loop Track: {loop_t}"
-            req = f"Requester: '{self.np.requester}'"
-            dur = f"Duration: {duration} (refreshable)"
-            views = f'Views: {self.np.view_count:,}'
+        remains = f"{remains} remaining track(s)"
+        vol = f"Volume: {volume}"
+        loop_q = f"(🔁) Loop Queue: {loop_q}"
+        loop_t = f"(🔂) Loop Track: {loop_t}"
+        req = f"Requester: '{self.np.requester}'"
+        dur = f"Duration: {duration} (refreshable)"
+        views = f'Views: {self.np.view_count:,}'
 
-            msg = (
-                f"```ml\n{tracks}\n"
-                f"{remains}     currently playing track:\n"
-                f"{loop_q}      {req}\n"
-                f"{loop_t}      {dur}\n"
-                f"{vol}                {views}```"
-            )
-        else:
-            msg = discord.Embed(description=tracks, color=discord.Color.green())
-            msg.add_field(name='Remaining track(s)', value=remains)
-            msg.add_field(name="Volume", value=volume)
-            msg.add_field(name="Queue/Track Loop", value=f"{loop_q} / {loop_t}")
-            msg.add_field(name='Requested by', value=self.np.requester)
-            msg.add_field(name='Duration', value=self.np.duration, inline=True)
-            msg.add_field(name='Views', value=f'{self.np.view_count:,}', inline=True)
+        msg = (
+            f"```ml\n{tracks}\n"
+            f"{remains}     currently playing track:\n"
+            f"{loop_q}      {req}\n"
+            f"{loop_t}      {dur}\n"
+            f"{vol}                {views}```"
+        )
 
         return msg
 
@@ -90,21 +80,15 @@ class PlayerView(View):
         pointer = self.player.current_pointer
 
         track_list = []
-        if self.old_msg:
-            for row_index, track in enumerate(queue[s-1:s+9], start=s):
-                row = f"{f'{row_index}. '[:4]}{track['title']}"
-                row = f"---> {row} <---" if pointer + 1 == row_index else f"     {row}"
-                track_list.append(row)
-        else:
-            for row_index, track in enumerate(queue[s-1:s+9], start=s):
-                row = f"`{f'{row_index}. '[:3]}`"
-                if pointer + 1 > row_index:
-                    row += f"**{track['title']}**"
-                elif pointer + 1 == row_index:
-                    row += f"**[{self.np.title}]({self.np.web_url})**"
-                else:
-                    row += track['title']
-                track_list.append(row)
+        for row_index, track in enumerate(queue[s-1:s+9], start=s):
+            row = f"`{f'{row_index}. '[:3]}`"
+            if pointer + 1 > row_index:
+                row += f"**{track['title']}**"
+            elif pointer + 1 == row_index:
+                row += f"**[{self.np.title}]({self.np.web_url})**"
+            else:
+                row += track['title']
+            track_list.append(row)
 
         return track_list
 
