@@ -4,6 +4,7 @@ import os
 import discord
 from discord import app_commands
 from discord.ext import commands
+from youtube_dl.utils import DownloadError
 
 from cogs.music.player import MusicPlayer
 from cogs.music.source import YTDLSource
@@ -103,8 +104,10 @@ class Music(commands.Cog):
                 The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
 
+        # making sure interaction timeout does not expire
         await interaction.response.send_message("...Looking for song(s)... wait...")
 
+        # check if we're in channel, if not, join the one we are currently in
         vc = interaction.guild.voice_client
         if not vc:
             channel = interaction.user.voice.channel
@@ -112,7 +115,12 @@ class Music(commands.Cog):
 
         # If download is False, source will be a list of entries which will be used to regather the stream.
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
-        entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False)
+        try:
+            entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False)
+        except DownloadError as e:
+            await interaction.followup.send(e)
+            return
+
         player = self.get_player(interaction)
         for entry in entries:
             source = {
