@@ -261,9 +261,9 @@ class Music(commands.Cog):
 
         vc = interaction.guild.voice_client
         if not vc or not vc.is_playing():
-            return await interaction.response.send_message("I'm not currently playing anything.")
+            return
         elif vc.is_paused():
-            return await interaction.response.send_message("The track is already paused.")
+            return
 
         vc.pause()
 
@@ -272,9 +272,9 @@ class Music(commands.Cog):
 
         vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
-            return await interaction.response.send_message("I'm not connected to a voice channel.")
+            return
         elif not vc.is_paused():
-            return await interaction.response.send_message("The track is already being played.")
+            return
 
         vc.resume()
 
@@ -283,9 +283,9 @@ class Music(commands.Cog):
 
         vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
-            return await interaction.response.send_message("I'm not connected to a voice channel.")
+            return
         if not vc.is_playing() and not vc.is_paused():
-            return await interaction.response.send_message("I'm not currently playing anything.")
+            return
 
         vc.stop()
 
@@ -294,7 +294,7 @@ class Music(commands.Cog):
 
         player = self.get_player(interaction)
         if player.queue.empty():
-            return await interaction.response.send_message("There is no queue.")
+            return
 
         non_shuffled = list(player.queue._queue)[:player.current_pointer+1]
         shuffled = list(player.queue._queue)[player.current_pointer+1:]
