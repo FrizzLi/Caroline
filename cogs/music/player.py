@@ -45,8 +45,8 @@ class MusicPlayer:
                     if self.loop_queue:
                         self.next_pointer = 0  # queue loop
                     else:
-                        self.next_pointer = self.queue.qsize() - 1  # return to last song's index
-                        continue
+                        await self.next.wait()
+                        self.next.clear()
 
                 self.current_pointer = self.next_pointer
                 source = self.queue._queue[self.current_pointer]

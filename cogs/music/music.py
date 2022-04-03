@@ -82,6 +82,7 @@ class Music(commands.Cog):
             return
 
         player = self.get_player(interaction)
+        send_signal = True if player.next_pointer >= player.queue.qsize() else False
         for entry in entries:
             source = {
                 'webpage_url': entry['webpage_url'],
@@ -89,6 +90,9 @@ class Music(commands.Cog):
                 'title': entry['title'],
             }
             await player.queue.put(source)
+
+        if send_signal:
+            player.next.set()
 
 
     @app_commands.command(name='volume')
