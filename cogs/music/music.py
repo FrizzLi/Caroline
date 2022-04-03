@@ -1,7 +1,7 @@
 import random
-import asyncio
 import os
 import discord
+from asyncio import TimeoutError
 from discord import app_commands
 from discord.ext import commands
 from youtube_dl.utils import DownloadError
@@ -82,14 +82,14 @@ class Music(commands.Cog):
             return
 
         player = self.get_player(interaction)
-        send_signal = True if player.next_pointer >= player.queue.qsize() else False
+        send_signal = True if player.next_pointer >= len(player.queue) else False
         for entry in entries:
             source = {
                 'webpage_url': entry['webpage_url'],
                 'requester': interaction.user.display_name,
                 'title': entry['title'],
             }
-            await player.queue.put(source)
+            await player.queue.append(source)
 
         if send_signal:
             player.next.set()
@@ -151,7 +151,7 @@ class Music(commands.Cog):
                     color=discord.Color.green()
                 )
                 await interaction.response.send_message(embed=embed)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await interaction.response.send_message(f'Moving to channel: <{channel}> timed out.')
         else:
             try:
@@ -161,7 +161,7 @@ class Music(commands.Cog):
                     color=discord.Color.green()
                 )
                 await interaction.response.send_message(embed=embed)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await interaction.response.send_message(f'Connecting to channel: <{channel}> timed out.')
 
     @app_commands.command(name='leave')
@@ -190,9 +190,9 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if player.queue.empty():
+        if not player.queue:
             return await interaction.response.send_message("There is no queue.")
-        if 0 >= index or index > player.queue.qsize():
+        if 0 >= index or index > len(player.queue):
             return await interaction.response.send_message(f"Could not find a track at '{index}' index.")
 
         player.next_pointer = index-2
@@ -212,15 +212,15 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if player.queue.empty():
+        if not player.queue:
             return await interaction.response.send_message("There is no queue.")
         if index is None:
-            index = player.queue.qsize()
-        elif 0 >= index > player.queue.qsize():
+            index = len(player.queue)
+        elif 0 >= index > len(player.queue):
             return await interaction.response.send_message(f"Could not find a track at '{index}' index.")
 
-        s = player.queue._queue[index-1]
-        del player.queue._queue[index-1]
+        s = player.queue[index-1]
+        del player.queue[index-1]
         if index-1 <= player.next_pointer:
             player.next_pointer -= 1
         if index-1 <= player.current_pointer:
@@ -241,10 +241,10 @@ class Music(commands.Cog):
             return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
-        if player.queue.empty():
+        if not player.queue:
             return await interaction.response.send_message("There is no queue.")
 
-        player.queue._queue.clear()
+        player.queue.clear()
         player.current_pointer = 0
         player.next_pointer = -1
         vc.stop()
@@ -293,13 +293,13 @@ class Music(commands.Cog):
         """Randomizes the position of tracks in queue."""
 
         player = self.get_player(interaction)
-        if player.queue.empty():
+        if not player.queue:
             return
 
-        non_shuffled = list(player.queue._queue)[:player.current_pointer+1]
-        shuffled = list(player.queue._queue)[player.current_pointer+1:]
-        random.shuffle(shuffled)
-        player.queue._queue = non_shuffled + shuffled
+        shuffled_remains = player.queue[player.current_pointer+1:]
+        random.shuffle(shuffled_remains)
+
+        player.queue = player.queue[:player.current_pointer+1] + shuffled_remains
 
     async def loop_queue_(self, interaction):
         """Loops the queue of tracks."""

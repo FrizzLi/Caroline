@@ -57,7 +57,7 @@ class PlayerView(View):
         track_list = self._get_track_list(first_row_index)
 
         tracks = "\n".join(track_list) + "\n"
-        remains = len(list(player.queue._queue)[first_row_index+9:])
+        remains = len(player.queue.[first_row_index+9:])
         volume = f"{int(player.volume * 100)}%"
         loop_q = "✅" if player.loop_queue else "❌"
         loop_t = "✅" if player.loop_track else "❌"
@@ -65,7 +65,7 @@ class PlayerView(View):
         return tracks, remains, volume, loop_q, loop_t
 
     def _get_first_row_index(self):
-        queue = list(self.player.queue._queue)
+        queue = self.player.queue
         pointer = self.player.current_pointer
 
         s = 1
@@ -76,7 +76,7 @@ class PlayerView(View):
         return s
 
     def _get_track_list(self, s):
-        queue = list(self.player.queue._queue)
+        queue = self.player.queue
         pointer = self.player.current_pointer
 
         track_list = []

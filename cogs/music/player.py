@@ -17,7 +17,7 @@ class MusicPlayer:
         self.interaction = interaction
         self.music = music
 
-        self.queue = asyncio.Queue()
+        self.queue = []
         self.next = asyncio.Event()
 
         self.np_msg = None
@@ -41,7 +41,7 @@ class MusicPlayer:
             try:
                 if not self.loop_track:
                     self.next_pointer += 1  # next song
-                if self.next_pointer >= self.queue.qsize():
+                if self.next_pointer >= len(self.queue):
                     if self.loop_queue:
                         self.next_pointer = 0  # queue loop
                     else:
@@ -49,7 +49,7 @@ class MusicPlayer:
                         self.next.clear()
 
                 self.current_pointer = self.next_pointer
-                source = self.queue._queue[self.current_pointer]
+                source = self.queue[self.current_pointer]
 
             except asyncio.TimeoutError:
                 return self.destroy(self.interaction.guild)
