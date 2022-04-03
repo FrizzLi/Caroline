@@ -219,6 +219,8 @@ class Music(commands.Cog):
         del player.queue._queue[index-1]
         if index-1 <= player.next_pointer:
             player.next_pointer -= 1
+        if index-1 <= player.current_pointer:
+            player.current_pointer -= 1
 
         embed = discord.Embed(
             description=f"Removed {index}. song [{s['title']}]({s['webpage_url']}).",
@@ -254,13 +256,7 @@ class Music(commands.Cog):
         """Pause the currently playing song."""
 
         vc = interaction.guild.voice_client
-        if not vc or not vc.is_connected():
-            return await interaction.response.send_message("I'm not connected to a voice channel.")
-
-        player = self.get_player(interaction)
-        if player.queue.empty():
-            return await interaction.response.send_message("There is no queue.")
-        if not vc.is_playing():
+        if not vc or not vc.is_playing():
             return await interaction.response.send_message("I'm not currently playing anything.")
         elif vc.is_paused():
             return await interaction.response.send_message("The track is already paused.")
@@ -273,10 +269,6 @@ class Music(commands.Cog):
         vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
             return await interaction.response.send_message("I'm not connected to a voice channel.")
-
-        player = self.get_player(interaction)
-        if player.queue.empty():
-            return await interaction.response.send_message("There is no queue.")
         elif not vc.is_paused():
             return await interaction.response.send_message("The track is already being played.")
 
@@ -288,21 +280,13 @@ class Music(commands.Cog):
         vc = interaction.guild.voice_client
         if not vc or not vc.is_connected():
             return await interaction.response.send_message("I'm not connected to a voice channel.")
-
-        player = self.get_player(interaction)
-        if player.queue.empty():
-            return await interaction.response.send_message("There is no queue.")
-        if not vc.is_playing():
+        if not vc.is_playing() and not vc.is_paused():
             return await interaction.response.send_message("I'm not currently playing anything.")
 
         vc.stop()
 
     async def shuffle_(self, interaction):
         """Randomizes the position of tracks in queue."""
-
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_connected():
-            return await interaction.response.send_message("I'm not connected to a voice channel.")
 
         player = self.get_player(interaction)
         if player.queue.empty():
