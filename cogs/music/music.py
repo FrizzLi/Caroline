@@ -122,7 +122,7 @@ class Music(commands.Cog):
             color=discord.Color.green()
         )
         await interaction.response.send_message(embed=embed)
-fddfgdfg
+
     @app_commands.command(name='join')
     async def connect_(self, interaction, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
