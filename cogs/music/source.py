@@ -24,8 +24,8 @@ ytdlopts = {
 ytdl = youtube_dl.YoutubeDL(ytdlopts)
 
 ffmpeg_opts = {
-    'before_options': '-nostdin',
-    'options': '-vn'
+    'options': '-vn',
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
 }
 
 class YTDLSource(discord.PCMVolumeTransformer):
@@ -82,4 +82,4 @@ class YTDLSource(discord.PCMVolumeTransformer):
         to_run = functools.partial(ytdl.extract_info, url=data['webpage_url'], download=False)
         data = await loop.run_in_executor(None, to_run)
 
-        return cls(discord.FFmpegPCMAudio(data['url']), data=data, requester=requester)
+        return cls(discord.FFmpegPCMAudio(data['url'], **ffmpeg_opts), data=data, requester=requester)
