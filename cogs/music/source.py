@@ -23,10 +23,6 @@ ytdlopts = {
 
 ytdl = youtube_dl.YoutubeDL(ytdlopts)
 
-ffmpeg_opts = {
-    'options': '-vn',
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
-}
 
 class YTDLSource(discord.PCMVolumeTransformer):
 
@@ -72,7 +68,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(source), data=data['entries'], requester=interaction.user)
 
     @classmethod
-    async def regather_stream(cls, data, *, loop):
+    async def regather_stream(cls, data, *, loop, timestamp=0):
         """Used for preparing a stream, instead of downloading.
         Since Youtube Streaming links expire."""
 
@@ -81,5 +77,13 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         to_run = functools.partial(ytdl.extract_info, url=data['webpage_url'], download=False)
         data = await loop.run_in_executor(None, to_run)
+
+        # set timestamp for last 5 seconds if set too high
+        if data['duration'] < timestamp + 5:
+            timestamp = data['duration'] - 5
+        ffmpeg_opts = {
+            'options': f'-vn -ss {timestamp}',
+            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
+        }
 
         return cls(discord.FFmpegPCMAudio(data['url'], **ffmpeg_opts), data=data, requester=requester)

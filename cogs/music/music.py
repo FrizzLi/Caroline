@@ -255,6 +255,28 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
+    @app_commands.command(name='seek')
+    async def seek_(self, interaction, second: int=0):
+        """Goes to a specific timestamp of currently played track."""
+
+        vc = interaction.guild.voice_client
+        if not vc or not vc.is_connected():
+            return await interaction.response.send_message("I'm not connected to a voice channel.")
+
+        player = self.get_player(interaction)
+        if vc.is_paused() or not vc.is_playing():
+            return await interaction.response.send_message("There is no song being played.")
+
+        player.timestamp = second
+        player.next_pointer -= 1
+        vc.stop()
+
+        embed = discord.Embed(
+            description="Track has been seeked.",
+            color=discord.Color.green()
+        )
+        await interaction.response.send_message(embed=embed)
+
     # Button commands
     async def pause_(self, interaction):
         """Pause the currently playing song."""

@@ -11,8 +11,6 @@ class MusicPlayer:
     When the bot disconnects from the Voice it's instance will be destroyed.
     """
 
-    __slots__ = ('interaction', 'music', 'queue', 'next', 'np_msg', 'volume', 'current_pointer', 'next_pointer', 'loop_queue', 'loop_track')
-
     def __init__(self, interaction, music):
         self.interaction = interaction
         self.music = music
@@ -26,6 +24,8 @@ class MusicPlayer:
         self.next_pointer = -1
         self.loop_queue = False
         self.loop_track = False
+
+        self.timestamp = 0
 
         interaction.client.loop.create_task(self.player_loop())
 
@@ -58,12 +58,15 @@ class MusicPlayer:
                 # Source was probably a stream (not downloaded)
                 # So we should regather to prevent stream expiration
                 try:
-                    source = await YTDLSource.regather_stream(source, loop=self.interaction.client.loop)
+                    source = await YTDLSource.regather_stream(
+                        source, loop=self.interaction.client.loop, timestamp=self.timestamp
+                    )
                 except Exception as e:
                     await self.interaction.channel.send(
                         f'There was an error processing your song.\n```css\n[{e}]\n```'
                     )
                     continue
+                self.timestamp = 0
 
             source.volume = self.volume
             try:
