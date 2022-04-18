@@ -1,19 +1,10 @@
 from timeit import default_timer as timer
 
 import discord
-from discord.ui import View, Button
+from discord.ui import View, Button, Select
 
 
-class PlayerView(View):
-    def __init__(self, player, source):
-        super().__init__(timeout=None)
-        self.add_item(Button(label="Current playing track link", url=source.web_url, row=1))
-        self.player = player
-        self.np = source
-        self.start_timestamp = timer()
-        self.msg = self.generate_message()
-
-    def _get_readable_duration(self, duration):
+def get_readable_duration(duration):
         """Get duration in hours, minutes and seconds."""
 
         m, s = divmod(int(duration), 60)
@@ -25,13 +16,52 @@ class PlayerView(View):
 
         return duration
 
+
+class SearchSelect(Select):
+    def __init__(self, player):
+        super().__init__()
+        self.player = player
+
+    async def callback(self, interaction):
+        await self.player.music._play(interaction, self.values[0])
+
+
+class SearchView(View):
+    def __init__(self, player, tracks):
+        super().__init__(timeout=None)
+        self.msg = "Choose a track!"
+        self.add_item(self.addSelection(tracks, player))
+
+    def addSelection(self, tracks, player):
+        selection = SearchSelect(player)
+        for track in tracks['entries']:
+            selection.add_option(
+                label=track['title'],
+                description=get_readable_duration(track['duration']),
+                value=track['webpage_url'],
+            )
+        return selection
+
+
+
+
+
+class PlayerView(View):
+    def __init__(self, player, source):
+        super().__init__(timeout=None)
+        self.add_item(Button(label="Current playing track link", url=source.web_url, row=1))
+        self.player = player
+        self.np = source
+        self.start_timestamp = timer()
+        self.msg = self.generate_message()
+
     def generate_message(self):
         """Display information about player and queue of songs."""
 
         tracks, remains, volume, loop_q, loop_t = self._get_page_info()
         end_timestamp = timer()
         duration_left = self.np.duration - (end_timestamp - self.start_timestamp)
-        duration = self._get_readable_duration(duration_left)
+        duration = get_readable_duration(duration_left)
 
         remains = f"{remains} remaining track(s)"
         vol = f"Volume: {volume}"

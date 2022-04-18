@@ -1,11 +1,12 @@
 import random
 import os
 import discord
+import youtube_dl
 from asyncio import TimeoutError
 from discord import app_commands
 from discord.ext import commands
-from youtube_dl.utils import DownloadError
 
+from cogs.music.player_view import SearchView
 from cogs.music.player import MusicPlayer
 from cogs.music.source import YTDLSource
 
@@ -64,6 +65,10 @@ class Music(commands.Cog):
                 The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
 
+        await self._play(interaction, search)
+
+    async def _play(self, interaction, search):
+
         # making sure interaction timeout does not expire
         await interaction.response.send_message("...Looking for song(s)... wait...")
 
@@ -77,7 +82,7 @@ class Music(commands.Cog):
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
         try:
             entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False)
-        except DownloadError as e:
+        except youtube_dl.utils.DownloadError as e:
             await interaction.followup.send(e)
             return
 
@@ -93,7 +98,6 @@ class Music(commands.Cog):
 
         if send_signal:
             player.next.set()
-
 
     @app_commands.command(name='volume')
     async def change_volume(self, interaction, *, volume: int=None):
@@ -276,6 +280,26 @@ class Music(commands.Cog):
             color=discord.Color.green()
         )
         await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name='search')
+    async def search_(self, interaction, search: str):
+        """Searches 10 entries from query."""
+
+        # making sure interaction timeout does not expire
+        await interaction.response.send_message("...Looking for song(s)... wait...")
+
+        # get entries
+        try:
+            entries = await YTDLSource.search_source(interaction, search, loop=self.bot.loop, download=False)
+        except youtube_dl.utils.DownloadError as e:
+            await interaction.followup.send(e)
+            return
+
+        # load it into view
+        player = self.get_player(interaction)
+        view = SearchView(player, entries)
+        await interaction.channel.send(view.msg, view=view)
+
 
     # Button commands
     async def pause_(self, interaction):

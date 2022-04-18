@@ -68,6 +68,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(source), data=data['entries'], requester=interaction.user)
 
     @classmethod
+    async def search_source(cls, interaction, search: str, *, loop, download=False):
+        loop = loop or asyncio.get_event_loop()
+
+        to_run = functools.partial(ytdl.extract_info, url='ytsearch10: ' + search, download=download)
+        data = await loop.run_in_executor(None, to_run)
+
+        return data
+
+    @classmethod
     async def regather_stream(cls, data, *, loop, timestamp=0):
         """Used for preparing a stream, instead of downloading.
         Since Youtube Streaming links expire."""

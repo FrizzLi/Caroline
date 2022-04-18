@@ -33,7 +33,6 @@ class MusicPlayer:
         """Our main player loop."""
 
         await self.interaction.client.wait_until_ready()
-        voice_client = self.interaction.guild.voice_client
 
         while not self.interaction.client.is_closed():
             self.next.clear()
@@ -70,10 +69,10 @@ class MusicPlayer:
 
             source.volume = self.volume
             try:
-                voice_client.play(
+                self.interaction.guild.voice_client.play(
                     source, after=lambda _: self.interaction.client.loop.call_soon_threadsafe(self.next.set)
                 )
-            except ClientException as e:
+            except (ClientException, AttributeError) as e:
                 print(e)
                 return
 
