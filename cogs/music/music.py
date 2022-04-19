@@ -300,6 +300,25 @@ class Music(commands.Cog):
         view = SearchView(player, entries)
         await interaction.channel.send(view.msg, view=view)
 
+    @app_commands.command(name='playlist')
+    async def playlist_(self, interaction, search: str):
+        """Display all songs from a playlist to pick from."""
+
+        # making sure interaction timeout does not expire
+        await interaction.response.send_message("...Looking for song(s)... wait...")
+
+        # get entries
+        try:
+            entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False, playlist=True)
+        except youtube_dl.utils.DownloadError as e:
+            await interaction.followup.send(e)
+            return
+
+        # load it into view
+        player = self.get_player(interaction)
+        view = SearchView(player, entries)
+        await interaction.channel.send(view.msg, view=view)
+
 
     # Button commands
     async def pause_(self, interaction):
@@ -358,6 +377,29 @@ class Music(commands.Cog):
 
         player = self.get_player(interaction)
         player.loop_track = not player.loop_track
+
+
+
+
+    # @app_commands.command(name='searchha')
+    # async def searchh(self, interaction, search: str):
+    #     """Searches 10 entries from query."""
+
+    #     # making sure interaction timeout does not expire
+    #     # await interaction.response.send_message("...Looking for song(s)... wait...")
+    #     # messages = interaction.channel.history(limit=200)
+    #     a = interaction.channel.history()
+    #     b = 0
+    #     c = []
+    #     async for elem in interaction.channel.history(limit=200):
+    #         # print(elem.content)
+    #         # if elem.content.startswith("..."):
+    #         #     b=2
+    #         # if elem.content.startswith("-play") or elem.content.startswith("!play"):
+    #         c.append(elem)
+    #     b = 1
+    #     print(b)
+
 
 async def setup(bot):
     await bot.add_cog(

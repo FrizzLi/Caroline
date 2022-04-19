@@ -34,16 +34,15 @@ class SearchView(View):
 
     def addSelection(self, tracks, player):
         selection = SearchSelect(player)
-        for track in tracks['entries']:
+
+        # above 25: raises maximum number of options already provided 
+        for track in tracks[-25:]:
             selection.add_option(
                 label=track['title'],
                 description=get_readable_duration(track['duration']),
                 value=track['webpage_url'],
             )
         return selection
-
-
-
 
 
 class PlayerView(View):
