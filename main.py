@@ -13,15 +13,6 @@ class MyBot(commands.Bot):
         )
 
     @commands.Cog.listener()
-    async def on_command_error(ctx, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("BadArgument! [{}]".format(error))
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("MissingRequiredArgument! [{}]".format(error))
-        else:
-            await ctx.send(error)
-
-    @commands.Cog.listener()
     async def on_ready(ctx):
         await bot.change_presence(
             activity=discord.Activity(
