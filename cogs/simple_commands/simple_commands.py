@@ -533,18 +533,18 @@ class Commands(commands.Cog):
         # get pandas format
         gc = gspread.service_account(filename='credentials.json')
         sh = gc.open("Discord Music Log")
-        cmd_wks = sh.worksheet("Commands Log2")
+        cmd_wks = sh.worksheet("Commands Log")
         cmd_df = pd.DataFrame(cmd_wks.get_all_records())
         cmd_df['Date'] = pd.to_datetime(cmd_df['Date'])
         now = pd.Timestamp.now()
 
         # preparation
         name_offset_dict = {
-            # "Track Log (Lifetime)": False,
-            "Track Log (year)": pd.DateOffset(years=1),
-            # "Track Log (3 months)": pd.DateOffset(months=3),
-            # "Track Log (month)": pd.DateOffset(months=1),
-            # "Track Log (week)": pd.DateOffset(weeks=1)
+            "Track Log (Lifetime)": False,
+            "Track Log (Year)": pd.DateOffset(years=1),
+            "Track Log (3 Months)": pd.DateOffset(months=3),
+            "Track Log (Month)": pd.DateOffset(months=1),
+            "Track Log (Week)": pd.DateOffset(weeks=1)
         }
 
         for sheet_name, offset in name_offset_dict.items():
@@ -567,13 +567,13 @@ class Commands(commands.Cog):
                 filtered_cmd_df = cmd_df
 
             # groupby titles
-            grouped_cmd_df = filtered_cmd_df.groupby(["Title", "URL"])["Date"]
+            grouped_cmd_df = filtered_cmd_df.groupby(["URL", "Title"])["Date"]
             function_list = [("First time requested", "min"), ("Last time requested", "max"), ("Requests", "count")]
             grouped_cmd_df = grouped_cmd_df.agg(function_list).reset_index()
 
             # merge with track_df, rearrange, clean data
-            cols_to_use = track_df.columns.difference(grouped_cmd_df.columns)
-            merged_df = pd.merge(grouped_cmd_df, track_df[cols_to_use], left_index=True, right_index=True, how='outer')
+            track_df = track_df.drop(labels=["First time requested", "Last time requested", "Requests", "Title"], axis=1)
+            merged_df = pd.merge(grouped_cmd_df, track_df, on='URL', how='left')
             merged_df = merged_df[[
                 'First time requested', 'Last time requested',
                 'Requests', 'Title', 'URL',
@@ -582,10 +582,10 @@ class Commands(commands.Cog):
             merged_df['First time requested'] = merged_df['First time requested'].astype(str)
             merged_df['Last time requested'] = merged_df['Last time requested'].astype(str)
             merged_df = merged_df.fillna(0)
-            # merged_df = merged_df.sort_values(by='Requests', ascending=False)
+            merged_df = merged_df.sort_values(by='Requests', ascending=False)
 
             # fill missing cells
-            for i, row in enumerate(merged_df.head(24).itertuples()):
+            for i, row in enumerate(merged_df.itertuples(), 1):
                 ytb_stats = row.Duration, row.Views, row.Categories
                 if not all(ytb_stats):
                     try:
@@ -597,7 +597,7 @@ class Commands(commands.Cog):
                     merged_df.at[row.Index, 'Duration'] = duration.replace(":", "︰")
                     merged_df.at[row.Index, 'Views'] = views
                     merged_df.at[row.Index, 'Categories'] = categories
-                    print(f"Updated {i} row.")
+                    print(f"Updated {i} row. ({duration}, {views}, {categories}) -- {row.Title}")
 
             # save to gsheets
             listed_table_result = [merged_df.columns.values.tolist()] + merged_df.values.tolist()  # first part is for header
