@@ -9,10 +9,11 @@ def get_readable_duration(duration):
 
         m, s = divmod(int(duration), 60)
         h, m = divmod(m, 60)
-        h = (f'{int(h)}h' if h else '')
-        m = (' ' if h and m else '') + (f'{int(m)}m' if m else '')
-        s = (' ' if h or m else '') + (f'{int(s)}s' if s else '')
-        duration = h + m + s
+
+        if h:
+            duration = f"{h}:{m:02d}:{s:02d}"
+        else:
+            duration = f"{m}:{s:02d}"
 
         return duration
 
