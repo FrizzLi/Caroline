@@ -66,7 +66,7 @@ class Music(commands.Cog):
         """
 
         await self._play(interaction, search)
-
+s
     async def _play(self, interaction, search):
 
         # making sure interaction timeout does not expire
@@ -91,7 +91,7 @@ class Music(commands.Cog):
         for entry in entries:
             source = {
                 'webpage_url': entry['webpage_url'],
-                'requester': interaction.user.display_name,
+                'requester': interaction.user.name,
                 'title': entry['title'],
             }
             player.queue.append(source)
@@ -377,28 +377,6 @@ class Music(commands.Cog):
 
         player = self.get_player(interaction)
         player.loop_track = not player.loop_track
-
-
-
-
-    # @app_commands.command(name='searchha')
-    # async def searchh(self, interaction, search: str):
-    #     """Searches 10 entries from query."""
-
-    #     # making sure interaction timeout does not expire
-    #     # await interaction.response.send_message("...Looking for song(s)... wait...")
-    #     # messages = interaction.channel.history(limit=200)
-    #     a = interaction.channel.history()
-    #     b = 0
-    #     c = []
-    #     async for elem in interaction.channel.history(limit=200):
-    #         # print(elem.content)
-    #         # if elem.content.startswith("..."):
-    #         #     b=2
-    #         # if elem.content.startswith("-play") or elem.content.startswith("!play"):
-    #         c.append(elem)
-    #     b = 1
-    #     print(b)
 
 
 async def setup(bot):
