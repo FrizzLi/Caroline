@@ -1,3 +1,10 @@
-pandas
+discord.py @ git+https://github.com/Rapptz/discord.py@deb79587979209c811329802bacfbaf78c157892
+youtube_dl
+pillow
+pandas  # (pytz, numpy)
 gspread
-pytz
+
+pylint
+flake8
+black
+pytest
