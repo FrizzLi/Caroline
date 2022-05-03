@@ -107,7 +107,7 @@ class Commands(commands.Cog):
         return duration, views, categories
 
     @commands.command()
-    async def history(self, ctx, limit: int):
+    async def history(self, ctx, limit: int=1000):
         """Saves history of songs into Google Sheets."""
 
         table_data = []
@@ -122,7 +122,7 @@ class Commands(commands.Cog):
                 try:
                     datetime, author, title, webpage_url = self.get_ytb_cmd_data(elem)
                 except Exception as e:
-                    print(f"{i}. Error: {e}. It is a playlist or there's other problem. search_expr: {search_expr}")
+                    print(f"{i}. Error: {e}. It is a playlist or there's other problem. command: {elem.content}")
                     continue
 
                 rec = datetime, author, title, webpage_url
@@ -138,11 +138,11 @@ class Commands(commands.Cog):
                 title = result[1].replace('"',"'")
                 webpage_url = result[2].replace('"',"'")
                 author_id = result[3]
-                author = await ctx.guild.fetch_member(author_id).name
+                author = await ctx.guild.fetch_member(author_id)
                 tz_aware_date = elem.created_at.astimezone(pytz.timezone('Europe/Berlin'))
                 datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")  # %Z%z
 
-                rec = datetime, author, title, webpage_url
+                rec = datetime, author.name, title, webpage_url
                 table_data.append(rec)
                 print(f"{i}. (new) downloaded: {rec}")
 
@@ -178,7 +178,7 @@ class Commands(commands.Cog):
         }
 
         for sheet_name, offset in name_offset_dict.items():
-            print(sheet_name, "begins")
+            print(sheet_name, "-----BEGINS-----")
             track_wks = sh.worksheet(sheet_name)
             track_df = pd.DataFrame(track_wks.get_all_records())
             if track_df.empty:
