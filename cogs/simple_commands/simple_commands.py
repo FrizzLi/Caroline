@@ -8,6 +8,8 @@ import gspread
 import pytz
 from cogs.music.player_view import get_readable_duration
 from cogs.music.source import ytdl
+import json
+import os
 
 
 class Commands(commands.Cog):
@@ -147,7 +149,9 @@ class Commands(commands.Cog):
                 print(f"{i}. (new) downloaded: {rec}")
 
         # save to gsheets
-        gc = gspread.service_account(filename='credentials.json')
+        credentials_dict_string = os.environ.get("GOOGLE_CREDENTIALS")
+        credentials_dict = json.loads(credentials_dict_string)
+        gc = gspread.service_account_from_dict(credentials_dict)
         sh = gc.open("Discord Music Log")
         wks = sh.worksheet("Commands Log")  # for creation sh.add_worksheet("Commands Log", df.shape[0], df.shape[1])
         df = pd.DataFrame(table_data, index=None)
@@ -161,7 +165,9 @@ class Commands(commands.Cog):
         """Saves history of songs into Google Sheets."""
 
         # get pandas format
-        gc = gspread.service_account(filename='credentials.json')
+        credentials_dict_string = os.environ.get("GOOGLE_CREDENTIALS")
+        credentials_dict = json.loads(credentials_dict_string)
+        gc = gspread.service_account_from_dict(credentials_dict)
         sh = gc.open("Discord Music Log")
         cmd_wks = sh.worksheet("Commands Log")
         cmd_df = pd.DataFrame(cmd_wks.get_all_records())
