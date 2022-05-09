@@ -155,7 +155,7 @@ class Commands(commands.Cog):
         sh = gc.open("Discord Music Log")
         wks = sh.worksheet("Commands Log")  # for creation sh.add_worksheet("Commands Log", df.shape[0], df.shape[1])
         df = pd.DataFrame(table_data, index=None)
-        wks_formatted_rows = [df.columns.values.tolist()] + df.values.tolist()
+        wks_formatted_rows = df.values.tolist()
         wks.append_rows(wks_formatted_rows, value_input_option='USER_ENTERED')
 
         await ctx.send("___Messages saved up to this point.___")
