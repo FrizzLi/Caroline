@@ -1,8 +1,8 @@
-import functools
 import asyncio
-import youtube_dl
-import discord
+import functools
 
+import discord
+import youtube_dl
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''

@@ -1,14 +1,14 @@
-import random
 import os
+import random
+from asyncio import TimeoutError
+
 import discord
 import youtube_dl
-from asyncio import TimeoutError
+from cogs.music.player import MusicPlayer
+from cogs.music.player_view import SearchView
+from cogs.music.source import YTDLSource
 from discord import app_commands
 from discord.ext import commands
-
-from cogs.music.player_view import SearchView
-from cogs.music.player import MusicPlayer
-from cogs.music.source import YTDLSource
 
 
 class Music(commands.Cog):
