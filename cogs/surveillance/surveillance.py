@@ -1,9 +1,10 @@
 import json
-import pytz
-import discord
 import os
-from discord.ext import commands
 from datetime import datetime
+
+import discord
+import pytz
+from discord.ext import commands
 from discord.utils import get
 
 
@@ -17,6 +18,10 @@ class Surveillance(commands.Cog):
         self.config = config
 
     # TODO: Maybe create properties like in korean.py? To preserve consistency
+    # TODO: this should only have voice monitoring and status,
+    # we could figure out everything else just by reading messages
+    # TODO: therefore, we wouldn't need surv_config.json anymore
+    # TODO: restart bot command for refresh.. heroku CLI cmd or other way?
 
     # Helping functions
     def get_timeRole(self, member):
@@ -40,7 +45,8 @@ class Surveillance(commands.Cog):
         # await ctx.bot.process_commands(message)
 
         # Dont read bot's messages
-        # if "Skynet" in [y.name for y in message.author.roles]: !!!!!!!!!!!!!!!'User' object has no attribute roles
+        # if "Skynet" in [y.name for y in message.author.roles]:
+        # TODO: !!!!!!!!!!!!!!!'User' object has no attribute roles
         #     return
 
         if not message.content:  # can happen on on_member_join
@@ -338,7 +344,7 @@ class Surveillance(commands.Cog):
     @commands.is_owner()
     @commands.command(brief="Surveillance settings properties.++")
     async def configure(self, ctx, action=None, val=None):
-        ''' "?configure" - shows current settings
+        """ "?configure" - shows current settings
         "?configure on_typing 1" - turns on tracking for typing into channel
         "?configure on_typing 0" - turns off tracking for typing into channel
 
@@ -353,7 +359,7 @@ class Surveillance(commands.Cog):
         member_remove (somebody has left the server),
         member_update (nick change, on/off, dnd, idle, activity),
         member_voice (deaf, mute, broadcast, afk, join/move voice channel),
-        member_role (shows user's role after name)'''
+        member_role (shows user's role after name)"""
 
         if action and val:
             val = "1" if val != "0" else "0"
