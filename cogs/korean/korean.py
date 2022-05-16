@@ -1,14 +1,14 @@
-import json
-import random
-import os
 import glob
-import discord
-from discord.ext import commands
-from discord.utils import get
+import json
+import os
+import random
 from collections import defaultdict
 from pathlib import Path
 
+import discord
 from cogs.korean.edu.create_vocab import createVocab as crVocab
+from discord.ext import commands
+from discord.utils import get
 
 
 class Language(commands.Cog):
@@ -147,9 +147,7 @@ class Language(commands.Cog):
                     all_vocab = json.load(f)
             else:
                 await ctx.send("Review vocab file does not exist.")
-                raise commands.CommandError(
-                    "Review vocab file does not exist."
-                )
+                raise commands.CommandError("Review vocab file does not exist.")
             all_vocab = [(k, v) for k, v in all_vocab.items()]
         else:
             full_path = f"{dir_path}\\{self.level}.json"
@@ -187,17 +185,20 @@ class Language(commands.Cog):
 
         # nobody except the command sender can interact with the "menu"
         def check(reaction, user):
-            return (
-                user == ctx.author
-                and reaction.emoji in ["🔚","⏭️","🔁","❌","✅"]
-            )
+            return user == ctx.author and reaction.emoji in [
+                "🔚",
+                "⏭️",
+                "🔁",
+                "❌",
+                "✅",
+            ]
 
         def computePercentages(good, ok, bad):
             total = good + ok + bad
             return (
                 round(good * 100 / total, 1),
                 round(ok * 100 / total, 1),
-                round(bad * 100 / total, 1)
+                round(bad * 100 / total, 1),
             )
 
         unknown_words = []
