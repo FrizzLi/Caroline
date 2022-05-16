@@ -1,7 +1,7 @@
 import os
 
-from discord.ext import commands
 from discord import File
+from discord.ext import commands
 
 # This import is for version without discord
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
 import collections as col
 import json
+import os
 import random
 import re
-import os
-from pathlib import Path
 from itertools import islice
 from os.path import dirname
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 
