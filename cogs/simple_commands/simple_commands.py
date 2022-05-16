@@ -1,15 +1,15 @@
+import json
+import os
 import random
-import discord
-from discord.ext import commands
-import youtube_dl
-import pandas as pd
 import re
+
+import discord
 import gspread
+import pandas as pd
 import pytz
 from cogs.music.player_view import get_readable_duration
 from cogs.music.source import ytdl
-import json
-import os
+from discord.ext import commands
 
 
 class Commands(commands.Cog):
@@ -50,30 +50,14 @@ class Commands(commands.Cog):
         )
         await ctx.send("Python mode deactivated!")
 
-    @commands.command(brief="Deletes specified number of messages. (clearr 5)")
-    async def clearr(self, ctx, amount=5):
-        channel = ctx.message.channel
-        async for message in channel.history(limit=int(amount) + 1):
-            await message.delete()
-
-    @commands.command(brief="?choose black pink white.")
-    async def choose(self, ctx, *args):
-        await ctx.send(random.choice(args))
-
-    @commands.command(brief="Replies specified message.++")
-    async def echo(self, ctx, *args):
-        """ For voice put '-v' after echo. E.g. ?echo -v Hello world!"""
-        # TODO: after voice is done, make TTS
-
-        if args[0] == "-v":
-            await ctx.send(" ".join(args[1:]), tts=True)
-        else:
-            await ctx.send(" ".join(args))
 
     @commands.command(brief="Logouts bot from the server.")
     async def close(self, ctx):
         await self.bot.close()
 
+    # TODO: move below functions into music cog
+    # TODO: change ALL commands to interaction cmds
+    # TODO: check interaction commands groups (?) otherwise its a mess!
     def get_ytb_cmd_data(self, elem):
         search_expr = elem.content[6:]
         data = ytdl.extract_info(url=search_expr, download=False)
