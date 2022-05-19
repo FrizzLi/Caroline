@@ -22,7 +22,7 @@ class MyBot(commands.Bot):
             ),
             status=discord.Status.online,
         )
-        print(f"Logged as {bot.user.name} with {discord.__version__} version.")
+        print(f"Logged {bot.user.name} with {discord.__version__} version.")
 
     async def setup_hook(self):
         py_files = {
