@@ -26,20 +26,8 @@ class Surveillance(commands.Cog):
         return time
 
     @commands.Cog.listener()
-    async def on_member_update(self, before, after):
+    async def on_presence_update(self, before, after):
         time = self.get_time()
-
-        # dont check nicks, but username instead as its more stable
-        # do not allow users to change nicknames into already existing ones
-        if before.nick != after.nick:
-            member_exist = get(after.guild.members, name=after.display_name)
-            if after.nick and member_exist:
-                await after.edit(nick=(before.display_name + "_stop"))
-
-            new_nick = after.name if not after.nick else after.nick
-            await self.get_log_channel().send(
-                f"{time}: {before.name} has changed his nick to {new_nick}."
-            )
 
         if (
             before.status == discord.Status.offline
