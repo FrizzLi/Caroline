@@ -102,19 +102,6 @@ class Surveillance(commands.Cog):
         for msg in msgs:
             await self.get_log_channel().send(f"{time}: {after.name} {msg}")
 
-    # More types of actions:
-    # DELETED msg_post (when somebody sends a message),
-    # DELETED msg_delete (somebody deletes a message),
-    # DELETED msg_edit (somebody edits a message),
-    # DELETED on_typing (somebody starts writing into channel),
-    # DELETED reaction_add (somebody adds a reaction to message),
-    # DELETED reaction_remove (somebody removes a reaction from message),
-    # DELETED member_join (somebody has joined the server),
-    # DELETED member_remove (somebody has left the server),
-    # member_update (nick change, on/off, dnd, idle, activity),
-    # member_voice (deaf, mute, broadcast, afk, join/move voice channel),
-    # DELETED member_role (shows user's role after name)
-
     # TODO: Config with Gsheets
     @commands.is_owner()
     @commands.command(brief="Bypass surveillance settings.++")
