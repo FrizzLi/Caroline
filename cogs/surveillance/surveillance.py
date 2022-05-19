@@ -17,151 +17,19 @@ class Surveillance(commands.Cog):
         self.bot = bot
         self.config = config
 
-    # TODO: Maybe create properties like in korean.py? To preserve consistency
-    # this should only have voice monitoring and status,
-    # we could figure out everything else just by reading messages
-    # therefore, we wouldn't need surv_config.json anymore, and if, go with gsheets
-
-    # NotImplemented
-    # TODO: Helping method for stats observing in graphs
-
-    # Helping functions
-    def get_timeRole(self, member):
-        time = datetime.now(pytz.timezone("Europe/Bratislava"))
-        time = time.strftime("%Y-%m-%d %H:%M:%S")
-
-        role_on = self.config["logs"]["member_role"] == "1"
-        top_role = f"({str(member.top_role)})" if role_on else ""
-
-        return time, top_role
-
-    def get_logsChannel(self):
+    def get_log_channel(self):
         return self.bot.get_channel(self.config["IDs"]["logs"])
 
-    async def cond_write(self, msg, member_type):
-        if self.config["logs"][member_type] != "0":
-            await self.get_logsChannel().send(msg)
+    def get_time(self):
+        time = datetime.now(pytz.timezone("Europe/Bratislava"))
+        time = time.strftime("%Y-%m-%d %H:%M:%S")
+        return time
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        # await ctx.bot.process_commands(message)
-
-        # Dont read bot's messages
-        # if "Skynet" in [y.name for y in message.author.roles]:
-        # TODO: !!!!!!!!!!!!!!!'User' object has no attribute roles
-        #     return
-
-        if not message.content:  # can happen on on_member_join
-            return
-
-        # Surveillance posting
-        time, top_role = self.get_timeRole(message.author)
-        msg = f"{time}: {message.author.name}{top_role} sent "
-        f'"{message.content}" to {message.channel}.'
-
-        bypassed = message.channel.name in self.config["bypass_channels"]
-
-        if self.config["logs"]["msg_post"] == "1" and not bypassed:
-            await self.get_logsChannel().send(msg)
-
-    @commands.Cog.listener()
-    async def on_message_delete(self, message):
-        # dont read bot's action
-        if "Skynet" in [y.name for y in message.author.roles]:
-            return
-
-        # dont read actions in log channel
-        if self.get_logsChannel() == message.channel:
-            return
-
-        # config restriction
-        if message.channel.name in self.config["bypass_channels"]:
-            return
-
-        time, top_role = self.get_timeRole(message.author)
-        msg = f"{time}: {message.author.name}'s{top_role} message "
-        f'"{message.content}" was deleted in {message.channel}.'
-
-        if self.config["logs"]["msg_delete"] != "0":
-            await self.get_logsChannel().send(msg)
-
-    @commands.Cog.listener()
-    async def on_message_edit(self, before, after):
-        if "Skynet" in [y.name for y in after.author.roles]:
-            return
-        if after.channel.name in self.config["bypass_channels"]:
-            return
-
-        time, top_role = self.get_timeRole(after.author)
-        msg = f"{time}: {after.author.name}{top_role} has edited message "
-        f'"{before.content}" to "{after.content}" in {after.channel}.'
-
-        if self.config["logs"]["msg_edit"] != "0":
-            await self.get_logsChannel().send(msg)
-
-    @commands.Cog.listener()
-    async def on_typing(self, channel, user, when):
-        if channel.name in self.config["bypass_channels"]:
-            return
-
-        time, top_role = self.get_timeRole(user)
-        msg = f"{time}: {user.name}{top_role} is typing into {channel}."
-
-        if self.config["logs"]["on_typing"] != "0":
-            await self.get_logsChannel().send(msg)
-
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        if reaction.message.channel.name in self.config["bypass_channels"]:
-            return
-
-        time, top_role = self.get_timeRole(user)
-        msg = f"{time}: {user.name}{top_role} has added {reaction.emoji} to "
-        f"{reaction.message.author.name}'s{top_role} "
-        f'"{reaction.message.content}" in {reaction.message.channel}.'
-
-        if self.config["logs"]["reaction_add"] != "0":
-            await self.get_logsChannel().send(msg)
-
-    @commands.Cog.listener()
-    async def on_reaction_remove(self, reaction, user):
-        if reaction.message.channel.name in self.config["bypass_channels"]:
-            return
-
-        time, top_role = self.get_timeRole(user)
-        msg = f"{time}: {user.name}{top_role} has removed {reaction.emoji} "
-        f"from {reaction.message.author.name}'s{top_role} "
-        f'"{reaction.message.content}" in {reaction.message.channel}.'
-
-        if self.config["logs"]["reaction_remove"] != "0":
-            await self.get_logsChannel().send(msg)
-
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        role = get(self.bot.guilds[0].roles, name="Member")
-        await member.add_roles(role)
-
-        time, top_role = self.get_timeRole(member)
-        msg = f"{time}: {member.name}{top_role} has joined this server."
-
-        if self.config["logs"]["member_join"] != "0":
-            await self.get_logsChannel().send(msg)
-
-    @commands.Cog.listener()
-    async def on_member_remove(self, member):
-        time, top_role = self.get_timeRole(member)
-        msg = f"{time}: {member.name}{top_role} has left this server."
-
-        if self.config["logs"]["member_remove"] != "0":
-            await self.get_logsChannel().send(msg)
-
-    ##################################
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        time, top_role = self.get_timeRole(after)
-        if top_role == "(@everyone)":
-            return
+        time = self.get_time()
 
+        # dont check nicks, but username instead as its more stable
         # do not allow users to change nicknames into already existing ones
         if before.nick != after.nick:
             member_exist = get(after.guild.members, name=after.display_name)
@@ -169,141 +37,126 @@ class Surveillance(commands.Cog):
                 await after.edit(nick=(before.display_name + "_stop"))
 
             new_nick = after.name if not after.nick else after.nick
-            await self.cond_write(
-                f"{time}: {before.name}{top_role} has "
-                f"changed his nick to {new_nick}.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {before.name} has changed his nick to {new_nick}."
             )
 
         if (
             before.status == discord.Status.offline
         ) and after.status != discord.Status.offline:
-            await self.cond_write(
-                f"{time}: {after.name}{top_role} has come online.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {after.name} has come online."
             )
         if (
             before.status == discord.Status.idle
         ) and after.status != discord.Status.idle:
-            await self.cond_write(
-                f"{time}: {after.name}{top_role} is no longer idle.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {after.name} is no longer idle."
             )
         if (
             before.status != discord.Status.dnd
         ) and after.status == discord.Status.dnd:
-            await self.cond_write(
-                f"{time}: {after.name}{top_role} has set DND status.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {after.name} has set DND status."
             )
         if (
             before.status == discord.Status.dnd
         ) and after.status != discord.Status.dnd:
-            await self.cond_write(
-                f"{time}: {after.name}{top_role} is no longer DND.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {after.name} is no longer DND."
             )
         if (
             before.status != discord.Status.idle
         ) and after.status == discord.Status.idle:
-            await self.cond_write(
-                f"{time}: {after.name}{top_role} has gone idle.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {after.name} has gone idle."
             )
         elif before.activity != after.activity and after.activity is None:
-            await self.cond_write(
-                f"{time}: {after.name}{top_role} has stopped "
-                f"{before.activity.name}.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {after.name} has stopped {before.activity.name}."
             )
         elif before.activity != after.activity and before.activity is None:
-            await self.cond_write(
-                f"{time}: {after.name}{top_role} has started "
-                f"{after.activity.name}.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {after.name} has started {after.activity.name}."
             )
         if (
             before.status != discord.Status.offline
         ) and after.status == discord.Status.offline:
-            await self.cond_write(
-                f"{time}: {after.name}{top_role} has gone offline.",
-                "member_update",
+            await self.get_log_channel().send(
+                f"{time}: {after.name} has gone offline."
             )
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-        time, top_role = self.get_timeRole(member)
+        time = self.get_time()
 
         if ((before.deaf is False) and after.deaf) or (
             (before.self_deaf is False) and after.self_deaf
         ):
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has been deafened.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has been deafened."
             )
         elif ((before.deaf is True) and not after.deaf) or (
             (before.self_deaf is True) and not after.self_deaf
         ):
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has been undeafened.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has been undeafened."
             )
         elif ((before.mute is False) and after.mute) or (
             (before.self_mute is False) and after.self_mute
         ):
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has been muted.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has been muted."
             )
         elif ((before.mute is True) and not after.mute) or (
             (before.self_mute is True) and not after.self_mute
         ):
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has been unmuted.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has been unmuted."
             )
         elif (before.self_video is False) and after.self_video:
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has started "
-                f"broadcasting a video.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has started broadcasting a video."
             )
         elif (before.self_video is True) and not after.self_video:
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has stopped "
-                f"broadcasting a video.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has stopped broadcasting a video."
             )
         elif (before.afk is False) and after.afk:
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has gone afk.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has gone afk."
             )
         elif (before.afk is True) and not after.afk:
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} is no longer afk.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} is no longer afk."
             )
         elif before.channel != after.channel and after.channel is None:
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has left "
-                f"{before.channel} channel.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has left {before.channel} channel."
             )
         elif before.channel != after.channel and before.channel is None:
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has joined "
-                f"{after.channel} channel.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has joined {after.channel} channel."
             )
         elif before.channel != after.channel:
-            await self.cond_write(
-                f"{time}: {member.name}{top_role} has moved from "
-                f"{before.channel} channel into {after.channel}.",
-                "member_voice",
+            await self.get_log_channel().send(
+                f"{time}: {member.name} has moved from {before.channel} channel into {after.channel}."
             )
 
-    # Commands
+    # More types of actions:
+    # DELETED msg_post (when somebody sends a message),
+    # DELETED msg_delete (somebody deletes a message),
+    # DELETED msg_edit (somebody edits a message),
+    # DELETED on_typing (somebody starts writing into channel),
+    # DELETED reaction_add (somebody adds a reaction to message),
+    # DELETED reaction_remove (somebody removes a reaction from message),
+    # DELETED member_join (somebody has joined the server),
+    # DELETED member_remove (somebody has left the server),
+    # member_update (nick change, on/off, dnd, idle, activity),
+    # member_voice (deaf, mute, broadcast, afk, join/move voice channel),
+    # DELETED member_role (shows user's role after name)
+
+    # TODO: Config with Gsheets
     @commands.is_owner()
     @commands.command(brief="Bypass surveillance settings.++")
     async def bypass(self, ctx, channel=None, val=None):
@@ -318,7 +171,7 @@ class Surveillance(commands.Cog):
                 )
             elif val == "0" and channel not in self.config["bypass_channels"]:
                 return await ctx.send(
-                    '"{}" channel isnt bypassed!'.format(channel)
+                    f'"{channel}" channel isnt bypassed!'
                 )
 
             if val != "0":
@@ -332,7 +185,7 @@ class Surveillance(commands.Cog):
             with open(surv_dir + "\\surv_config.json", "w") as f4:
                 json.dump(self.config, f4, sort_keys=True, indent=4)
 
-            await self.get_logsChannel().send(msg)
+            await self.get_log_channel().send(msg)
             return await ctx.send(msg)
 
         else:  # display current bypass settings
@@ -343,61 +196,7 @@ class Surveillance(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-    @commands.is_owner()
-    @commands.command(brief="Surveillance settings properties.++")
-    async def configure(self, ctx, action=None, val=None):
-        """ "?configure" - shows current settings
-        "?configure on_typing 1" - turns on tracking for typing into channel
-        "?configure on_typing 0" - turns off tracking for typing into channel
-
-        Types of actions:
-        msg_post (when somebody sends a message),
-        msg_delete (somebody deletes a message),
-        msg_edit (somebody edits a message),
-        on_typing (somebody starts writing into channel),
-        reaction_add (somebody adds a reaction to message),
-        reaction_remove (somebody removes a reaction from message),
-        member_join (somebody has joined the server),
-        member_remove (somebody has left the server),
-        member_update (nick change, on/off, dnd, idle, activity),
-        member_voice (deaf, mute, broadcast, afk, join/move voice channel),
-        member_role (shows user's role after name)"""
-
-        if action and val:
-            val = "1" if val != "0" else "0"
-            if action not in self.config["logs"]:
-                return await ctx.send(
-                    f"{action} doesnt exist in logs configuration."
-                )
-            elif val == self.config["logs"][action]:
-                track = "untracked" if val == "0" else "tracked"
-                return await ctx.send(
-                    f"{action} action is already being {track}."
-                )
-
-            self.config["logs"][action] = val
-            surv_dir = os.path.dirname(os.path.abspath(__file__))
-            with open(surv_dir + "\\surv_config.json", "w") as fopen:
-                json.dump(self.config, fopen, sort_keys=True, indent=4)
-
-            track = "untracked" if val == "0" else "tracked"
-            msg = f"{action} action is now being {track}"
-            await self.get_logsChannel().send(msg)
-            await ctx.send(msg)
-        else:
-            embed = discord.Embed(
-                title="Surveillance configuration",
-                # description = 'To This is a description',
-                colour=discord.Colour.blue(),
-            )
-            # embed.set_footer(text='This is a footer.')
-            # embed.set_image(url='')
-            # embed.set_thumbnail(url='')
-            # embed.set_author(name='Author Name') #icon_url
-            for action in self.config["logs"]:
-                embed.add_field(name=action, value=self.config["logs"][action])
-            await ctx.send(embed=embed)
-
-
 async def setup(bot):
     await bot.add_cog(Surveillance(bot))
+
+# TODO: Helping method for stats observing in graphs
