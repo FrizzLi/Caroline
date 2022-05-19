@@ -52,7 +52,7 @@ class AiAlgo(commands.Cog):
     #     self._points_amount = new_val
     #     self.facts_amount = new_val + 1
 
-    # TODO: no config, cannot sync brief with it.. solution in korean.py
+    # TODO: no config, cannot sync brief with it
     # for now, to stop the spam in help command, commenting it
     '''
     # modifying evolution attributes
@@ -271,5 +271,4 @@ if __name__ == "__main__":
 
 # TODO: remember previous fitness attempts
 # TODO: optimize creating props
-# TODO: create tests
 # TODO: parameters could be done better in create method

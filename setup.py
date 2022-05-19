@@ -5,4 +5,4 @@ with open("reqs.txt", encoding="utf-8") as f:
 
 setup(name="setup", install_requires=reqs)
 
-# TODO: check this whether it is necessary for tests, or anything else
+# TODO: Tests -> check this whether it is necessary for tests, or anything else

@@ -56,8 +56,6 @@ class Commands(commands.Cog):
         await self.bot.close()
 
     # TODO: move below functions into music cog
-    # TODO: change ALL commands to interaction cmds
-    # TODO: check interaction commands groups (?) otherwise its a mess!
     def get_ytb_cmd_data(self, elem):
         search_expr = elem.content[6:]
         data = ytdl.extract_info(url=search_expr, download=False)

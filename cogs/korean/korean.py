@@ -13,7 +13,7 @@ from discord.utils import get
 
 class Language(commands.Cog):
     def __init__(self, bot):
-        # TODO: maybe add other cogs' configs into gitignore too?
+        
         kor_dir = os.path.dirname(os.path.abspath(__file__))
         path = f"{kor_dir}\\kor_config.json"
         if os.path.exists(path):

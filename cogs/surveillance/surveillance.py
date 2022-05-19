@@ -18,10 +18,12 @@ class Surveillance(commands.Cog):
         self.config = config
 
     # TODO: Maybe create properties like in korean.py? To preserve consistency
-    # TODO: this should only have voice monitoring and status,
+    # this should only have voice monitoring and status,
     # we could figure out everything else just by reading messages
-    # TODO: therefore, we wouldn't need surv_config.json anymore
-    # TODO: restart bot command for refresh.. heroku CLI cmd or other way?
+    # therefore, we wouldn't need surv_config.json anymore, and if, go with gsheets
+
+    # NotImplemented
+    # TODO: Helping method for stats observing in graphs
 
     # Helping functions
     def get_timeRole(self, member):
@@ -399,71 +401,3 @@ class Surveillance(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Surveillance(bot))
-
-
-# NotImplemented
-# TODO: Helping method for stats observing in graphs
-"""
-messages = 0
-async def update_stats():
-    await bot.wait_until_ready()
-
-    while not bot.is_closed():
-        try:
-            with open("stats.txt", "a") as f:
-                time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                f.write(f"Time: {time},
-                Messages: {messages}\n") #int(time.time())
-        except Exception as e:
-            print(e)
-        await asyncio.sleep(60)
-
-IN MAIN FUNCTION:
-bot.loop.create_task(update_stats())
-"""
-
-# add experience for each message user sent
-"""
-
-# Basic functions
-async def update_data(users, user):
-    id = str(user.id)
-    if not id in users:
-        users[id] = {}
-        users[id]['name'] = user.name
-        users[id]['experience'] = 0
-        users[id]['level'] = 1
-
-async def add_experience(users, user, exp):
-    users[str(user.id)]['experience'] += exp
-
-async def level_up(users, user, channel):
-    id = str(user.id)
-    experience = users[id]['experience']
-    lvl_start = users[id]['level']
-    lvl_end = int(experience ** (1/3))
-
-    if lvl_start < lvl_end:
-        await channel.send(f'{user.mention}
-        has leveled up to level {lvl_end}')
-        users[id]['level'] = lvl_end
-
-# ON MESSAGE
-# Update experience
-with open('users.json', 'r') as fopen:
-    users = json.load(fopen)
-    await update_data(users, message.author)
-    await add_experience(users, message.author, 5)
-    await level_up(users, message.author, message.channel)
-with open('users.json', 'w') as fopen:
-    json.dump(users, fopen) #### WATCH THE PATH
-
-
-# ON MEMBER JOIN
-# Storing user info into database
-with open('users.json', 'r') as f:
-    users = json.load(f)
-    await update_data(users, member)
-with open('users.json', 'w') as f:
-    json.dump(users, f) #### WATCH THE PATH
-"""
