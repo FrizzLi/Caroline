@@ -98,3 +98,5 @@ class YTDLSource(discord.PCMVolumeTransformer):
         }
 
         return cls(discord.FFmpegPCMAudio(data['url'], **ffmpeg_opts), data=data, requester=requester)
+
+# TODO: remove previous song -> makes going songs fast

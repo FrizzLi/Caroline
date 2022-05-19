@@ -48,7 +48,7 @@ class MyBot(commands.Bot):
         )
 
 
-PREFIX = "."
+PREFIX = "?"
 bot = MyBot()
 bot.run(os.environ.get("CAROLINE_TOKEN"))
 
@@ -56,6 +56,6 @@ bot.run(os.environ.get("CAROLINE_TOKEN"))
 # TODO: Logs (instead of print)
 # TODO: Tests
 
-# TODO: Cogs configs into gitignore? Gsheets? Global problem tho
-# TODO: Interaction cmds + check groups
-# TODO: Restart bot cmd for refresh.. heroku CLI?
+# TODO: Interaction CMDs + check groups
+# TODO: Restart bot CMD for refresh.. Heroku CLI?
+# TODO: Ctrl+Shift+F "pylint:" errors
