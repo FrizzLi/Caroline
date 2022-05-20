@@ -52,9 +52,13 @@ PREFIX = "?"
 bot = MyBot()
 bot.run(os.environ.get("CAROLINE_TOKEN"))
 
+# NOTE: ai -> music -> korean (priority)
+# TODO: clean + apply python elements (check news)
+# TODO: git/vscode deeper run (cheatsheet + docs improve)
+
 # TODO: Docstring
 # TODO: Logs (instead of print)
-# TODO: Tests
+# TODO: Tests (+coverage)
 
 # TODO: Interaction CMDs + check groups
 # TODO: Restart bot CMD for refresh.. Heroku CLI?
