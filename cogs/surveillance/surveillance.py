@@ -34,9 +34,9 @@ class Surveillance(commands.Cog):
         elif not before_offline and after_offline:
             msg = "has gone offline."
         elif diff_act and before_no_act:
-            msg = f"has stopped {before.activity.name}."
+            msg = f"has started {before.activity.name}."
         elif diff_act and after_no_act:
-            msg = f"has started {after.activity.name}."
+            msg = f"has stopped {after.activity.name}."
         elif not before_dnd and after_dnd:
             msg = "has set DND status."
         elif before_dnd and not after_dnd:
