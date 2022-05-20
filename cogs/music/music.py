@@ -230,7 +230,7 @@ class Music(commands.Cog):
 
     # Slash commands, the main command
     @app_commands.command(name='play')
-    async def play_(self, interaction, *, search: str):
+    async def _play(self, interaction, *, search: str):
         """Request a song and add it to the queue.
         This command attempts to join a valid voice channel if the bot is not already in one.
         Uses YTDL to automatically search, retrieves a song and streams it.
@@ -240,9 +240,9 @@ class Music(commands.Cog):
                 The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
 
-        await self._play(interaction, search)
-s
-    async def _play(self, interaction, search):
+        await self.play_(interaction, search)
+
+    async def play_(self, interaction, search):
 
         # making sure interaction timeout does not expire
         await interaction.response.send_message("...Looking for song(s)... wait...")
@@ -465,7 +465,7 @@ s
 
         # get entries
         try:
-            entries = await YTDLSource.search_source(interaction, search, loop=self.bot.loop, download=False)
+            entries = await YTDLSource.search_source(search, loop=self.bot.loop, download=False)
         except youtube_dl.utils.DownloadError as e:
             await interaction.followup.send(e)
             return
@@ -561,3 +561,9 @@ async def setup(bot):
             id=os.environ.get("SERVER_ID")
         )]
     )
+
+# TODO: Deeper code check!
+# TODO: Extend class - regular commands into separate file
+# TODO: remove previous song -> makes going songs fast
+# TODO: resolve download
+# TODO: resolve _ before function and after

@@ -7,13 +7,13 @@ from discord.ui import Button, Select, View
 def get_readable_duration(duration):
     """Get duration in hours, minutes and seconds."""
 
-    m, s = divmod(int(duration), 60)
-    h, m = divmod(m, 60)
+    min_, sec = divmod(int(duration), 60)
+    hour, min_ = divmod(min_, 60)
 
-    if h:
-        duration = f"{h}:{m:02d}:{s:02d}"
+    if hour:
+        duration = f"{hour}:{min_:02d}:{sec:02d}"
     else:
-        duration = f"{m}:{s:02d}"
+        duration = f"{min_}:{sec:02d}"
 
     return duration
 
@@ -24,16 +24,16 @@ class SearchSelect(Select):
         self.player = player
 
     async def callback(self, interaction):
-        await self.player.music._play(interaction, self.values[0])
+        await self.player.music.play_(interaction, self.values[0])
 
 
 class SearchView(View):
     def __init__(self, player, tracks):
         super().__init__(timeout=None)
         self.msg = "Choose a track!"
-        self.add_item(self.addSelection(tracks, player))
+        self.add_item(self.add_selection(tracks, player))
 
-    def addSelection(self, tracks, player):
+    def add_selection(self, tracks, player):
         selection = SearchSelect(player)
 
         # above 25: raises maximum number of options already provided
@@ -55,7 +55,7 @@ class PlayerView(View):
             )
         )
         self.player = player
-        self.np = source
+        self.source = source
         self.start = timer()
         self.msg = self.generate_message()
 
@@ -64,16 +64,16 @@ class PlayerView(View):
 
         tracks, remains, volume, loop_q, loop_t = self._get_page_info()
         end = timer()
-        duration_left = self.np.duration - (end - self.start)
+        duration_left = self.source.duration - (end - self.start)
         duration = get_readable_duration(duration_left)
 
         remains = f"{remains} remaining track(s)"
         vol = f"Volume: {volume}"
         loop_q = f"(🔁) Loop Queue: {loop_q}"
         loop_t = f"(🔂) Loop Track: {loop_t}"
-        req = f"Requester: '{self.np.requester}'"
+        req = f"Requester: '{self.source.requester}'"
         dur = f"Duration: {duration} (refreshable)"
-        views = f"Views: {self.np.view_count:,}"
+        views = f"Views: {self.source.view_count:,}"
 
         msg = (
             f"```ml\n{tracks}\n"
@@ -102,19 +102,21 @@ class PlayerView(View):
         queue = self.player.queue
         pointer = self.player.current_pointer
 
-        s = 1
+        start = 1
         if pointer > 2 and len(queue) > 10:
             remaining = len(queue[pointer : pointer + 8])
-            s = remaining + pointer - 9
+            start = remaining + pointer - 9
 
-        return s
+        return start
 
-    def _get_track_list(self, s):
+    def _get_track_list(self, start):
         queue = self.player.queue
         pointer = self.player.current_pointer
 
         track_list = []
-        for row_index, track in enumerate(queue[s - 1 : s + 9], start=s):
+        for row_index, track in enumerate(
+            queue[start - 1 : start + 9], start=start
+        ):
             row = f"{f'{row_index}. '[:4]}{track['title']}"
             row = (
                 f"---> {row} <---"

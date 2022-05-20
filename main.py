@@ -58,4 +58,4 @@ bot.run(os.environ.get("CAROLINE_TOKEN"))
 
 # TODO: Interaction CMDs + check groups
 # TODO: Restart bot CMD for refresh.. Heroku CLI?
-# TODO: Ctrl+Shift+F "pylint:" errors
+# TODO: Ctrl+Shift+F "pylint:" errors, pylintrc file remove as much as pos.
