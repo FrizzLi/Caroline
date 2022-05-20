@@ -5,6 +5,5 @@ pandas  # (pytz, numpy)
 gspread
 
 pylint
-flake8
 black
 pytest
