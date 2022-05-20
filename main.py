@@ -52,14 +52,14 @@ PREFIX = "?"
 bot = MyBot()
 bot.run(os.environ.get("CAROLINE_TOKEN"))
 
-# NOTE: ai -> music -> korean (priority)
-# TODO: clean + apply python elements (check news)
-# TODO: git/vscode deeper run (cheatsheet + docs improve)
-
-# TODO: Docstring
-# TODO: Logs (instead of print)
-# TODO: Tests (+coverage)
+# TODO: use all that I have in docs + check Python news, improve docs
+# TODO: (ai -> music -> korean (priority)) - Deep check, ALL WHILE:
+# clean + apply all python elements
+# Git/VSCode deeper run (cheatsheet + docs improve)
+# Docstring
+# Logs (instead of print)
+# Tests (+coverage)
 
 # TODO: Interaction CMDs + check groups
 # TODO: Restart bot CMD for refresh.. Heroku CLI?
-# TODO: Ctrl+Shift+F "pylint:" errors, pylintrc file remove as much as pos.
+# TODO: Ctrl+Shift+F "pylint:" errors, pylintrc file
