@@ -4,16 +4,11 @@ import pickle
 import random
 import re
 import time
-from os.path import dirname
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Tuple
 
 
 class QueryError(Exception):
-    pass
-
-
-class FileNotFoundError(Exception):
     pass
 
 
@@ -346,31 +341,35 @@ def generateProperties(
     return map_list
 
 
-def saveMap(
-    map_list: List[List[str]],
+def save_map(
     fname: str,
+    map_list: List[List[str]],
     show: bool = False,
     spacing: str = "{:^3}",
 ) -> None:
-    """Saves a map into file. It can also print the map into console.
+    """Saves a map into file.
 
     Args:
+        fname (str): name of the file into which the map is going to be saved.
         map_list (List[List[str]]): 2D map
-        fname (str): name of the file we're saving the map into
-        show (bool): Print saved map into console. Defaults to False.
-        spacing (str, optional): spacing between numbers. Defaults to "{:^3}".
+        show (bool, optional): Option to print saved map into console.
+            Defaults to False.
+        spacing (str, optional): Spacing between map values.
+            Defaults to "{:^3}".
     """
 
-    current_dir = dirname(dirname(os.path.abspath(__file__)))
-    map_dir = f"{current_dir}\\data\\maps"
-    Path(map_dir).mkdir(parents=True, exist_ok=True)
-    with open(f"{map_dir}\\{fname}.txt", "w") as f:
+    source_dir = Path(__file__).parents[1]
+    map_dir = Path(f"{source_dir}/data/maps")
+    map_dir.mkdir(parents=True, exist_ok=True)
+    fname_path = Path(f"{map_dir}/{fname}.txt")
+
+    with open(fname_path, "w", encoding="utf-8") as file:
         for i, row in enumerate(map_list):
             for j in range(len(row)):
-                f.write(spacing.format(map_list[i][j]))
+                file.write(spacing.format(map_list[i][j]))
                 if show:
                     print(spacing.format(map_list[i][j]), end=" ")
-            f.write("\n")
+            file.write("\n")
             if show:
                 print()
 
@@ -386,9 +385,9 @@ def loadMap(fname: str) -> List[List[str]]:
     """
 
     map_ = []
-    current_dir = dirname(dirname(os.path.abspath(__file__)))
+    source_dir = Path(__file__).parents[1]
     try:
-        with open(f"{current_dir}\\data\\maps\\{fname}.txt") as f:
+        with open(f"{source_dir}\\data\\maps\\{fname}.txt") as f:
             line = f.readline().rstrip()
             map_.append(line.split())
             prev_length = len(line)
@@ -415,48 +414,51 @@ def saveSolution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
             will be saved
     """
 
-    current_dir = dirname(dirname(os.path.abspath(__file__)))
-    solutions_dir = f"{current_dir}\\data\\solutions"
+    source_dir = Path(__file__).parents[1]
+    solutions_dir = f"{source_dir}\\data\\solutions"
     Path(solutions_dir).mkdir(parents=True, exist_ok=True)
     with open(f"{solutions_dir}\\{fname}_rake", "wb") as f:
         pickle.dump(rake_paths, f)
 
 
-def createWalls(query: str, fname: str, show: bool = False) -> None:
-    """Creates a file that represents unterrained map with walls.
-    Map is filled with "1" being walls and "0" being walkable places.
+def create_walls(fname: str, query: str, show: bool = False) -> None:
+    """Creates a file that represents map with walls only.
+
+    Map is filled with "1" being walls and "0" being walkable space.
 
     Args:
-        query (str): contains size of the map and tuple coordinates of walls
-            example: "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9)"
-        fname (str): root name of the file that is going to be created
-        show (bool): Print created walls into console. Defaults to False.
+        fname (str): name of the file that is going to be created
+        query (str): contains size of map and coordinates of walls
+            option: "10x12 1,5 2,1 3,4 4,2 6,8 6,9"
+        show (bool, optional): Print created walls into console. Defaults to False.
 
     Raises:
-        QueryError: if query does not match regular expression
+        QueryError: query does not match regular expression
     """
 
     walled_map = []
     if re.search(r"[0-9]+x[0-9]+(\ \([0-9]+,[0-9]+\))+$", query):
-        query_list = query.split()
-        rows, cols = map(int, query_list[0].split("x"))
-        walls = {eval(coordinate) for coordinate in query_list[1:]}
+        query_split = query.split()
+        row_count, col_count = map(int, query_split[0].split("x"))
+        walled_map = [["0"] * col_count for _ in range(row_count)]
+        wall_coordinates = query_split[1:]
 
-        walled_map = [["0"] * cols for _ in range(rows)]
-        for wall in walls:
+        for wall_coordinate in wall_coordinates:
+            x, y = map(int, wall_coordinate[1:-1].split(","))
             try:
-                walled_map[wall[0]][wall[1]] = "1"
+                walled_map[x][y] = "1"
             except IndexError:
                 walled_map = []
 
     if not walled_map:
         raise QueryError("Invalid query!")
 
-    fname += "_wal"
-    saveMap(walled_map, fname, show)
+    walled_fname = fname + "_wal"
+    save_map(walled_fname, walled_map, show)
 
 
-def createTerrain(max_runs: int, fname: str, show: bool = False) -> str:
+def createTerrain(fname: str, max_runs: int, show: bool = False) -> str:
+    # Runs evolution algorithm to create and save the maps into text file.
     """Creates a file that represents terrained map.
     Map is filled with "-1" being walls and walkable places are filled
     with various numbers generated by evolutionary algorithm.
@@ -486,15 +488,15 @@ def createTerrain(max_runs: int, fname: str, show: bool = False) -> str:
     ]
 
     saveSolution(rake_paths, fname)
-    fname += "_ter"
-    saveMap(terrained_map, fname, show)
+    terrained_fname = fname + "_ter"
+    save_map(terrained_fname, terrained_map, show)
 
     return "Solution was found." if solution else "Solution was not found."
 
 
 def createProperties(
-    points_amount: int,
     fname: str,
+    points_amount: int,
     show: bool = False,
 ) -> None:
     """Creates a file that represents terrained map with properties.
@@ -514,48 +516,52 @@ def createProperties(
     if not terrained_map:
         raise FileNotFoundError("Invalid import name for creating properties!")
 
-    map_propertied = generateProperties(terrained_map, points_amount)
+    propertied_map = generateProperties(terrained_map, points_amount)
 
-    fname += "_pro"
-    saveMap(map_propertied, fname, show, "{:^5}")
+    propertied_fname = fname + "_pro"
+    save_map(propertied_fname, propertied_map, show, "{:^5}")
 
 
-def createMaps(
-    begin_create: str,
-    query: str,
+def create_maps(
     fname: str,
+    begin_from: str,
+    query: str,
     max_runs: int,
     points_amount: int,
 ) -> None:
-    """Runs evolution algorithm to create and save the maps into text file.
+    """
+    Creates and saves variously filled maps into text files.
+
+    There are three dependant stages of creating a complete map. Each stage
+    uses map that was created and saved into text file from the previous stage
+    (except for the first one). We can start from any stage as long as the
+    previous one was run, after that, all the remaining stages will run too.
 
     Args:
-        begin_create (str): defines from which part of creating maps to
-            start until the ending properties part
-            (walls/terrain/properties)
-        query (str): contains size of map and tuple coordinates of walls
-            example: "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9)"
-        fname (str): name of the file that is going to be created
-        max_runs: (int): max number of attempts to find a solution
+        fname (str): name of the file(s) that is/are going to be created
+        begin_from (str): defines which stage to start from
+            options: "walls", "terrain", "properties"
+        query (str): contains size of map and coordinates of walls
+            option: "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9)"
+        max_runs: (int): max number of attempts in evo. alg. to find solution
         points_amount (int): amount of destination points to visit
     """
 
     next_ = False
 
     try:
-        if begin_create == "walls":
-            createWalls(query, fname)
+        if begin_from == "walls":
+            create_walls(fname, query)
             next_ = True
-        if begin_create == "terrain" or next_:
-            createTerrain(max_runs, fname)
+        if begin_from == "terrain" or next_:
+            createTerrain(fname, max_runs)
             next_ = True
-        if begin_create == "properties" or next_:
-            createProperties(points_amount, fname, show=True)
-
-    except QueryError as e:
-        print(e)
-    except FileNotFoundError as e:
-        print(e)
+        if begin_from == "properties" or next_:
+            createProperties(fname, points_amount, show=True)
+    except QueryError as err:
+        print(err)
+    except FileNotFoundError as err:
+        print(err)
 
 
 if __name__ == "__main__":
@@ -563,18 +569,18 @@ if __name__ == "__main__":
     # walls uses: query, fname, max_runs, points_amount
     # terrain uses: fname, max_runs, points_amount
     # properties uses: fname, points_amount
-    begin_create = "walls"
+    begin_from = "walls"
     query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"
     fname = "queried"
     max_runs = 3
     points_amount = 10
 
     evo_parameters = dict(
-        begin_create=begin_create,
+        begin_from=begin_from,
         query=query,
         fname=fname,
         max_runs=max_runs,
         points_amount=points_amount,
     )  # type: Dict[str, Any]
 
-    createMaps(**evo_parameters)
+    create_maps(**evo_parameters)

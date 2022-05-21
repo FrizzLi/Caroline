@@ -46,7 +46,7 @@ class AiAlgo(commands.Cog):
     @commands.command(brief="Creates gif and shows it. (pars in file)")
     async def create(self, ctx):
         evo_parameters = dict(
-            begin_create=self.wall_begin_create,
+            begin_from=self.wall_begin_create,
             query=self.wall_query,
             fname=self.shared_fname,
             max_runs=self.wall_max_runs,
@@ -71,7 +71,7 @@ class AiAlgo(commands.Cog):
             fname=self.shared_fname,
         )
 
-        evo.createMaps(**evo_parameters)
+        evo.create_maps(**evo_parameters)
         path.findShortestPath(**path_parameters)
         chain.runProduction(**chain_parameters)
         view.createGif(
@@ -86,7 +86,7 @@ async def setup(bot):
 
 
 # TODO: evo - remember previous fitness attempts
-# TODO: evo - parameters could be done better in createMaps(?) method
+# TODO: evo - parameters could be done better in create_maps(?) method
 # TODO: chain - optimize creating props
 # TODO: gspread parameter loading
 # TODO: update ai repo and make local parameter loading there
