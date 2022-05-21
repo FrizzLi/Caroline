@@ -14,11 +14,11 @@ class AiAlgo(commands.Cog):
         self.bot = bot
 
     # walls:       fname
-    # terrain:     fname, points_amount, climb
-    # properties:  fname, points_amount
+    # terrain:     fname, points_count, climb
+    # properties:  fname, points_count
     # view:        fname,                climb
     shared_fname = "queried"
-    shared_points_amount = 10
+    shared_points_count = 10
     shared_climb = False
 
     wall_query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,7)"
@@ -50,7 +50,7 @@ class AiAlgo(commands.Cog):
             query=self.wall_query,
             fname=self.shared_fname,
             max_runs=self.wall_max_runs,
-            points_amount=self.shared_points_amount,
+            points_count=self.shared_points_count,
         )
 
         path_parameters = dict(
@@ -66,7 +66,7 @@ class AiAlgo(commands.Cog):
             load_fname_facts=self.property_load_fname_facts,
             load_fname_rules=self.property_load_fname_rules,
             step_by_step=self.property_step_by_step,
-            facts_amount=self.shared_points_amount + 1,
+            facts_amount=self.shared_points_count + 1,
             facts_random_order=self.property_facts_random_order,
             fname=self.shared_fname,
         )
