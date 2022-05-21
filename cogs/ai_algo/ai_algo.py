@@ -39,9 +39,8 @@ class AiAlgo(commands.Cog):
 
     async def send_file_message(self, ctx):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        with open(
-            f"{current_dir}\\data\\{self.shared_fname}.gif", "rb"
-        ) as file:
+        gif_path = f"{current_dir}\\data\\{self.shared_fname}.gif"
+        with open(gif_path, "rb") as file:
             await ctx.message.channel.send(file=File(file))
 
     @commands.command(brief="Creates gif and shows it. (pars in file)")
@@ -86,8 +85,8 @@ async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
 
-# TODO: remember previous fitness attempts
-# TODO: optimize creating props
-# TODO: parameters could be done better in create method
+# TODO: evo - remember previous fitness attempts
+# TODO: evo - parameters could be done better in createMaps(?) method
+# TODO: chain - optimize creating props
 # TODO: gspread parameter loading
 # TODO: update ai repo and make local parameter loading there

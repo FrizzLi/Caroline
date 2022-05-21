@@ -6,13 +6,8 @@ from typing import Any, Dict, List, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
-# This import is for version without discord
-if __name__ == "__main__":
-    import model.evolution as evo
-    import model.pathfinding as path
-else:
-    import cogs.ai_algo.model.evolution as evo
-    import cogs.ai_algo.model.pathfinding as path
+from .model import evolution as evo
+from .model import pathfinding as path
 
 
 def loadPickle(fname: str) -> Any:

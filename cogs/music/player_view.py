@@ -5,15 +5,15 @@ from discord.ui import Button, Select, View
 
 
 def get_readable_duration(duration):
-    """Get duration in hours, minutes and seconds."""
+    """Get duration in hs, minutes and sonds."""
 
-    min_, sec = divmod(int(duration), 60)
-    hour, min_ = divmod(min_, 60)
+    m, s = divmod(int(duration), 60)
+    h, m = divmod(m, 60)
 
-    if hour:
-        duration = f"{hour}:{min_:02d}:{sec:02d}"
+    if h:
+        duration = f"{h}:{m:02d}:{s:02d}"
     else:
-        duration = f"{min_}:{sec:02d}"
+        duration = f"{m}:{s:02d}"
 
     return duration
 
