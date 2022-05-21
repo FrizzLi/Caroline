@@ -47,9 +47,9 @@ class Map:
         self._height = 0  # type: int
         self.nodes = {}  # type: Dict[Tuple[int, int], Node]
         self.properties = {}  # type: Dict[str, Any]
-        self.__loadMap(fname)
+        self.__load_map(fname)
 
-    def __loadMap(self, fname) -> None:
+    def __load_map(self, fname) -> None:
         properties = {
             "points": [],
             "base": 0,
@@ -434,7 +434,7 @@ def printSolution(paths: List[List[Tuple[int, int]]], distance: int) -> None:
     print("Cost: " + str(distance) + "\n")
 
 
-def saveSolution(comb_path: List[List[Tuple[int, int]]], fname: str) -> None:
+def save_solution(comb_path: List[List[Tuple[int, int]]], fname: str) -> None:
     """Saves solution (path) of finding the shortest combination of path
     into pickle file.
 
@@ -534,7 +534,7 @@ def findShortestPath(
         paths = getPaths(pro_data, pro_order)
 
         printSolution(paths, dist)
-        saveSolution(paths, fname)
+        save_solution(paths, fname)
 
     except FileNotFoundError as e:
         print(e)

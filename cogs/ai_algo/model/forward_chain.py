@@ -237,7 +237,7 @@ def saveFacts(facts: List[str], save_fname_facts: str) -> None:
         f.write("\n".join(facts))
 
 
-def saveSolution(stepped_facts: Dict[str, List[str]], fname: str) -> None:
+def save_solution(stepped_facts: Dict[str, List[str]], fname: str) -> None:
     """Saves solution of production system with stepped facts into json file.
 
     Args:
@@ -300,7 +300,7 @@ def runProduction(
     for i, fact in enumerate(stepped_facts, 1):
         print(f"{str(i)}:  {fact} -> " + ", ".join(stepped_facts[fact]))
 
-    saveSolution(stepped_facts, fname)
+    save_solution(stepped_facts, fname)
 
 
 def runForwardChain(

@@ -100,7 +100,7 @@ def createGif(fname: str, skip_rake: bool, climb: bool) -> None:
     # TODO?: we must specify climb bool value
     try:
         map_props = path.Map(fname)
-        terrained_map = evo.loadMap(fname + "_ter")
+        terrained_map = evo.load_map(fname + "_ter")
         rake_solved = loadPickle(fname + "_rake")
         paths_solved = loadPickle(fname + "_path")
         rule_solved = loadJson(fname + "_rule")
