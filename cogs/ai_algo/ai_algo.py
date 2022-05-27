@@ -16,18 +16,18 @@ class AiAlgo(commands.Cog):
     # walls:       fname
     # terrain:     fname, points_count, climb
     # properties:  fname, points_count
-    # view:        fname,                climb
+    # view:        fname,               climb
     shared_fname = "queried"
     shared_points_count = 10
     shared_climb = False
 
     wall_query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,7)"
     wall_begin_create = "walls"
-    wall_max_runs = 1
-
+    
     terrain_movement = "M"
     terrain_algorithm = "HK"
     terrain_subset_size = None
+    terrain_max_runs = 1
 
     property_save_fname_facts = "facts"
     property_load_fname_facts = "facts_init"
@@ -49,7 +49,7 @@ class AiAlgo(commands.Cog):
             begin_from=self.wall_begin_create,
             query=self.wall_query,
             fname=self.shared_fname,
-            max_runs=self.wall_max_runs,
+            max_runs=self.terrain_max_runs,
             points_count=self.shared_points_count,
         )
 

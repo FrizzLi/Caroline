@@ -1,5 +1,4 @@
 import copy
-import os
 import pickle
 import random
 import re
@@ -451,9 +450,9 @@ def create_walls(fname: str, query: str, show: bool = False) -> None:
         wall_coordinates = query_split[1:]
 
         for wall_coordinate in wall_coordinates:
-            x, y = map(int, wall_coordinate[1:-1].split(","))
+            i, j = map(int, wall_coordinate[1:-1].split(","))
             try:
-                walled_map[x][y] = "1"
+                walled_map[i][j] = "1"
             except IndexError:
                 walled_map = []
 
@@ -566,9 +565,7 @@ def create_maps(
             next_ = True
         if begin_from == "properties" or next_:
             create_properties(fname, points_count, show=True)
-    except QueryError as err:
-        print(err)
-    except FileNotFoundError as err:
+    except (QueryError, FileNotFoundError) as err:
         print(err)
 
 
@@ -592,3 +589,7 @@ if __name__ == "__main__":
     )  # type: Dict[str, Any]
 
     create_maps(**evo_parameters)
+
+# TODO: tests
+# TODO: docstring everywhere for check
+# TODO: order of methods/funcs
