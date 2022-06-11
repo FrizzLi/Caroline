@@ -48,7 +48,15 @@ class MyBot(commands.Bot):
         )
 
 
-PREFIX = "?"
+try:
+    import flask
+    import keep_alive
+    keep_alive.keep_alive()
+    prefix = "?"
+except ModuleNotFoundError:
+    print("No flask found, running locally!")
+    prefix = "."
+
 bot = MyBot()
 bot.run(os.environ.get("CAROLINE_TOKEN"))
 
