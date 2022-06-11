@@ -7,3 +7,5 @@ gspread
 pylint
 black
 pytest
+
+pynacl
