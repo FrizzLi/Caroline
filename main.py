@@ -52,13 +52,13 @@ try:
     import flask
     import keep_alive
     keep_alive.keep_alive()
-    prefix = "?"
+    PREFIX = "?"
 except ModuleNotFoundError:
     print("No flask found, running locally!")
-    prefix = "."
+    PREFIX = "."
 
 bot = MyBot()
-bot.run(os.environ.get("CAROLINE_TOKEN"))
+bot.run(os.environ.get("GLADOS_TOKEN"))
 
 # TODO: use all that I have in docs + check Python news, improve docs
 # TODO: (ai -> music -> korean (priority)) - Deep check, ALL WHILE:
