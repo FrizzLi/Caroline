@@ -31,6 +31,8 @@ class MyBot(commands.Bot):
         }
         for dir_name in os.listdir("cogs"):
             if dir_name in py_files:
+                if PREFIX == "." and dir_name == "music":
+                    continue
                 try:
                     path = (
                         py_files[dir_name]
@@ -52,13 +54,14 @@ try:
     import flask
     import keep_alive
     keep_alive.keep_alive()
+    TOKEN = os.environ.get("GLADOS_TOKEN")
     PREFIX = "?"
 except ModuleNotFoundError:
-    print("No flask found, running locally!")
+    TOKEN = os.environ.get("CAROLINE_TOKEN")
     PREFIX = "."
 
 bot = MyBot()
-bot.run(os.environ.get("GLADOS_TOKEN"))
+bot.run(TOKEN)
 
 # TODO: use all that I have in docs + check Python news, improve docs
 # TODO: (ai -> music -> korean (priority)) - Deep check, ALL WHILE:

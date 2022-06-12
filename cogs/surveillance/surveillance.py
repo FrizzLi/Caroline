@@ -46,6 +46,7 @@ class Surveillance(commands.Cog):
         elif not before_idle and after_idle:
             msg = "has gone idle."
         else:
+            print(f"{after.name} did something..!")
             return
 
         time = self.get_time()
@@ -98,7 +99,8 @@ class Surveillance(commands.Cog):
         elif move:
             msg = f"has moved from {before.channel} to {after.channel}."
         else:
-            msg = "[condition error in code]"
+            print(f"{member.name} did something..!")
+            return
 
         time = self.get_time()
         await self.get_log_channel().send(f"{time}: {member.name} {msg}")
