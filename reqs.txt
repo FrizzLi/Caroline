@@ -1,4 +1,4 @@
-discord.py @ git+https://github.com/Rapptz/discord.py@deb79587979209c811329802bacfbaf78c157892
+discord.py @ git+https://github.com/Rapptz/discord.py
 youtube_dl
 pillow
 pandas  # (pytz, numpy)
