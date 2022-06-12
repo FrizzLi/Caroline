@@ -4,7 +4,7 @@ from threading import Thread
 app = Flask("")
 
 @app.route('/')
-def main():
+def home():
     return "Your bot is running!"
 
 def run():
