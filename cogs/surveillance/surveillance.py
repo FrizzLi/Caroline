@@ -34,9 +34,9 @@ class Surveillance(commands.Cog):
         elif not before_offline and after_offline:
             msg = "has gone offline."
         elif diff_act and before_no_act:
-            msg = f"has started {before.activity.name}."
+            msg = f"has started {after.activity.name}."
         elif diff_act and after_no_act:
-            msg = f"has stopped {after.activity.name}."
+            msg = f"has stopped {before.activity.name}."
         elif not before_dnd and after_dnd:
             msg = "has set DND status."
         elif before_dnd and not after_dnd:
@@ -46,7 +46,7 @@ class Surveillance(commands.Cog):
         elif not before_idle and after_idle:
             msg = "has gone idle."
         else:
-            msg = "[condition error in code]"
+            return
 
         time = self.get_time()
         await self.get_log_channel().send(f"{time}: {after.name} {msg}")
