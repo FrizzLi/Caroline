@@ -567,3 +567,4 @@ async def setup(bot):
 # TODO: remove previous song -> makes going songs fast
 # TODO: resolve download
 # TODO: resolve _ before function and after
+# TODO: refresh duration not minus.. say not playing anything
