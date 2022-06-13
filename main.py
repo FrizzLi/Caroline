@@ -31,7 +31,7 @@ class MyBot(commands.Bot):
         }
         for dir_name in os.listdir("cogs"):
             if dir_name in py_files:
-                if PREFIX == "." and dir_name == "music":
+                if PREFIX == PREFIXES[LOCAL] and dir_name in MB_LISTS[LOCAL]:
                     continue
                 try:
                     path = (
@@ -50,15 +50,21 @@ class MyBot(commands.Bot):
         )
 
 
+
+HOST = 0
+LOCAL = 1
+PREFIXES = ("?", ".")
+MB_LISTS = (("music", "surveillance"), ())
+
 try:
     import flask
     import keep_alive
     keep_alive.keep_alive()
     TOKEN = os.environ.get("GLADOS_TOKEN")
-    PREFIX = "?"
+    PREFIX = PREFIXES[HOST]
 except ModuleNotFoundError:
     TOKEN = os.environ.get("CAROLINE_TOKEN")
-    PREFIX = "."
+    PREFIX = PREFIXES[LOCAL]
 
 bot = MyBot()
 bot.run(TOKEN)
