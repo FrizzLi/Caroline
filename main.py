@@ -54,7 +54,7 @@ class MyBot(commands.Bot):
 HOST = 0
 LOCAL = 1
 PREFIXES = ("?", ".")
-MB_LISTS = (("music", "surveillance"), ())
+MB_LISTS = ((), ("music", "surveillance"))
 
 try:
     import flask
