@@ -17,14 +17,14 @@ def evolutionize(
     """Runs evolutionary algorithm on a map with walls to fill it with terrain.
 
     Args:
-        map_list (List[List[int]]): 2D map of 0 and 1 (walls) integers
+        map_list (List[List[int]]): 2D walled map that will be terrained
         max_runs (int): max number of attempts to find solution with evo. alg.
         print_stats (bool, optional): turns on debug mode that prints stats
             and solution
 
     Returns:
         Tuple[List[List[int]], Dict[Tuple[int, int], int], bool]: (
-            2D map of various integers (wall being -1 now),
+            2D map with integers indicating terrain (wall being -1 now),
             chromosome - solution that consist of genes,
             fact announcing if the solution was found or not
         )
@@ -35,17 +35,22 @@ def evolutionize(
 
     while not found_solution and attempt_number <= max_runs:
 
-        # convert map_list into dict of tuples
-        map_tuple = {
-            (i, j): -col
-            for i, row in enumerate(map_list)
-            for j, col in enumerate(row)
-        }
+        # simplify 2D map_list into 1D dict
+        # map_tuple = {
+        #     (i, j): -col
+        #     for i, row in enumerate(map_list)
+        #     for j, col in enumerate(row)
+        # }
 
-        shape = len(map_list), len(map_list[0])
-        rocks_amount = sum(val != 0 for val in map_tuple.values())
-        to_rake_amount = shape[0] * shape[1] - rocks_amount
-        genes_amount = (shape[0] + shape[1]) * 2
+        rows, cols = len(map_list), len(map_list[0])
+        # rocks_amount = sum(val != 0 for val in map_tuple.values())
+        rocks_amount = sum(map(sum, map_list))
+        # negate = lambda x: [-num for num in x]
+        # aaa = list(map(negate, map_list))
+
+        map_list = [[-val for val in row] for row in map_list]
+        to_rake_amount = rows * cols - rocks_amount
+        map_perimeter = (rows + cols) * 2
 
         CHROMOSOMES = 30  # chromosome - solution defined by genes
         GENERATIONS = 100  # generation - set of all chromosomes
@@ -53,28 +58,30 @@ def evolutionize(
         MAX_MUT_RATE = 0.80
         CROSS_RATE = 0.90
 
-        # generating chromosomes for one population/generation
+        # generating chromosomes for first generation/population
         population = []
-        genes = random.sample(range(1, genes_amount), genes_amount - 1)
+        genes = random.sample(range(1, map_perimeter), map_perimeter - 1)  
+        # ? NEED TO KNOW WHAT DOES THOSE NUMBERS DO
+        # ? is map_tuple necessary? What about dealing with it in 2D space
         for _ in range(CHROMOSOMES):
             random.shuffle(genes)
             chromosome = [num * random.choice([-1, 1]) for num in genes]
             population.append(chromosome)
 
         start_time = time.time()
-        gen_times = []
+        generation_times = []
 
-        # loop of generations
+        # loop over generations - evolution
         prev_max = 0
-        mu_rate = MIN_MUT_RATE
+        mut_rate = MIN_MUT_RATE
         for i in range(GENERATIONS):
             generation_time = time.time()
 
             # evaluate all chromosomes and save the best one
             fit, fit_max, best_index = [], 0, 0
             for j in range(CHROMOSOMES):
-                unraked_amount, filled_map, tmp_rake_paths = rakeMap(
-                    population[j], copy.copy(map_tuple), shape
+                unraked_amount, filled_map, tmp_rake_paths = rake_map(  # ? I'M HERE NOW!
+                    population[j], copy.deepcopy(map_list), rows, cols
                 )
                 raked_amount = to_rake_amount - unraked_amount
                 fit.append(raked_amount)
@@ -85,14 +92,14 @@ def evolutionize(
             if prev_max < fit_max:
                 print(f"Generation: {i+1},", end="\t")
                 print(f"Raked: {fit_max} (out of {to_rake_amount})", end="\t")
-                print(f"Mutation rate: {round(mu_rate, 2)}")
+                print(f"Mutation rate: {round(mut_rate, 2)}")
             if fit_max == to_rake_amount:
                 found_solution = True
-                gen_times.append(time.time() - generation_time)
+                generation_times.append(time.time() - generation_time)
                 break
 
             # increase mutation rate each generation to prevent local maximums
-            mu_rate = mu_rate if mu_rate >= MAX_MUT_RATE else mu_rate + 0.01
+            mut_rate = mut_rate if mut_rate >= MAX_MUT_RATE else mut_rate + 0.01
 
             # next generation creating, 1 iteration for 2 populations
             children = []  # type: List[Any]
@@ -105,7 +112,7 @@ def evolutionize(
 
                 # copying better genes to 2 child chromosomes
                 children.extend([[], []])
-                for j in range(genes_amount - 1):
+                for j in range(map_perimeter - 1):
                     children[i].append(population[better1][j])
                     children[i + 1].append(population[better2][j])
 
@@ -113,11 +120,11 @@ def evolutionize(
                 # (both inherit the same amount of genetic info)
                 if random.random() < CROSS_RATE:
                     for c in range(2):
-                        for g in range(genes_amount - 1):
-                            if random.random() < mu_rate:
+                        for g in range(map_perimeter - 1):
+                            if random.random() < mut_rate:
 
                                 # search for gene with mut_num number
-                                mut_num = random.randint(1, genes_amount)
+                                mut_num = random.randint(1, map_perimeter)
                                 mut_num *= random.choice([-1, 1])
                                 f = 0
                                 for k, gene in enumerate(children[i + c]):
@@ -133,17 +140,17 @@ def evolutionize(
                                     children[i + c][g] = mut_num
 
             # keep the best chromosome for next generation
-            for i in range(genes_amount - 1):
+            for i in range(map_perimeter - 1):
                 children[0][i] = population[best_index][i]
 
             population = children
             prev_max = fit_max
-            gen_times.append(time.time() - generation_time)
+            generation_times.append(time.time() - generation_time)
 
         # printing stats, solution and map
         if print_stats:
             total = round(time.time() - start_time, 2)
-            avg = round(sum(gen_times) / len(gen_times), 2)
+            avg = round(sum(generation_times) / len(generation_times), 2)
             chromo = " ".join(map(str, population[best_index]))
             answer = "found" if found_solution else "not found"
             print(f"Solution is {answer}!")
@@ -157,136 +164,191 @@ def evolutionize(
 
     return terr_map, rake_paths, found_solution
 
+def get_start_pos(
+    gene: int, rows: int, cols: int
+) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    """Gets starting position and movement direction.
 
-def rakeMap(
+    Args:
+        gene (int): instruction that defines the starting pos and movement
+        rows (int): amount of rows in the map (helping variable)
+        cols (int): amount of cols in the map (helping variable)
+
+    Returns:
+        Tuple[Tuple[int, int], Tuple[int, int]]: 
+            (coordinate of starting pos, moving direction coordinate)
+    """
+
+    half_perimeter = rows + cols
+    pos_num = abs(gene)
+    if pos_num <= cols:  # go DOWN
+        pos, move = (0, pos_num - 1), (1, 0)
+    elif pos_num <= half_perimeter:  # go RIGHT
+        pos, move = (pos_num - cols - 1, 0), (0, 1)
+    elif pos_num <= half_perimeter + rows:  # go LEFT
+        pos, move = (pos_num - half_perimeter - 1, cols - 1), (0, -1)
+    else:  # go UP
+        pos, move = (
+            (rows - 1, pos_num - half_perimeter - rows - 1),
+            (-1, 0),
+        )
+    
+    return pos, move
+
+def get_row_movement(pos, cols, map_tuple, gene):
+    R_pos = pos[0], pos[1] + 1
+    L_pos = pos[0], pos[1] - 1
+    R_inbound = R_pos[1] < cols
+    L_inbound = L_pos[1] >= 0
+    R_free = R_inbound and not map_tuple[R_pos[0]][R_pos[1]]
+    L_free = L_inbound and not map_tuple[L_pos[0]][L_pos[0]]
+
+    # if both ways are free, the gene will decide where to go
+    if R_free and L_free:
+        move = (0, 1) if gene > 0 else (0, -1)
+
+    elif R_free:
+        move = 0, 1
+    elif L_free:
+        move = 0, -1
+
+    # we are in bounds of the map, but we cannot move anywhere
+    elif R_inbound and L_inbound:
+        move = 0, 0
+
+    # reached end of the map so we can leave - WHAT DOES THIS MEAN
+    else:
+        move = 1, 1
+    
+    return move
+
+def get_col_movement(pos, rows, map_tuple, gene):
+    D_pos = pos[0] + 1, pos[1]
+    U_pos = pos[0] - 1, pos[1]
+    D_inbound = D_pos[0] < rows
+    U_inbound = U_pos[0] >= 0
+    D_free = D_inbound and not map_tuple[D_pos[0]][D_pos[1]]
+    U_free = U_inbound and not map_tuple[U_pos[0]][U_pos[1]]
+
+    if D_free and U_free:
+        move = (1, 0) if gene > 0 else (-1, 0)
+    elif D_free:
+        move = 1, 0
+    elif U_free:
+        move = -1, 0
+    elif D_inbound and U_inbound:
+        move = 0, 0
+    else:
+        move = 1, 1
+
+    return move
+
+def in_bounds(pos, rows, cols):
+    return 0 <= pos[0] < rows and 0 <= pos[1] < cols
+
+def rake_map(
     chromosome: List[int],
     map_tuple: Dict[Tuple[int, int], int],
-    shape: Tuple[int, int],
+    rows: int,
+    cols: int,
 ) -> Tuple[int, List[List[int]], Dict[Tuple[int, int], int]]:
-    """Attempts to fill the map terrain with chromosome that is defined
-    by the order of instructions known as genes.
+    """Fills the map with terrain with chromosome that consists of instructions known as genes. 
+    is defined
+    by the terrain_num of instructions known as genes.
+    Each gene defines the starting position and direction of raking.
 
     Args:
         chromosome (List[int]): ordered set of genes (instructions)
-        map_tuple (Dict[Tuple[int, int], int]): map defined by tuples
-            of (x, y) being as coordinate keys
-        shape (Tuple[int, int]): height and width lengths of the map
+        map_tuple (Dict[Tuple[int, int], int]): map defined by dict with:
+            key as tuples (x, y) being coordinates, 
+            value being terrain (0 is unraked)
+        rows (int): amount of rows in the map
+        cols (int): amount of cols in the map
 
     Returns:
         Tuple[int, List[List[int]], Dict[Tuple[int, int], int]]:
-            (amount of unraked spots, terrained map, raking paths)
+            (amount of unraked spots, terrained map, raking path)
     """
 
-    rows, cols = shape
-    half_perimeter = sum(shape)
-    UNRAKED = 0
-    parents = {}  # type: Dict[Any, Any]
     rake_paths = {}  # type: Dict[Tuple[int, int], int]
-    pos = 0  # type: Any
-    order = 1
+    terrain_num = 1  # first raking number
 
     for gene in chromosome:
 
         # get starting position and movement direction
-        pos_num = abs(gene)
-        if pos_num <= cols:  # go DOWN
-            pos, move = (0, pos_num - 1), (1, 0)
-        elif pos_num <= half_perimeter:  # go RIGHT
-            pos, move = (pos_num - cols - 1, 0), (0, 1)
-        elif pos_num <= half_perimeter + rows:  # go LEFT
-            pos, move = (pos_num - half_perimeter - 1, cols - 1), (0, -1)
-        else:  # go UP
-            pos, move = (
-                (rows - 1, pos_num - half_perimeter - rows - 1),
-                (-1, 0),
-            )
-
+        pos, move = get_start_pos(gene, rows, cols)
+        
         # checking whether we can enter the garden with current pos
-        if map_tuple[pos] == UNRAKED:
-            parents = {}
-            parent = 0
+        if map_tuple[pos[0]][pos[1]]:
+            continue
+        
+        # move until we reach end of the map
+        parents = {}  # type: Dict[Any, Any]
+        parent = 0
+        while in_bounds(pos, rows, cols):
+            
+            # collision to rock or raked sand
+            if map_tuple[pos[0]][pos[1]]:
 
-            # move until we reach end of the map
-            while 0 <= pos[0] < rows and 0 <= pos[1] < cols:
+                # moving to previous position
+                pos = parent
+                parent = parents[pos]
 
-                # collision to raked sand/rock
-                if map_tuple[pos] != UNRAKED:
-                    pos = parent  # get previous pos
-                    parent = parents[pos]  # get previous parent
+                # change moving direction
+                if move[0]:
+                    move = get_row_movement(pos, cols, map_tuple, gene)
+                else:
+                    move = get_col_movement(pos, rows, map_tuple, gene)
 
-                    # change moving direction
-                    if move[0] != 0:  # Y -> X
-                        R_pos = pos[0], pos[1] + 1
-                        L_pos = pos[0], pos[1] - 1
-                        R_inbound = R_pos[1] < cols
-                        L_inbound = L_pos[1] >= 0
-                        R_free = R_inbound and map_tuple[R_pos] == UNRAKED
-                        L_free = L_inbound and map_tuple[L_pos] == UNRAKED
+                # cant change direction, remove the path
+                if not any(move):
+                    terrain_num -= 1
+                    while parents[pos] != 0:
+                        map_tuple[pos[0]][pos[1]] = 0
+                        pos = parents[pos]
+                    map_tuple[pos[0]][pos[1]] = 0
+                    break
 
-                        if R_free and L_free:
-                            move = (0, 1) if gene > 0 else (0, -1)
-                        elif R_free:
-                            move = 0, 1
-                        elif L_free:
-                            move = 0, -1
-                        elif R_inbound and L_inbound:
-                            move = 0, 0
-                        else:
-                            break  # reached end of the map so we can leave
+                # can change direction into moving out of the map
+                if all(move):
+                    break
 
-                    else:  # X -> Y
-                        D_pos = pos[0] + 1, pos[1]
-                        U_pos = pos[0] - 1, pos[1]
-                        D_inbound = D_pos[0] < rows
-                        U_inbound = U_pos[0] >= 0
-                        D_free = D_inbound and map_tuple[D_pos] == UNRAKED
-                        U_free = U_inbound and map_tuple[U_pos] == UNRAKED
+            # move to the next pos
+            map_tuple[pos[0]][pos[1]] = terrain_num
+            parents[pos] = parent
+            parent = pos
+            pos = pos[0] + move[0], pos[1] + move[1]
 
-                        if D_free and U_free:
-                            move = (1, 0) if gene > 0 else (-1, 0)
-                        elif D_free:
-                            move = 1, 0
-                        elif U_free:
-                            move = -1, 0
-                        elif D_inbound and U_inbound:
-                            move = 0, 0
-                        else:
-                            break
+        # save paths for visualization in gif file
+        if any(move):
+            rake_path = {key: terrain_num for key in parents}
+            rake_paths = {**rake_paths, **rake_path}
 
-                    # if we cant change direction, remove the path
-                    if not any(move):
-                        order -= 1
-                        while parents[pos] != 0:
-                            map_tuple[pos] = 0
-                            pos = parents[pos]
-                        map_tuple[pos] = 0
-                        break
+        terrain_num += 1
 
-                # save the order num and parent, move by setting new pos
-                map_tuple[pos] = order
-                parents[pos] = parent
-                parent = pos
-                pos = pos[0] + move[0], pos[1] + move[1]
-
-            # save paths for visualization
-            if any(move):
-                rake_path = {key: order for key in parents}
-                rake_paths = {**rake_paths, **rake_path}
-            order += 1
-
-    filled_map = []  # type: List[List[int]]
     unraked_amount = 0
+
+    # conversion back to 2D map... 
+    # ? cant we do it without tuples? if we do, nn next step
+    #   ? we dont have to convert every bad map, just in the end is enough
+    # ? what does the gene number represent.. the way of conversion working
+    # filled_map = []  # type: List[List[int]]
     row_number = -1
 
-    for i, order_num in enumerate(map_tuple.values()):
-        if order_num == UNRAKED:
-            unraked_amount += 1
-        if i % cols == 0:
-            row_number += 1
-            filled_map.append([])
-        filled_map[row_number].append(order_num)
+    for row in map_tuple:
+        for col in row:
+            if not col:
+                unraked_amount += 1
 
-    return unraked_amount, filled_map, rake_paths
+    # for i, terrain_num in enumerate(map_tuple.values()):
+    #     if not terrain_num:
+    #         unraked_amount += 1
+    #     if i % cols == 0:
+    #         row_number += 1
+    #         filled_map.append([])
+    #     filled_map[row_number].append(terrain_num)
+
+    return unraked_amount, map_tuple, rake_paths
 
 
 def generate_properties(
@@ -414,14 +476,14 @@ def save_solution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
     """Saves solution (paths) of evolutionary alg. into pickle file.
 
     Args:
-        rake_paths (Dict[Tuple[int, int], int]): order of raking the map
+        rake_paths (Dict[Tuple[int, int], int]): terrain_num of raking the map
         fname (str): name of pickle file into which the solution will be saved
     """
 
     source_dir = Path(__file__).parents[1]
-    solutions_dir = Path(f"{source_dir}\\data\\solutions")
+    solutions_dir = Path(f"{source_dir}/data/solutions")
     Path(solutions_dir).mkdir(parents=True, exist_ok=True)
-    fname_path = Path(f"{solutions_dir}/{fname}_rake.txt")
+    fname_path = Path(f"{solutions_dir}/{fname}_rake")
     with open(fname_path, "wb") as file:
         pickle.dump(rake_paths, file)
 
@@ -486,13 +548,13 @@ def create_terrain(fname: str, max_runs: int, show: bool = False) -> str:
     if not walled_map:
         raise FileNotFoundError("Invalid file name for creating terrain!")
 
-    map_list = [list(map(int, subarray)) for subarray in walled_map]
+    int_walled_map = [list(map(int, subarray)) for subarray in walled_map]
     # TODO: evo deep check
-    map_list, rake_paths, solution = evolutionize(map_list, max_runs)
+    int_terrained_map, rake_paths, solution = evolutionize(int_walled_map, max_runs)
 
     # TODO: mark remaining unraked space with -2 (why actually?), add to docstring
     terrained_map = [
-        [str(i) if i else "-2" for i in subarray] for subarray in map_list
+        [str(i) if i else "-2" for i in subarray] for subarray in int_terrained_map
     ]
 
     save_solution(rake_paths, fname)  # TODO: after evolutionize checkout -> check docstring here
@@ -538,15 +600,15 @@ def create_maps(
     points_count: int,
 ) -> None:
     """
-    Creates and saves variously filled maps into text files.
+    Creates and saves walled, terrained and propertied maps into text files.
 
     There are three dependant stages of creating a complete map. Each stage
-    uses map that was created and saved into text file from the previous stage
-    We can start from any stage as long as the previous one was run. (except
-    for the first one). All remaining stages will run after that.
+    uses map that was created by the previous stage. We can therefore start
+    from any stage as long as the previous stage one was run. (except for the
+    first one). All remaining stages will run after that.
 
     Args:
-        fname (str): name of the file(s) that is/are going to be created
+        fname (str): name of file(s) that is/are going to be created
         begin_from (str): Defines which stage to start from.
             Options: "walls", "terrain", "properties"
         query (str): Contains size of map and coordinates of walls.
@@ -592,4 +654,5 @@ if __name__ == "__main__":
 
 # TODO: tests
 # TODO: docstring everywhere for check
-# TODO: order of methods/funcs
+# TODO: terrain_num of methods/funcs
+# TODO: amount vs count naming convention
