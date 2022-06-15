@@ -23,7 +23,7 @@ class AiAlgo(commands.Cog):
 
     wall_query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,7)"
     wall_begin_create = "walls"
-    
+
     terrain_movement = "M"
     terrain_algorithm = "HK"
     terrain_subset_size = None

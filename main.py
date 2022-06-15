@@ -57,7 +57,6 @@ PREFIXES = ("?", ".")
 MB_LISTS = ((), ("music", "surveillance"))
 
 try:
-    import flask
     import keep_alive
     keep_alive.keep_alive()
     TOKEN = os.environ.get("GLADOS_TOKEN")

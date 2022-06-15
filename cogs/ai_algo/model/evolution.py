@@ -696,6 +696,8 @@ if __name__ == "__main__":
     create_maps(**evo_parameters)
 
 # TODO: amount vs count naming convention
+# TODO: private functions analyze, etc.
 # TODO: check everything again
+# TODO: pylint check
 
 # TODO: tests
