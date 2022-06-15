@@ -12,21 +12,21 @@ class QueryError(Exception):
 
 
 def evolutionize(
-    map_list: List[List[int]], max_runs: int, print_stats: bool = True
+    map_list: List[List[str]], max_runs: int, print_stats: bool = True
 ) -> Tuple[List[List[int]], Dict[Tuple[int, int], int], bool]:
     """Runs evolutionary algorithm on a map with walls to fill it with terrain.
 
     Args:
-        map_list (List[List[int]]): 2D walled map that will be terrained
+        map_list (List[List[str]]): 2D walled map that will be terrained
         max_runs (int): max number of attempts to find solution with evo. alg.
         print_stats (bool, optional): Turns on debug mode that prints stats
             and solution. Defaults to True.
 
     Returns:
         Tuple[List[List[int]], Dict[Tuple[int, int], int], bool]: (
-            2D map with integers indicating terrain (wall being -1 now),
-            chromosome - solution that consist of genes,
-            fact announcing if the solution was found or not
+            2D map filled with terrain (wall being -1, unraked being -2)
+            dict of ordered raking paths, keys - coordinates, vals - terrain
+            information about whether the solution was found
         )
     """
 
@@ -35,15 +35,15 @@ def evolutionize(
 
     while not found_solution and attempt_number <= max_runs:
 
-        # simplify 2D map_list into 1D dict
+        # simplify 2D map_list into 1D dict (it is faster in raking)
         map_tuple = {
-            (i, j): -col
+            (i, j): -int(col)
             for i, row in enumerate(map_list)
             for j, col in enumerate(row)
         }
 
         rows, cols = len(map_list), len(map_list[0])
-        rocks_amount = sum(map(sum, map_list))
+        rocks_amount = abs(sum(map_tuple.values()))
         to_rake_amount = rows * cols - rocks_amount
         map_perimeter = (rows + cols) * 2
 
@@ -76,7 +76,6 @@ def evolutionize(
                 map_tuple_filled, raking_paths = rake_map(
                     population[j], copy.copy(map_tuple), rows, cols
                 )
-
                 unraked_count = list(map_tuple_filled.values()).count(0)
                 raked_count = to_rake_amount - unraked_count
                 fit_vals.append(raked_count)
@@ -86,10 +85,13 @@ def evolutionize(
                     fit_max_path = raking_paths
                     fit_max_index = j
 
+            # found better population
             if prev_max < fit_max:
                 print(f"Generation: {i+1},", end="\t")
                 print(f"Raked: {fit_max} (out of {to_rake_amount})", end="\t")
                 print(f"Mutation rate: {round(mut_rate, 2)}")
+
+            # found solution
             if fit_max == to_rake_amount:
                 found_solution = True
                 generation_times.append(time.time() - generation_time)
@@ -98,48 +100,42 @@ def evolutionize(
             # increase mutation rate each generation to prevent local maximum
             mut_rate = mut_rate + 0.01 if mut_rate < MAX_MUT_RATE else MAX_MUT_RATE
 
-            # creating next generation, 1 iteration for 2 populations
+            # creating next generation
             children = []  # type: List[Any]
-            for i in range(0, CHROMOSOMES, 2):
+            for i in range(CHROMOSOMES):
+                children.append([])
 
-                # pick 2 winning chromosomes out of 4
-                pick = random.sample(range(CHROMOSOMES), 4)
-                win1 = pick[0] if fit_vals[pick[0]] > fit_vals[pick[1]] else pick[1]
-                win2 = pick[2] if fit_vals[pick[2]] > fit_vals[pick[3]] else pick[3]
+                # pick a winning chromosomes out of 2
+                rand1, rand2 = random.sample(range(CHROMOSOMES), 2)
+                win = rand1 if fit_vals[rand1] > fit_vals[rand2] else rand2
 
-                # copying winning chromosomes into 2 children
-                children.extend([[], []])
+                # copying winning chromosome into children
                 for j in range(map_perimeter - 1):
-                    children[i].append(population[win1][j])
-                    children[i + 1].append(population[win2][j])
+                    children[i].append(population[win][j])
 
                 if random.random() > CROSS_RATE:
                     continue
 
-                # mutating 2 chromosomes with uniform crossover
+                # mutating chromosome with uniform crossover
                 # (both inherit the same amount of genetic info)
-                for j in range(2):
-                    for rand_index in range(map_perimeter - 1):
-                        if random.random() < mut_rate:
+                for rand_index in range(map_perimeter - 1):
+                    if random.random() < mut_rate:
 
-                            # create random gene, search for such gene in children
-                            rand_val = random.randint(0, map_perimeter - 1)
-                            rand_val *= random.choice([-1, 1])
+                        # create random gene
+                        rand_val = random.randint(0, map_perimeter - 1)
+                        rand_val *= random.choice([-1, 1])
 
-                            # try to find such gene in children
-                            if rand_val in children[i + j]:
-                                found_gene_index = children[i + j].index(rand_val)
-                            else:
-                                found_gene_index = 0
+                        # search for such gene in children
+                        found_index = False
+                        if rand_val in children[i]:
+                            found_index = children[i].index(rand_val)
 
-                            # swap it with g gene if it was found
-                            if found_gene_index:
-                                tmp = children[i + j][rand_index]
-                                children[i + j][rand_index] = children[i + j][found_gene_index]
-                                children[i + j][found_gene_index] = tmp
-                            # replace it with rand_val
-                            else:
-                                children[i + j][rand_index] = rand_val
+                        if found_index:  # swap it with g gene if it was found
+                            tmp = children[i][rand_index]
+                            children[i][rand_index] = children[i][found_index]
+                            children[i][found_index] = tmp
+                        else:  # replace it with rand_val
+                            children[i][rand_index] = rand_val
 
             # keep the best chromosome for next generation
             for i in range(map_perimeter - 1):
@@ -164,17 +160,29 @@ def evolutionize(
             if not found_solution and attempt_number <= max_runs:
                 print(f"\nAttempt number {attempt_number}.")
 
-    # add the conversion of map here! it is faster with tuples...
-    # TODO:   map_tuple_filled
-    filled_map = []  # type: List[List[int]]
-    row_number = -1
-    for i, terrain_num in enumerate(terr_map.values()):  # fit_max_map
-        if i % cols == 0:
-            row_number += 1
-            filled_map.append([])
-        filled_map[row_number].append(terrain_num)
+    map_list_filled = fill_map(map_list, fit_max_map)
 
-    return filled_map, rake_paths, found_solution
+    return map_list_filled, fit_max_path, found_solution
+
+def fill_map(
+    map_list: List[List[str]], map_tuple_filled: Dict[Tuple[int, int], int]
+) -> List[List[str]]:
+    """Fills walled map with terrain generated by the evolution algorithm.
+    Replaces zeros with -2 (unraked spots).
+
+    Args:
+        map_list (List[List[str]]): 2D walled map
+        map_tuple_filled (Dict[Tuple[int, int], int]): 1D terrained map
+
+    Returns:
+        List[List[str]]: 2D terrained map
+    """
+
+    for (i, j), terrain_num in map_tuple_filled.items():
+        terrain_str = str(terrain_num) if terrain_num else "-2"
+        map_list[i][j] = terrain_str
+
+    return map_list
 
 def get_start_pos(
     gene: int, rows: int, cols: int
@@ -513,7 +521,8 @@ def load_map(fname: str, suffix: str) -> List[List[str]]:
 
 
 def save_solution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
-    """Saves solution (paths) of evolutionary alg. into pickle file.
+    """Saves solution (paths) of evolutionary alg. into pickle file for gif
+    visualization.
 
     Args:
         rake_paths (Dict[Tuple[int, int], int]): terrain_num of raking the map
@@ -588,16 +597,7 @@ def create_terrain(fname: str, max_runs: int, show: bool = False) -> str:
     if not walled_map:
         raise FileNotFoundError("Invalid file name for creating terrain!")
 
-    int_walled_map = [list(map(int, subarray)) for subarray in walled_map]
-    # TODO: evo deep check
-    int_terrained_map, rake_paths, solution = evolutionize(int_walled_map, max_runs)
-
-    
-
-    # TODO: mark remaining unraked space with -2 (why actually?), add to docstring
-    terrained_map = [
-        [str(i) if i else "-2" for i in subarray] for subarray in int_terrained_map
-    ]
+    terrained_map, rake_paths, solution = evolutionize(walled_map, max_runs)
 
     save_solution(rake_paths, fname)  # TODO: after evolutionize checkout -> check docstring here
 
