@@ -250,16 +250,10 @@ def evolutionize(
         to_rake_amount = rows * cols - rocks_amount
         map_perimeter = (rows + cols) * 2
 
-        CHROMOSOMES = 30  # chromosome - solution defined by genes
-        GENERATIONS = 100  # generation - set of all chromosomes
-        MIN_MUT_RATE = 0.05
-        MAX_MUT_RATE = 0.80
-        CROSS_RATE = 0.90
-
         # generating chromosome for first generation/population
         population = []
         genes = random.sample(range(map_perimeter - 1), map_perimeter - 1)
-        for _ in range(CHROMOSOMES):
+        for _ in range(CHROMOSOMES):  # chromosome - solution defined by genes
             random.shuffle(genes)
             chromosome = [num * random.choice([-1, 1]) for num in genes]
             population.append(chromosome)
@@ -270,7 +264,7 @@ def evolutionize(
         # loop over generations - evolution
         prev_max = 0
         mut_rate = MIN_MUT_RATE
-        for i in range(GENERATIONS):
+        for i in range(GENERATIONS):  # generation - set of all chromosomes
             generation_time = time.time()
 
             # evaluate all chromosomes and save the best one
@@ -301,7 +295,9 @@ def evolutionize(
                 break
 
             # increase mutation rate each generation to prevent local maximum
-            mut_rate = mut_rate + 0.01 if mut_rate < MAX_MUT_RATE else MAX_MUT_RATE
+            mut_rate = (
+                mut_rate + 0.01 if mut_rate < MAX_MUT_RATE else MAX_MUT_RATE
+            )
 
             # creating next generation
             children = []  # type: List[Any]
@@ -375,13 +371,13 @@ def rake_map(
     cols: int,
 ) -> Tuple[int, List[List[int]], Dict[Tuple[int, int], int]]:
     """Rakes the map with terrain by chromosome that consists of instructions
-    known as genes. 
+    known as genes.
     Each gene defines the starting position and directionof raking.
 
     Args:
         chromosome (List[int]): ordered set of genes (instructions)
         map_tuple (Dict[Tuple[int, int], int]): map defined by dict with:
-            keys being tuples as coordinates, 
+            keys being tuples as coordinates,
             value being values of terrain (0 is unraked)
         rows (int): amount of rows in the map
         cols (int): amount of cols in the map
@@ -396,11 +392,11 @@ def rake_map(
 
     for gene in chromosome:
         pos, move = get_start_pos(gene, rows, cols)
-        
+
         # collision check (to rock or raked sand)
         if map_tuple[pos]:
             continue
-        
+
         parents = {}  # type: Dict[Any, Any]
         parent = 0
         while in_bounds(pos, rows, cols):
@@ -463,6 +459,7 @@ def fill_map(
 
     return map_list
 
+
 def get_start_pos(
     gene: int, rows: int, cols: int
 ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
@@ -470,18 +467,18 @@ def get_start_pos(
 
     Args:
         gene (int): instruction that defines the starting movement
-            and position coordinate that is number number between 
+            and position coordinate that is number number between
             (0) and (perimeter - 1)
         rows (int): amount of rows in the map (helping variable)
         cols (int): amount of cols in the map (helping variable)
 
     Returns:
-        Tuple[Tuple[int, int], Tuple[int, int]]: 
+        Tuple[Tuple[int, int], Tuple[int, int]]:
             (start position coordinate, movement direction coordinate)
     """
 
     half_perimeter = rows + cols
-    
+
     pos_num = abs(gene)
     if pos_num < cols:  # go DOWN
         pos, move = (0, pos_num), (1, 0)
@@ -494,7 +491,7 @@ def get_start_pos(
             (rows - 1, pos_num - half_perimeter - rows),
             (-1, 0),
         )
-    
+
     return pos, move
 
 
@@ -509,7 +506,7 @@ def in_bounds(pos: Tuple[int, int], rows: int, cols: int) -> bool:
     Returns:
         bool: indicates rake availability
     """
-    
+
     return 0 <= pos[0] < rows and 0 <= pos[1] < cols
 
 
@@ -525,7 +522,7 @@ def get_row_movement(
         pos (Tuple[int, int]): current position we are at
         cols (int): amount of cols in the map
         map_tuple (Dict[Tuple[int, int], int]): map defined by dict with:
-            keys being tuples as coordinates, 
+            keys being tuples as coordinates,
             value being values of terrain (0 is unraked)
         gene (int): instruction that also carries the information about which
             direction to choose in case of having two movement possibilities
@@ -534,24 +531,24 @@ def get_row_movement(
         Tuple[int, int]: movement direction coordinate
     """
 
-    R_pos = pos[0], pos[1] + 1
-    L_pos = pos[0], pos[1] - 1
-    R_inbound = R_pos[1] < cols
-    L_inbound = L_pos[1] >= 0
-    R_free = R_inbound and not map_tuple[R_pos]
-    L_free = L_inbound and not map_tuple[L_pos]
+    right = pos[0], pos[1] + 1
+    left = pos[0], pos[1] - 1
+    right_inbound = right[1] < cols
+    left_inbound = left[1] >= 0
+    right_free = right_inbound and not map_tuple[right]
+    left_free = left_inbound and not map_tuple[left]
 
     # if both ways are free, the gene will decide where to go
-    if R_free and L_free:
+    if right_free and left_free:
         move = (0, 1) if gene > 0 else (0, -1)
 
-    elif R_free:
+    elif right_free:
         move = 0, 1
-    elif L_free:
+    elif left_free:
         move = 0, -1
 
     # we are in bounds of the map, but we cannot move anywhere
-    elif R_inbound and L_inbound:
+    elif right_inbound and left_inbound:
         move = 0, 0
 
     # one movement side is out of bounds, which means we can leave the map
@@ -573,7 +570,7 @@ def get_col_movement(
         pos (Tuple[int, int]): current position we are at
         rows (int): amount of rows in the map
         map_tuple (Dict[Tuple[int, int], int]): map defined by dict with:
-            keys being tuples as coordinates, 
+            keys being tuples as coordinates,
             value being values of terrain (0 is unraked)
         gene (int): instruction that also carries the information about which
             direction to choose in case of having two movement possibilities
@@ -582,20 +579,20 @@ def get_col_movement(
         Tuple[int, int]: movement direction coordinate
     """
 
-    D_pos = pos[0] + 1, pos[1]
-    U_pos = pos[0] - 1, pos[1]
-    D_inbound = D_pos[0] < rows
-    U_inbound = U_pos[0] >= 0
-    D_free = D_inbound and not map_tuple[D_pos]
-    U_free = U_inbound and not map_tuple[U_pos]
+    down = pos[0] + 1, pos[1]
+    _up = pos[0] - 1, pos[1]
+    down_inbound = down[0] < rows
+    up_inbound = _up[0] >= 0
+    down_free = down_inbound and not map_tuple[down]
+    up_free = up_inbound and not map_tuple[_up]
 
-    if D_free and U_free:
+    if down_free and up_free:
         move = (1, 0) if gene > 0 else (-1, 0)
-    elif D_free:
+    elif down_free:
         move = 1, 0
-    elif U_free:
+    elif up_free:
         move = -1, 0
-    elif D_inbound and U_inbound:
+    elif down_inbound and up_inbound:
         move = 0, 0
     else:
         move = 1, 1
@@ -677,20 +674,26 @@ def generate_properties(
 if __name__ == "__main__":
 
     # walls uses: query, fname, max_runs, points_count
-    # terrain uses: fname, max_runs, points_count
+    # terrain uses: fname, max_runs, points_count, evo. vars
     # properties uses: fname, points_count
-    begin_from = "walls"
-    query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"
-    fname = "queried"
-    max_runs = 3
-    points_count = 10
+    BEGIN_FROM = "walls"
+    QUERY = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"
+    FNAME = "queried"
+    MAX_RUNS = 3
+    POINTS_COUNT = 10
+
+    CHROMOSOMES = 30
+    GENERATIONS = 100
+    MIN_MUT_RATE = 0.05
+    MAX_MUT_RATE = 0.80
+    CROSS_RATE = 0.90
 
     evo_parameters = dict(
-        begin_from=begin_from,
-        query=query,
-        fname=fname,
-        max_runs=max_runs,
-        points_count=points_count,
+        begin_from=BEGIN_FROM,
+        query=QUERY,
+        fname=FNAME,
+        max_runs=MAX_RUNS,
+        points_count=POINTS_COUNT,
     )  # type: Dict[str, Any]
 
     create_maps(**evo_parameters)

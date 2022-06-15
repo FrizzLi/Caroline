@@ -78,4 +78,4 @@ bot.run(TOKEN)
 
 # TODO: Interaction CMDs + check groups
 # TODO: Restart bot CMD for refresh.. Heroku CLI?
-# TODO: Ctrl+Shift+F "pylint:" errors, pylintrc file
+# TODO: Ctrl+Shift+F "pylint:" errors, pylintrc
