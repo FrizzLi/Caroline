@@ -56,10 +56,11 @@ def evolutionize(
 
         # generating chromosomes for first generation/population
         population = []
-        genes = random.sample(range(1, map_perimeter), map_perimeter - 1)  
+        genes = random.sample(range(0, map_perimeter - 1), map_perimeter - 1)  
         # ? NEED TO KNOW WHAT DOES THOSE NUMBERS DO
-        # ? is map_tuple necessary? What about dealing with it in 2D space
         for _ in range(CHROMOSOMES):
+            if 44 in genes:
+                print("what")
             random.shuffle(genes)
             chromosome = [num * random.choice([-1, 1]) for num in genes]
             population.append(chromosome)
@@ -76,9 +77,15 @@ def evolutionize(
             # evaluate all chromosomes and save the best one
             fit, fit_max, best_index = [], 0, 0
             for j in range(CHROMOSOMES):
-                unraked_amount, filled_map, tmp_rake_paths = rake_map(  # ? I'M HERE NOW!
+                filled_map, tmp_rake_paths = rake_map(  # ? I'M HERE NOW!
                     population[j], copy.copy(map_tuple), rows, cols
                 )
+                # count unraked amount
+                unraked_amount = 0
+                for terrain_num in filled_map.values():
+                    if not terrain_num:
+                        unraked_amount += 1
+                #
                 raked_amount = to_rake_amount - unraked_amount
                 fit.append(raked_amount)
                 if raked_amount > fit_max:
@@ -120,7 +127,7 @@ def evolutionize(
                             if random.random() < mut_rate:
 
                                 # search for gene with mut_num number
-                                mut_num = random.randint(1, map_perimeter)
+                                mut_num = random.randint(0, map_perimeter - 1)
                                 mut_num *= random.choice([-1, 1])
                                 f = 0
                                 for k, gene in enumerate(children[i + c]):
@@ -158,6 +165,7 @@ def evolutionize(
             if not found_solution and attempt_number <= max_runs:
                 print(f"\nAttempt number {attempt_number}.")
 
+    # add the conversion of map here!
     return terr_map, rake_paths, found_solution
 
 def get_start_pos(
@@ -167,6 +175,7 @@ def get_start_pos(
 
     Args:
         gene (int): instruction that defines the starting pos and movement
+            number between (1) and (perimeter - 1)
         rows (int): amount of rows in the map (helping variable)
         cols (int): amount of cols in the map (helping variable)
 
@@ -176,19 +185,24 @@ def get_start_pos(
     """
 
     half_perimeter = rows + cols
+    
     pos_num = abs(gene)
-    if pos_num <= cols:  # go DOWN
-        pos, move = (0, pos_num - 1), (1, 0)
-    elif pos_num <= half_perimeter:  # go RIGHT
-        pos, move = (pos_num - cols - 1, 0), (0, 1)
-    elif pos_num <= half_perimeter + rows:  # go LEFT
-        pos, move = (pos_num - half_perimeter - 1, cols - 1), (0, -1)
-    else:  # go UP
+    if pos_num == 44:
+        print("what")
+    if pos_num < cols:  # go DOWN               0-11
+        pos, move = (0, pos_num), (1, 0)
+    elif pos_num < half_perimeter:  # go RIGHT  12-21
+        pos, move = (pos_num - cols, 0), (0, 1)
+    elif pos_num < half_perimeter + rows:  # go LEFT   22-31
+        pos, move = (pos_num - half_perimeter, cols - 1), (0, -1)
+    else:  # go UP      32-43
         pos, move = (
-            (rows - 1, pos_num - half_perimeter - rows - 1),
+            (rows - 1, pos_num - half_perimeter - rows),
             (-1, 0),
         )
     
+    if pos[1] == 44:
+        print("what")
     return pos, move
 
 def get_row_movement(pos, cols, map_tuple, gene):
@@ -322,24 +336,7 @@ def rake_map(
 
         terrain_num += 1
 
-    unraked_amount = 0
-
-    # conversion back to 2D map... 
-    # ? cant we do it without tuples? if we do, nn next step
-    #   ? we dont have to convert every bad map, just in the end is enough
-    # ? what does the gene number represent.. the way of conversion working
-    filled_map = []  # type: List[List[int]]
-    row_number = -1
-
-    for i, terrain_num in enumerate(map_tuple.values()):
-        if not terrain_num:
-            unraked_amount += 1
-        if i % cols == 0:
-            row_number += 1
-            filled_map.append([])
-        filled_map[row_number].append(terrain_num)
-
-    return unraked_amount, filled_map, rake_paths
+    return map_tuple, rake_paths
 
 
 def generate_properties(
@@ -542,6 +539,17 @@ def create_terrain(fname: str, max_runs: int, show: bool = False) -> str:
     int_walled_map = [list(map(int, subarray)) for subarray in walled_map]
     # TODO: evo deep check
     int_terrained_map, rake_paths, solution = evolutionize(int_walled_map, max_runs)
+
+    # TODO:
+    # filled_map = []  # type: List[List[int]]
+    # row_number = -1
+    # for i, terrain_num in enumerate(map_tuple.values()):
+    #     if not terrain_num:
+    #         unraked_amount += 1
+    #     if i % cols == 0:
+    #         row_number += 1
+    #         filled_map.append([])
+    #     filled_map[row_number].append(terrain_num)
 
     # TODO: mark remaining unraked space with -2 (why actually?), add to docstring
     terrained_map = [
