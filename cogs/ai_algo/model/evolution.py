@@ -36,19 +36,15 @@ def evolutionize(
     while not found_solution and attempt_number <= max_runs:
 
         # simplify 2D map_list into 1D dict
-        # map_tuple = {
-        #     (i, j): -col
-        #     for i, row in enumerate(map_list)
-        #     for j, col in enumerate(row)
-        # }
+        map_tuple = {
+            (i, j): -col
+            for i, row in enumerate(map_list)
+            for j, col in enumerate(row)
+        }
 
         rows, cols = len(map_list), len(map_list[0])
         # rocks_amount = sum(val != 0 for val in map_tuple.values())
         rocks_amount = sum(map(sum, map_list))
-        # negate = lambda x: [-num for num in x]
-        # aaa = list(map(negate, map_list))
-
-        map_list = [[-val for val in row] for row in map_list]
         to_rake_amount = rows * cols - rocks_amount
         map_perimeter = (rows + cols) * 2
 
@@ -81,7 +77,7 @@ def evolutionize(
             fit, fit_max, best_index = [], 0, 0
             for j in range(CHROMOSOMES):
                 unraked_amount, filled_map, tmp_rake_paths = rake_map(  # ? I'M HERE NOW!
-                    population[j], copy.deepcopy(map_list), rows, cols
+                    population[j], copy.copy(map_tuple), rows, cols
                 )
                 raked_amount = to_rake_amount - unraked_amount
                 fit.append(raked_amount)
@@ -200,8 +196,8 @@ def get_row_movement(pos, cols, map_tuple, gene):
     L_pos = pos[0], pos[1] - 1
     R_inbound = R_pos[1] < cols
     L_inbound = L_pos[1] >= 0
-    R_free = R_inbound and not map_tuple[R_pos[0]][R_pos[1]]
-    L_free = L_inbound and not map_tuple[L_pos[0]][L_pos[0]]
+    R_free = R_inbound and not map_tuple[R_pos]
+    L_free = L_inbound and not map_tuple[L_pos]
 
     # if both ways are free, the gene will decide where to go
     if R_free and L_free:
@@ -227,8 +223,8 @@ def get_col_movement(pos, rows, map_tuple, gene):
     U_pos = pos[0] - 1, pos[1]
     D_inbound = D_pos[0] < rows
     U_inbound = U_pos[0] >= 0
-    D_free = D_inbound and not map_tuple[D_pos[0]][D_pos[1]]
-    U_free = U_inbound and not map_tuple[U_pos[0]][U_pos[1]]
+    D_free = D_inbound and not map_tuple[D_pos]
+    U_free = U_inbound and not map_tuple[U_pos]
 
     if D_free and U_free:
         move = (1, 0) if gene > 0 else (-1, 0)
@@ -279,7 +275,7 @@ def rake_map(
         pos, move = get_start_pos(gene, rows, cols)
         
         # checking whether we can enter the garden with current pos
-        if map_tuple[pos[0]][pos[1]]:
+        if map_tuple[pos]:
             continue
         
         # move until we reach end of the map
@@ -288,7 +284,7 @@ def rake_map(
         while in_bounds(pos, rows, cols):
             
             # collision to rock or raked sand
-            if map_tuple[pos[0]][pos[1]]:
+            if map_tuple[pos]:
 
                 # moving to previous position
                 pos = parent
@@ -304,9 +300,9 @@ def rake_map(
                 if not any(move):
                     terrain_num -= 1
                     while parents[pos] != 0:
-                        map_tuple[pos[0]][pos[1]] = 0
+                        map_tuple[pos] = 0
                         pos = parents[pos]
-                    map_tuple[pos[0]][pos[1]] = 0
+                    map_tuple[pos] = 0
                     break
 
                 # can change direction into moving out of the map
@@ -314,7 +310,7 @@ def rake_map(
                     break
 
             # move to the next pos
-            map_tuple[pos[0]][pos[1]] = terrain_num
+            map_tuple[pos] = terrain_num
             parents[pos] = parent
             parent = pos
             pos = pos[0] + move[0], pos[1] + move[1]
@@ -332,23 +328,18 @@ def rake_map(
     # ? cant we do it without tuples? if we do, nn next step
     #   ? we dont have to convert every bad map, just in the end is enough
     # ? what does the gene number represent.. the way of conversion working
-    # filled_map = []  # type: List[List[int]]
+    filled_map = []  # type: List[List[int]]
     row_number = -1
 
-    for row in map_tuple:
-        for col in row:
-            if not col:
-                unraked_amount += 1
+    for i, terrain_num in enumerate(map_tuple.values()):
+        if not terrain_num:
+            unraked_amount += 1
+        if i % cols == 0:
+            row_number += 1
+            filled_map.append([])
+        filled_map[row_number].append(terrain_num)
 
-    # for i, terrain_num in enumerate(map_tuple.values()):
-    #     if not terrain_num:
-    #         unraked_amount += 1
-    #     if i % cols == 0:
-    #         row_number += 1
-    #         filled_map.append([])
-    #     filled_map[row_number].append(terrain_num)
-
-    return unraked_amount, map_tuple, rake_paths
+    return unraked_amount, filled_map, rake_paths
 
 
 def generate_properties(
