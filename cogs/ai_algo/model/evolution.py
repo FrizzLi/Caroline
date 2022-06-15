@@ -19,8 +19,8 @@ def evolutionize(
     Args:
         map_list (List[List[int]]): 2D walled map that will be terrained
         max_runs (int): max number of attempts to find solution with evo. alg.
-        print_stats (bool, optional): turns on debug mode that prints stats
-            and solution
+        print_stats (bool, optional): Turns on debug mode that prints stats
+            and solution. Defaults to True.
 
     Returns:
         Tuple[List[List[int]], Dict[Tuple[int, int], int], bool]: (
@@ -43,7 +43,6 @@ def evolutionize(
         }
 
         rows, cols = len(map_list), len(map_list[0])
-        # rocks_amount = sum(val != 0 for val in map_tuple.values())
         rocks_amount = sum(map(sum, map_list))
         to_rake_amount = rows * cols - rocks_amount
         map_perimeter = (rows + cols) * 2
@@ -54,13 +53,10 @@ def evolutionize(
         MAX_MUT_RATE = 0.80
         CROSS_RATE = 0.90
 
-        # generating chromosomes for first generation/population
+        # generating chromosome for first generation/population
         population = []
-        genes = random.sample(range(0, map_perimeter - 1), map_perimeter - 1)  
-        # ? NEED TO KNOW WHAT DOES THOSE NUMBERS DO
+        genes = random.sample(range(map_perimeter - 1), map_perimeter - 1)
         for _ in range(CHROMOSOMES):
-            if 44 in genes:
-                print("what")
             random.shuffle(genes)
             chromosome = [num * random.choice([-1, 1]) for num in genes]
             population.append(chromosome)
@@ -75,22 +71,20 @@ def evolutionize(
             generation_time = time.time()
 
             # evaluate all chromosomes and save the best one
-            fit, fit_max, best_index = [], 0, 0
+            fit_vals, fit_max, fit_max_index = [], 0, 0
             for j in range(CHROMOSOMES):
-                filled_map, tmp_rake_paths = rake_map(  # ? I'M HERE NOW!
+                map_tuple_filled, raking_paths = rake_map(
                     population[j], copy.copy(map_tuple), rows, cols
                 )
-                # count unraked amount
-                unraked_amount = 0
-                for terrain_num in filled_map.values():
-                    if not terrain_num:
-                        unraked_amount += 1
-                #
-                raked_amount = to_rake_amount - unraked_amount
-                fit.append(raked_amount)
-                if raked_amount > fit_max:
-                    best_index, fit_max = j, raked_amount
-                    terr_map, rake_paths = filled_map, tmp_rake_paths
+
+                unraked_count = list(map_tuple_filled.values()).count(0)
+                raked_count = to_rake_amount - unraked_count
+                fit_vals.append(raked_count)
+                if raked_count > fit_max:
+                    fit_max = raked_count
+                    fit_max_map = map_tuple_filled
+                    fit_max_path = raking_paths
+                    fit_max_index = j
 
             if prev_max < fit_max:
                 print(f"Generation: {i+1},", end="\t")
@@ -101,17 +95,18 @@ def evolutionize(
                 generation_times.append(time.time() - generation_time)
                 break
 
-            # increase mutation rate each generation to prevent local maximums
-            mut_rate = mut_rate if mut_rate >= MAX_MUT_RATE else mut_rate + 0.01
+            # increase mutation rate each generation to prevent local maximum
+            mut_rate = mut_rate + 0.01 if mut_rate < MAX_MUT_RATE else MAX_MUT_RATE
 
+            # ? STAYING HERE... gotta rewrite docs for prev. stuff
             # next generation creating, 1 iteration for 2 populations
             children = []  # type: List[Any]
             for i in range(0, CHROMOSOMES, 2):
 
                 # pick 2 better chromosomes out of 4
                 pick = random.sample(range(CHROMOSOMES), 4)
-                better1 = pick[0] if fit[pick[0]] > fit[pick[1]] else pick[1]
-                better2 = pick[2] if fit[pick[2]] > fit[pick[3]] else pick[3]
+                better1 = pick[0] if fit_vals[pick[0]] > fit_vals[pick[1]] else pick[1]
+                better2 = pick[2] if fit_vals[pick[2]] > fit_vals[pick[3]] else pick[3]
 
                 # copying better genes to 2 child chromosomes
                 children.extend([[], []])
@@ -144,7 +139,7 @@ def evolutionize(
 
             # keep the best chromosome for next generation
             for i in range(map_perimeter - 1):
-                children[0][i] = population[best_index][i]
+                children[0][i] = population[fit_max_index][i]
 
             population = children
             prev_max = fit_max
@@ -154,7 +149,7 @@ def evolutionize(
         if print_stats:
             total = round(time.time() - start_time, 2)
             avg = round(sum(generation_times) / len(generation_times), 2)
-            chromo = " ".join(map(str, population[best_index]))
+            chromo = " ".join(map(str, population[fit_max_index]))
             answer = "found" if found_solution else "not found"
             print(f"Solution is {answer}!")
             print(f"Total time elapsed is {total}s,", end="\t")
@@ -165,8 +160,17 @@ def evolutionize(
             if not found_solution and attempt_number <= max_runs:
                 print(f"\nAttempt number {attempt_number}.")
 
-    # add the conversion of map here!
-    return terr_map, rake_paths, found_solution
+    # add the conversion of map here! it is faster with tuples...
+    # TODO:   map_tuple_filled
+    filled_map = []  # type: List[List[int]]
+    row_number = -1
+    for i, terrain_num in enumerate(terr_map.values()):  # fit_max_map
+        if i % cols == 0:
+            row_number += 1
+            filled_map.append([])
+        filled_map[row_number].append(terrain_num)
+
+    return filled_map, rake_paths, found_solution
 
 def get_start_pos(
     gene: int, rows: int, cols: int
@@ -187,22 +191,18 @@ def get_start_pos(
     half_perimeter = rows + cols
     
     pos_num = abs(gene)
-    if pos_num == 44:
-        print("what")
-    if pos_num < cols:  # go DOWN               0-11
+    if pos_num < cols:  # go DOWN (0 - cols-1)
         pos, move = (0, pos_num), (1, 0)
-    elif pos_num < half_perimeter:  # go RIGHT  12-21
+    elif pos_num < half_perimeter:  # go RIGHT (cols - half_perimeter-1)
         pos, move = (pos_num - cols, 0), (0, 1)
-    elif pos_num < half_perimeter + rows:  # go LEFT   22-31
+    elif pos_num < half_perimeter + rows:  # go LEFT (half_perimeter - half_perimeter+rows-1)
         pos, move = (pos_num - half_perimeter, cols - 1), (0, -1)
-    else:  # go UP      32-43
+    else:  # go UP (half_perimeter+rows - perimeter-1)
         pos, move = (
             (rows - 1, pos_num - half_perimeter - rows),
             (-1, 0),
         )
     
-    if pos[1] == 44:
-        print("what")
     return pos, move
 
 def get_row_movement(pos, cols, map_tuple, gene):
@@ -284,23 +284,16 @@ def rake_map(
     terrain_num = 1  # first raking number
 
     for gene in chromosome:
-
-        # get starting position and movement direction
         pos, move = get_start_pos(gene, rows, cols)
         
-        # checking whether we can enter the garden with current pos
+        # collision check (to rock or raked sand)
         if map_tuple[pos]:
             continue
         
-        # move until we reach end of the map
         parents = {}  # type: Dict[Any, Any]
         parent = 0
         while in_bounds(pos, rows, cols):
-            
-            # collision to rock or raked sand
             if map_tuple[pos]:
-
-                # moving to previous position
                 pos = parent
                 parent = parents[pos]
 
@@ -310,7 +303,7 @@ def rake_map(
                 else:
                     move = get_col_movement(pos, rows, map_tuple, gene)
 
-                # cant change direction, remove the path
+                # cant change direction - remove the path
                 if not any(move):
                     terrain_num -= 1
                     while parents[pos] != 0:
@@ -319,7 +312,7 @@ def rake_map(
                     map_tuple[pos] = 0
                     break
 
-                # can change direction into moving out of the map
+                # can change direction to just move out of the map
                 if all(move):
                     break
 
@@ -329,7 +322,7 @@ def rake_map(
             parent = pos
             pos = pos[0] + move[0], pos[1] + move[1]
 
-        # save paths for visualization in gif file
+        # save paths for gif visualization
         if any(move):
             rake_path = {key: terrain_num for key in parents}
             rake_paths = {**rake_paths, **rake_path}
@@ -540,16 +533,7 @@ def create_terrain(fname: str, max_runs: int, show: bool = False) -> str:
     # TODO: evo deep check
     int_terrained_map, rake_paths, solution = evolutionize(int_walled_map, max_runs)
 
-    # TODO:
-    # filled_map = []  # type: List[List[int]]
-    # row_number = -1
-    # for i, terrain_num in enumerate(map_tuple.values()):
-    #     if not terrain_num:
-    #         unraked_amount += 1
-    #     if i % cols == 0:
-    #         row_number += 1
-    #         filled_map.append([])
-    #     filled_map[row_number].append(terrain_num)
+    
 
     # TODO: mark remaining unraked space with -2 (why actually?), add to docstring
     terrained_map = [
