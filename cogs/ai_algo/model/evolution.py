@@ -98,44 +98,48 @@ def evolutionize(
             # increase mutation rate each generation to prevent local maximum
             mut_rate = mut_rate + 0.01 if mut_rate < MAX_MUT_RATE else MAX_MUT_RATE
 
-            # ? STAYING HERE... gotta rewrite docs for prev. stuff
-            # next generation creating, 1 iteration for 2 populations
+            # creating next generation, 1 iteration for 2 populations
             children = []  # type: List[Any]
             for i in range(0, CHROMOSOMES, 2):
 
-                # pick 2 better chromosomes out of 4
+                # pick 2 winning chromosomes out of 4
                 pick = random.sample(range(CHROMOSOMES), 4)
-                better1 = pick[0] if fit_vals[pick[0]] > fit_vals[pick[1]] else pick[1]
-                better2 = pick[2] if fit_vals[pick[2]] > fit_vals[pick[3]] else pick[3]
+                win1 = pick[0] if fit_vals[pick[0]] > fit_vals[pick[1]] else pick[1]
+                win2 = pick[2] if fit_vals[pick[2]] > fit_vals[pick[3]] else pick[3]
 
-                # copying better genes to 2 child chromosomes
+                # copying winning chromosomes into 2 children
                 children.extend([[], []])
                 for j in range(map_perimeter - 1):
-                    children[i].append(population[better1][j])
-                    children[i + 1].append(population[better2][j])
+                    children[i].append(population[win1][j])
+                    children[i + 1].append(population[win2][j])
+
+                if random.random() > CROSS_RATE:
+                    continue
 
                 # mutating 2 chromosomes with uniform crossover
                 # (both inherit the same amount of genetic info)
-                if random.random() < CROSS_RATE:
-                    for c in range(2):
-                        for g in range(map_perimeter - 1):
-                            if random.random() < mut_rate:
+                for j in range(2):
+                    for rand_index in range(map_perimeter - 1):
+                        if random.random() < mut_rate:
 
-                                # search for gene with mut_num number
-                                mut_num = random.randint(0, map_perimeter - 1)
-                                mut_num *= random.choice([-1, 1])
-                                f = 0
-                                for k, gene in enumerate(children[i + c]):
-                                    if gene == mut_num:
-                                        f = k
+                            # create random gene, search for such gene in children
+                            rand_val = random.randint(0, map_perimeter - 1)
+                            rand_val *= random.choice([-1, 1])
 
-                                # swap it with g gene, else replace g with it
-                                if f:
-                                    tmp = children[i + c][g]
-                                    children[i + c][g] = children[i + c][f]
-                                    children[i + c][f] = tmp
-                                else:
-                                    children[i + c][g] = mut_num
+                            # try to find such gene in children
+                            if rand_val in children[i + j]:
+                                found_gene_index = children[i + j].index(rand_val)
+                            else:
+                                found_gene_index = 0
+
+                            # swap it with g gene if it was found
+                            if found_gene_index:
+                                tmp = children[i + j][rand_index]
+                                children[i + j][rand_index] = children[i + j][found_gene_index]
+                                children[i + j][found_gene_index] = tmp
+                            # replace it with rand_val
+                            else:
+                                children[i + j][rand_index] = rand_val
 
             # keep the best chromosome for next generation
             for i in range(map_perimeter - 1):
