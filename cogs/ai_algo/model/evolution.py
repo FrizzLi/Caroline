@@ -175,29 +175,30 @@ def evolutionize(
 def get_start_pos(
     gene: int, rows: int, cols: int
 ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
-    """Gets starting position and movement direction.
+    """Gets start position and movement direction.
 
     Args:
-        gene (int): instruction that defines the starting pos and movement
-            number between (1) and (perimeter - 1)
+        gene (int): instruction that defines the starting movement
+            and position coordinate that is number number between 
+            (0) and (perimeter - 1)
         rows (int): amount of rows in the map (helping variable)
         cols (int): amount of cols in the map (helping variable)
 
     Returns:
         Tuple[Tuple[int, int], Tuple[int, int]]: 
-            (coordinate of starting pos, moving direction coordinate)
+            (start position coordinate, movement direction coordinate)
     """
 
     half_perimeter = rows + cols
     
     pos_num = abs(gene)
-    if pos_num < cols:  # go DOWN (0 - cols-1)
+    if pos_num < cols:  # go DOWN
         pos, move = (0, pos_num), (1, 0)
-    elif pos_num < half_perimeter:  # go RIGHT (cols - half_perimeter-1)
+    elif pos_num < half_perimeter:  # go RIGHT
         pos, move = (pos_num - cols, 0), (0, 1)
-    elif pos_num < half_perimeter + rows:  # go LEFT (half_perimeter - half_perimeter+rows-1)
+    elif pos_num < half_perimeter + rows:  # go LEFT
         pos, move = (pos_num - half_perimeter, cols - 1), (0, -1)
-    else:  # go UP (half_perimeter+rows - perimeter-1)
+    else:  # go UP
         pos, move = (
             (rows - 1, pos_num - half_perimeter - rows),
             (-1, 0),
@@ -205,7 +206,28 @@ def get_start_pos(
     
     return pos, move
 
-def get_row_movement(pos, cols, map_tuple, gene):
+
+def get_row_movement(
+    pos: Tuple[int, int],
+    cols: int,
+    map_tuple: Dict[Tuple[int, int], int],
+    gene: int,
+) -> Tuple[int, int]:
+    """Gets next movement coordinate that changes positions between columns.
+
+    Args:
+        pos (Tuple[int, int]): current position we are at
+        cols (int): amount of cols in the map
+        map_tuple (Dict[Tuple[int, int], int]): map defined by dict with:
+            keys being tuples as coordinates, 
+            value being values of terrain (0 is unraked)
+        gene (int): instruction that also carries the information about which
+            direction to choose in case of having two movement possibilities
+
+    Returns:
+        Tuple[int, int]: movement direction coordinate
+    """
+
     R_pos = pos[0], pos[1] + 1
     L_pos = pos[0], pos[1] - 1
     R_inbound = R_pos[1] < cols
@@ -226,13 +248,34 @@ def get_row_movement(pos, cols, map_tuple, gene):
     elif R_inbound and L_inbound:
         move = 0, 0
 
-    # reached end of the map so we can leave - WHAT DOES THIS MEAN
+    # one movement side is out of bounds, which means we can leave the map
     else:
         move = 1, 1
-    
+
     return move
 
-def get_col_movement(pos, rows, map_tuple, gene):
+
+def get_col_movement(
+    pos: Tuple[int, int],
+    rows: int,
+    map_tuple: Dict[Tuple[int, int], int],
+    gene: int,
+) -> Tuple[int, int]:
+    """Gets next movement coordinate that changes positions between columns.
+
+    Args:
+        pos (Tuple[int, int]): current position we are at
+        rows (int): amount of rows in the map
+        map_tuple (Dict[Tuple[int, int], int]): map defined by dict with:
+            keys being tuples as coordinates, 
+            value being values of terrain (0 is unraked)
+        gene (int): instruction that also carries the information about which
+            direction to choose in case of having two movement possibilities
+
+    Returns:
+        Tuple[int, int]: movement direction coordinate
+    """
+
     D_pos = pos[0] + 1, pos[1]
     U_pos = pos[0] - 1, pos[1]
     D_inbound = D_pos[0] < rows
@@ -253,8 +296,21 @@ def get_col_movement(pos, rows, map_tuple, gene):
 
     return move
 
-def in_bounds(pos, rows, cols):
+
+def in_bounds(pos: Tuple[int, int], rows: int, cols: int) -> bool:
+    """Checks whether current position is not out of bounds of the map.
+
+    Args:
+        pos (Tuple[int, int]): current position we are at
+        rows (int): amount of rows in the map
+        cols (int): amount of cols in the map
+
+    Returns:
+        bool: indicates rake availability
+    """
+    
     return 0 <= pos[0] < rows and 0 <= pos[1] < cols
+
 
 def rake_map(
     chromosome: List[int],
@@ -262,22 +318,21 @@ def rake_map(
     rows: int,
     cols: int,
 ) -> Tuple[int, List[List[int]], Dict[Tuple[int, int], int]]:
-    """Fills the map with terrain with chromosome that consists of instructions known as genes. 
-    is defined
-    by the terrain_num of instructions known as genes.
-    Each gene defines the starting position and direction of raking.
+    """Rakes the map with terrain by chromosome that consists of instructions
+    known as genes. 
+    Each gene defines the starting position and directionof raking.
 
     Args:
         chromosome (List[int]): ordered set of genes (instructions)
         map_tuple (Dict[Tuple[int, int], int]): map defined by dict with:
-            key as tuples (x, y) being coordinates, 
-            value being terrain (0 is unraked)
+            keys being tuples as coordinates, 
+            value being values of terrain (0 is unraked)
         rows (int): amount of rows in the map
         cols (int): amount of cols in the map
 
     Returns:
-        Tuple[int, List[List[int]], Dict[Tuple[int, int], int]]:
-            (amount of unraked spots, terrained map, raking path)
+        Tuple[List[List[int]], Dict[Tuple[int, int], int]]:
+            (terrained map, raking path)
     """
 
     rake_paths = {}  # type: Dict[Tuple[int, int], int]
