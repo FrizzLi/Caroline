@@ -16,24 +16,24 @@ class AiAlgo(commands.Cog):
     # walls:       fname
     # terrain:     fname, points_amount, climb
     # properties:  fname, points_amount
-    # view:        fname,               climb
+    # view:        fname,                climb
     shared_fname = "queried"
     shared_points_amount = 10
     shared_climb = False
 
-    wall_query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,7)"
-    wall_begin_create = "walls"
+    evo_query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,7)"
+    evo_begin_create = "walls"
+    evo_max_runs = 1
 
-    terrain_movement = "M"
-    terrain_algorithm = "HK"
-    terrain_subset_size = None
-    terrain_max_runs = 1
+    path_movement = "M"
+    path_algorithm = "HK"
+    path_visit_points_amount = None
 
-    property_save_fname_facts = "facts"
-    property_load_fname_facts = "facts_init"
-    property_load_fname_rules = "rules"
-    property_step_by_step = True
-    property_facts_random_order = True
+    chain_save_fname_facts = "facts"
+    chain_load_fname_facts = "facts_init"
+    chain_load_fname_rules = "rules"
+    chain_step_by_step = True
+    chain_facts_random_order = True
 
     view_skip_rake = False
 
@@ -46,28 +46,28 @@ class AiAlgo(commands.Cog):
     @commands.command(brief="Creates gif and shows it. (pars in file)")
     async def create(self, ctx):
         evo_parameters = dict(
-            begin_from=self.wall_begin_create,
-            query=self.wall_query,
+            begin_from=self.evo_begin_create,
+            query=self.evo_query,
             fname=self.shared_fname,
-            max_runs=self.terrain_max_runs,
+            max_runs=self.evo_max_runs,
             points_amount=self.shared_points_amount,
         )
 
         path_parameters = dict(
             fname=self.shared_fname,
-            movement=self.terrain_movement,
+            movement=self.path_movement,
             climb=self.shared_climb,
-            algorithm=self.terrain_algorithm,
-            subset_size=self.terrain_subset_size,
+            algorithm=self.path_algorithm,
+            visit_points_amount=self.path_visit_points_amount,
         )
 
         chain_parameters = dict(
-            save_fname_facts=self.property_save_fname_facts,
-            load_fname_facts=self.property_load_fname_facts,
-            load_fname_rules=self.property_load_fname_rules,
-            step_by_step=self.property_step_by_step,
+            save_fname_facts=self.chain_save_fname_facts,
+            load_fname_facts=self.chain_load_fname_facts,
+            load_fname_rules=self.chain_load_fname_rules,
+            step_by_step=self.chain_step_by_step,
             facts_amount=self.shared_points_amount + 1,
-            facts_random_order=self.property_facts_random_order,
+            facts_random_order=self.chain_facts_random_order,
             fname=self.shared_fname,
         )
 
@@ -86,5 +86,6 @@ async def setup(bot):
 
 
 # TODO: chain - optimize creating props
+
 # TODO: gspread parameter loading
 # TODO: update ai repo and make local parameter loading there
