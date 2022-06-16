@@ -377,7 +377,8 @@ def _rake_map(
             continue
 
         parents = {}  # type: Dict[Any, Any]
-        parent = (-1, -1)  # type: Tuple[int, int] (indicates no parrent)
+        parent = (-1, -1)  # type: Tuple[int, int]
+        # (-1, -1) (indicates no parrent)
         while _in_bounds(pos, rows, cols):
             if map_tuple[pos]:
                 pos = parent
@@ -729,9 +730,9 @@ def _generate_properties(
 
 if __name__ == "__main__":
 
-    # walls uses: query, fname, max_runs, points_amount
-    # terrain uses: fname, max_runs, points_amount, evo. vars
-    # properties uses: fname, points_amount
+    # walls uses:   query, fname, max_runs, points_amount
+    # terrain uses:        fname, max_runs, points_amount, evo. consts
+    # properties uses:     fname,           points_amount
     BEGIN_FROM = "walls"
     QUERY = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"
     FNAME = "queried"
