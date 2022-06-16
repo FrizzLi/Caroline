@@ -1,7 +1,7 @@
 import heapq
 import os
 import pickle
-from copy import deepcopy as dcopy
+from copy import deepcopy
 from itertools import combinations, permutations
 from os.path import dirname
 from pathlib import Path
@@ -43,77 +43,76 @@ class Node:
 class Map:
     def __init__(self, fname) -> None:
         self.fname = ""  # type: str
-        self._width = 0  # type: int
-        self._height = 0  # type: int
+        self.width = 0  # type: int
+        self.height = 0  # type: int
         self.nodes = {}  # type: Dict[Tuple[int, int], Node]
         self.properties = {}  # type: Dict[str, Any]
-        self.__load_map(fname)
+        self._load_map(fname)
 
-    def __load_map(self, fname) -> None:
+    def _load_map(self, fname) -> None:
         properties = {
             "points": [],
-            "base": 0,
+            "home": 0,
             "start": 0,
         }  # type: Dict[str, Any]
         nodes = {}  # type: Dict[Tuple[int, int], Node]
 
-        current_dir = dirname(dirname(os.path.abspath(__file__)))
-        with open(f"{current_dir}\\data\\maps\\{fname}_pro.txt") as f:
-            for i, line in enumerate(f):
-                for j, col in enumerate(line.split()):
-                    if col[0] in "([{":
-                        if col[0] == "(":
+        source_dir = Path(__file__).parents[1]
+        fname_path = Path(f"{source_dir}/data/maps/{fname}_pro.txt")
+        with open(fname_path, encoding="utf-8") as file:
+            for i, row in enumerate(file):
+                for j, col in enumerate(row.split()):
+
+                    # if there are brackets, add propertied point
+                    if not col.isnumeric():
+                        if col.startswith("("):
                             properties["points"].append((i, j))
-                        elif col[0] == "[":
-                            properties["base"] = (i, j)
-                        elif col[0] == "{":
+                        elif col.startswith("["):
+                            properties["home"] = (i, j)
+                        elif col.startswith("{"):
                             properties["start"] = (i, j)
-                        col = col[1:-1]
+                        if not col.startswith("-"):
+                            col = col[1:-1]
+
                     nodes[i, j] = Node((i, j), int(col))
 
+        height, width = max(nodes)
         if all(properties.values()):
             self.fname = fname
-            self._height = i + 1
-            self._width = j + 1
+            self.height = height + 1
+            self.width = width + 1
             self.nodes = nodes
             self.properties = properties
 
     def __getitem__(self, pos):
         assert len(pos) == 2, "Coordinate must have two values."
-        if not (0 <= pos[0] < self.height) or not (0 <= pos[1] < self.width):
+        if not 0 <= pos[0] < self.height or not 0 <= pos[1] < self.width:
             raise PositionError(str(pos))
         return self.nodes[pos]
 
-    @property
-    def width(self):
-        return self._width
 
-    @property
-    def height(self):
-        return self._height
-
-
-def getMoves(query: str) -> List[Tuple[int, int]]:
-    """Gets moving options.
+def get_movement_possibilities(movement_type: str) -> List[Tuple[int, int]]:
+    """Gets movement possibilities from either Manhattan or
+    Diagonal + Manhattan approach.
 
     Args:
-        query (str): determines the type of movement options
-            ("M" - Manhattan, "D" - Diagonal + Manhattan)
+        movement_type (str): determines the type of movement options
+            Options: "M", "D"
 
     Raises:
-        MovementError: if query has not "M" or "N"
+        MovementError: movement_type has not "M" or "N" set
 
     Returns:
-        List[Tuple[int, int]]: tuples of x, y coordinate movement options
+        List[Tuple[int, int]]: list of tuple coordinate movement options
     """
 
     moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    if query == "M":
-        return moves
-    elif query == "D":
-        return moves + [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+    if movement_type == "D":
+        moves += [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+    elif movement_type != "M":
+        raise MovementError("Invalid movement type!")
 
-    raise MovementError("Invalid movement type!")
+    return moves
 
 
 def unpassable(neighbor: Tuple[int, int], data: Map):
@@ -155,18 +154,18 @@ def getNextDist(prev_terr: int, next_terr: int, climb: bool) -> int:
 
 def dijkstra(
     data: Map,
-    start: Tuple[int, int],
     moves: List[Tuple[int, int]],
     climb: bool,
+    start: Tuple[int, int],
 ) -> Map:
     """Finds and saves the shortest path to all destinations from the start.
 
     Args:
         data (Map): contains information about the map
-        start (Tuple[int, int]): starting position
         moves (List[Tuple[int, int]]): tuples of movement options
         climb (bool): Climbing distance approach. If True, distance is measured
             with abs(current terrain number - next terrain number)
+        start (Tuple[int, int]): starting position
 
     Returns:
         Map: Contains distances from starting position to all destinations.
@@ -195,22 +194,22 @@ def dijkstra(
     return data
 
 
-def aStar(
+def a_star(
     data: Map,
-    start: Tuple[int, int],
-    dest: Tuple[int, int],
     moves: List[Tuple[int, int]],
     climb: bool,
+    start: Tuple[int, int],
+    dest: Tuple[int, int],
 ) -> Map:
-    """Finds and saves the shortest path to destination from the start.
+    """Finds and saves the shortest path from start to destination.
 
     Args:
         data (Map): contains information about the map
+        moves (List[Tuple[int, int]]): movement options
+        climb (bool): Climbing distance calculation approach. If True, distance
+            is measured with abs(current terrain number - next terrain number)
         start (Tuple[int, int]): starting position
         dest (Tuple[int, int]): ending position
-        moves (List[Tuple[int, int]]): tuples of movement options
-        climb (bool): Climbing distance approach. If True, distance is measured
-            with abs(current terrain number - next terrain number)
 
     Returns:
         Map: Contains distance between starting position and destination.
@@ -266,17 +265,17 @@ def naivePermutations(
         Tuple[List[Any], int]: (order of properties' coordinates, distance)
     """
 
-    points, base, start = tuple(pro_data.values())[0].properties.values()
+    points, home, start = tuple(pro_data.values())[0].properties.values()
     cost = maxsize
 
     for permutation in permutations(points, subset_size):
-        distance = pro_data[start][base].dist
-        for begin, finish in zip((base,) + permutation, permutation):
+        distance = pro_data[start][home].dist
+        for begin, finish in zip((home,) + permutation, permutation):
             distance += pro_data[begin][finish].dist
         if distance < cost:
             cost, pro_order = distance, permutation
 
-    return list((start, base) + pro_order), cost
+    return list((start, home) + pro_order), cost
 
 
 def heldKarp(
@@ -294,7 +293,7 @@ def heldKarp(
         Tuple[List[Any], int]: (order of properties' coordinates, distance)
     """
 
-    points, base, start = tuple(pro_data.values())[0].properties.values()
+    points, home, start = tuple(pro_data.values())[0].properties.values()
     points = frozenset(points)
 
     key = Tuple[Tuple[int, int], FrozenSet[int]]
@@ -307,11 +306,11 @@ def heldKarp(
             comb_set = frozenset(comb)
             for dest in points - comb_set:
                 routes = []
-                if comb_set == frozenset():  # case for base starting
+                if comb_set == frozenset():  # case for home starting
                     cost = (
-                        pro_data[base][dest].dist + pro_data[start][base].dist
+                        pro_data[home][dest].dist + pro_data[start][home].dist
                     )
-                    nodes[dest, frozenset()] = cost, base
+                    nodes[dest, frozenset()] = cost, home
                 else:
                     for begin in comb_set:  # single val from set
                         sub_comb = comb_set - frozenset({begin})
@@ -337,7 +336,7 @@ def heldKarp(
         path.append(next_step)
         points -= {next_step}
         next_step = nodes[next_step, points][1]
-    path.extend([base, start])
+    path.extend([home, start])
 
     return path[::-1], cost
 
@@ -356,40 +355,48 @@ def noComb(
         Tuple[List[Any], int]: (order of properties' coordinates, distance)
     """
 
-    points, base, start = tuple(pro_data.values())[0].properties.values()
-    pro_order, dist = [start, base], pro_data[start][base].dist
+    points, home, start = tuple(pro_data.values())[0].properties.values()
+    pro_order, dist = [start, home], pro_data[start][home].dist
     if subset_size:
-        point, dist_to_p = min([(p, pro_data[base][p].dist) for p in points])
+        point, dist_to_p = min([(p, pro_data[home][p].dist) for p in points])
         pro_order.append(point)
         dist += dist_to_p
 
     return pro_order, dist
 
 
-def findShortestDistances(
+def find_shortest_distances(
     map_data: Map, moves: List[Tuple[int, int]], climb: bool
 ) -> Dict[Tuple[int, int], Map]:
-    """Finds shortest distances between all properties (points, base, start)
-    in the map using Dijkstra and A* algorithms.
+    """Finds shortest distances between all properties (start, home, points).
+    Uses A* algorithm from start, from the others Dijkstra is used.
 
     Args:
         map_data (Map): contains information about the map
-        moves (List[Tuple[int, int]]): tuples of x, y coordinate movement opts
-        climb (bool): Climbing distance approach. If True, distance is measured
-            with abs(current terrain number - next terrain number)
+        moves (List[Tuple[int, int]]): movement options
+        climb (bool): Climbing distance calculation approach. If True, distance
+            is measured with abs(current terrain number - next terrain number)
 
     Returns:
         Dict[Tuple[int, int], Map]: Contains distances between all properties.
             Access via Dict[start][destination].dist
     """
 
-    points, base, start = map_data.properties.values()
+    points, home, start = map_data.properties.values()
 
-    pro_data = {p: dijkstra(dcopy(map_data), p, moves, climb) for p in points}
-    pro_data.update({start: aStar(dcopy(map_data), start, base, moves, climb)})
-    pro_data.update({base: dijkstra(dcopy(map_data), base, moves, climb)})
+    from_start_to_home = a_star(deepcopy(map_data), moves, climb, start, home)
+    from_home = dijkstra(deepcopy(map_data), moves, climb, home)
+    from_points = {
+        point: dijkstra(deepcopy(map_data), moves, climb, point)
+        for point in points
+    }
 
-    return pro_data
+    shortest_distances_between_properties = {
+        start: from_start_to_home,
+        home: from_home,
+        **from_points,
+    }
+    return shortest_distances_between_properties
 
 
 def getPaths(
@@ -452,85 +459,97 @@ def save_solution(comb_path: List[List[Tuple[int, int]]], fname: str) -> None:
         pickle.dump(comb_path, f)
 
 
-def setSubsetSize(
-    subset_size: Union[int, None], points: List[Tuple[int, int]]
+def validate_visit_points_amount(
+    visit_points_amount: Union[int, None], map_points: List[Tuple[int, int]]
 ) -> int:
-    """Validates and sets subset size when it's None.
+    """Validates and sets amount of points to visit. If its None or higher than
+    the amount of points on the map, it will be reduced down to the map's
+    amount.
 
     Args:
-        subset_size (Union[int, None]): number of points to visit
+        visit_points_amount (Union[int, None]): Points we want to visit.
             None means all
+        map_points (List[Tuple[int, int]]): coordinate points on the map
 
     Raises:
-        SubsetSizeError: if subset_size is negative number
+        SubsetSizeError: visit_points_amount is negative number
 
     Returns:
-        int: subset size
+        int: amount of points that are going to be visited on the map
     """
 
-    if subset_size is None or subset_size > len(points):
-        subset_size = len(points)
-    if subset_size < 0:
+    if visit_points_amount is None or visit_points_amount > len(map_points):
+        visit_points_amount = len(map_points)
+    if visit_points_amount < 0:
         raise SubsetSizeError("Invalid subset size!")
 
-    return subset_size
+    return visit_points_amount
 
 
-def setAlgorithm(algorithm: str, subset_size: int) -> str:
-    """Validates and sets algorithm.
+def validate_algorithm(algorithm: str, visit_points_amount: int) -> str:
+    """Validates algorithm option and sets the algorithm.
 
     Args:
-        algorithm (str): NP - Naive Permutations, HK - Held Karp, NC - No comb
-        subset_size (int): number of points to visit
+        algorithm (str): algorithm abbreviation
+            Options: "NP", "HK" (Naive Permutations or Held Karp)
+        visit_points_amount (int): number of points to visit
 
     Raises:
-        AlgorithmError: if it is not either NC, NP or HK
+        AlgorithmError: wrong algorithm abbreviation string (NP or HK)
 
     Returns:
-        str: algorithm
+        str: algorithm abbreviation
     """
 
-    if subset_size < 2:
+    if visit_points_amount < 2:
         algorithm = "NC"
-    if algorithm not in ("NC", "NP", "HK"):
+    elif algorithm not in ("NC", "NP", "HK"):
         raise AlgorithmError("Invalid algorithm input!")
 
     return algorithm
 
 
-def findShortestPath(
+def find_shortest_path(
     fname: str,
-    movement: str,
+    movement_type: str,
     climb: bool,
     algorithm: str,
-    subset_size: Union[int, None],
+    visit_points_amount: Union[int, None],
 ) -> None:
     """Runs pathfinding algorithm on a map that is loaded from the text file.
 
     Args:
-        fname (string): name of the file to load (without _pro.txt)
-        movement (string): "M" - Manhattan, "D" - Diagonal + Manhattan
+        fname (string): name of the file to load (with no suffix)
+        movement_type (string): "M" - Manhattan, "D" - Diagonal + Manhattan
         climb (bool): Climbing distance approach. If True, distance is
             measured with abs(current terrain number - next terrain number)
-        algorithm (string): NP - Naive Permutations, HK - Held Karp
-        subset_size (Union[int, None]): number of points to visit
+        algorithm (string): algorithm abbreviation string
+            Options: "NP", "HK" (Naive Permutations or Held Karp)
+        visit_points_amount (Union[int, None]): amount of points to visit
             None means all
     """
 
-    findShortestCombo = {
+    algorithm_opts = {
         "NC": noComb,
         "NP": naivePermutations,
         "HK": heldKarp,
     }
 
     try:
+        # set up parameters for pathfinding algs
         map_data = Map(fname)
-        moves = getMoves(movement)
-        subset_size = setSubsetSize(subset_size, map_data.properties["points"])
-        algorithm = setAlgorithm(algorithm, subset_size)
+        moves = get_movement_possibilities(movement_type)
+        visit_points_amount = validate_visit_points_amount(
+            visit_points_amount, map_data.properties["points"]
+        )
+        # ? NC.. really? -> if nn, search for "and sets the algorithm" docstr
+        algorithm = validate_algorithm(algorithm, visit_points_amount)
 
-        pro_data = findShortestDistances(map_data, moves, climb)
-        pro_order, dist = findShortestCombo[algorithm](pro_data, subset_size)
+        # ! STAYING HERE NOW
+        pro_data = find_shortest_distances(map_data, moves, climb)
+        pro_order, dist = algorithm_opts[algorithm](
+            pro_data, visit_points_amount
+        )
         paths = getPaths(pro_data, pro_order)
 
         printSolution(paths, dist)
@@ -546,18 +565,18 @@ def findShortestPath(
 
 if __name__ == "__main__":
 
-    fname = "queried"
-    movement = "M"
-    climb = False
-    algorithm = "HK"
-    subset_size = None
+    FNAME = "queried"
+    MOVEMENT_TYPE = "M"
+    CLIMB = False
+    ALGORITHM = "HK"
+    VISIT_POINTS_AMOUNT = None
 
     path_parameters = dict(
-        fname=fname,
-        movement=movement,
-        climb=climb,
-        algorithm=algorithm,
-        subset_size=subset_size,
+        fname=FNAME,
+        movement_type=MOVEMENT_TYPE,
+        climb=CLIMB,
+        algorithm=ALGORITHM,
+        visit_points_amount=VISIT_POINTS_AMOUNT,
     )  # type: Dict[str, Any]
 
-    findShortestPath(**path_parameters)
+    find_shortest_path(**path_parameters)
