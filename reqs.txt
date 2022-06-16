@@ -5,6 +5,7 @@ pandas  # (pytz, numpy)
 gspread
 
 pylint
+mypy
 black
 pytest
 
