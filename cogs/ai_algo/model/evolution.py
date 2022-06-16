@@ -6,6 +6,12 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Tuple
 
+CHROMOSOMES = 30
+GENERATIONS = 100
+MIN_MUT_RATE = 0.05
+MAX_MUT_RATE = 0.80
+CROSS_RATE = 0.90
+
 
 class QueryError(Exception):
     pass
@@ -16,7 +22,7 @@ def create_maps(
     begin_from: str,
     query: str,
     max_runs: int,
-    points_count: int,
+    points_amount: int,
 ) -> None:
     """
     Creates and saves walled, terrained and propertied maps into text files.
@@ -33,7 +39,7 @@ def create_maps(
         query (str): Contains size of map and coordinates of walls.
             Option: "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9)"
         max_runs (int): max number of attempts to find solution with evo. alg.
-        points_count (int): amount of destination points to visit
+        points_amount (int): amount of destination points to visit
     """
 
     next_ = False
@@ -45,7 +51,7 @@ def create_maps(
             create_terrain(fname, max_runs)
             next_ = True
         if begin_from == "properties" or next_:
-            create_properties(fname, points_count, show=True)
+            create_properties(fname, points_amount, show=True)
     except (QueryError, FileNotFoundError) as err:
         print(err)
 
@@ -69,8 +75,8 @@ def create_walls(fname: str, query: str, show: bool = False) -> None:
     walled_map = []
     if re.search(r"[0-9]+x[0-9]+(\ \([0-9]+,[0-9]+\))+$", query):
         query_split = query.split()
-        row_count, col_count = map(int, query_split[0].split("x"))
-        walled_map = [["0"] * col_count for _ in range(row_count)]
+        row_amount, col_amount = map(int, query_split[0].split("x"))
+        walled_map = [["0"] * col_amount for _ in range(row_amount)]
         wall_coordinates = query_split[1:]
 
         for wall_coordinate in wall_coordinates:
@@ -122,13 +128,13 @@ def create_terrain(fname: str, max_runs: int, show: bool = False) -> str:
 
 def create_properties(
     fname: str,
-    points_count: int,
+    points_amount: int,
     show: bool = False,
 ) -> None:
     """Creates a file that represents propertied map with walls and terrain.
 
     Args:
-        points_count (int): amount of destination points to visit
+        points_amount (int): amount of destination points to visit
         fname (str): name of the file that is going to be created
         show (bool, optional): Option to print created properties into
             console. Defaults to False.
@@ -141,7 +147,7 @@ def create_properties(
     if not terrained_map:
         raise FileNotFoundError("Invalid import name for creating properties!")
 
-    propertied_map = generate_properties(terrained_map, points_count)
+    propertied_map = generate_properties(terrained_map, points_amount)
 
     propertied_fname = fname + "_pro"
     save_map(propertied_fname, propertied_map, show, "{:^5}")
@@ -580,11 +586,11 @@ def get_col_movement(
     """
 
     down = pos[0] + 1, pos[1]
-    _up = pos[0] - 1, pos[1]
+    upp = pos[0] - 1, pos[1]
     down_inbound = down[0] < rows
-    up_inbound = _up[0] >= 0
+    up_inbound = upp[0] >= 0
     down_free = down_inbound and not map_tuple[down]
-    up_free = up_inbound and not map_tuple[_up]
+    up_free = up_inbound and not map_tuple[upp]
 
     if down_free and up_free:
         move = (1, 0) if gene > 0 else (-1, 0)
@@ -618,7 +624,7 @@ def save_solution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
 
 
 def generate_properties(
-    map_list: List[List[str]], points_count: int
+    map_list: List[List[str]], points_amount: int
 ) -> List[List[str]]:
     """Adds properties to terrained map.
 
@@ -627,7 +633,7 @@ def generate_properties(
 
     Args:
         map_list (List[List[str]]): 2D terrained map that will be propertied
-        points_count (int): amount of destination points to visit
+        points_amount (int): amount of destination points to visit
 
     Returns:
         List[List[str]]: 2D propertied map
@@ -664,7 +670,7 @@ def generate_properties(
     start_i, start_j = next(free)
     map_list[first_i][first_j] = "[" + map_list[first_i][first_j] + "]"
     map_list[start_i][start_j] = "{" + map_list[start_i][start_j] + "}"
-    for _ in range(points_count):
+    for _ in range(points_amount):
         i, j = next(free)
         map_list[i][j] = "(" + map_list[i][j] + ")"
 
@@ -673,34 +679,26 @@ def generate_properties(
 
 if __name__ == "__main__":
 
-    # walls uses: query, fname, max_runs, points_count
-    # terrain uses: fname, max_runs, points_count, evo. vars
-    # properties uses: fname, points_count
+    # walls uses: query, fname, max_runs, points_amount
+    # terrain uses: fname, max_runs, points_amount, evo. vars
+    # properties uses: fname, points_amount
     BEGIN_FROM = "walls"
     QUERY = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"
     FNAME = "queried"
     MAX_RUNS = 3
-    POINTS_COUNT = 10
-
-    CHROMOSOMES = 30
-    GENERATIONS = 100
-    MIN_MUT_RATE = 0.05
-    MAX_MUT_RATE = 0.80
-    CROSS_RATE = 0.90
+    POINTS_AMOUNT = 10
 
     evo_parameters = dict(
         begin_from=BEGIN_FROM,
         query=QUERY,
         fname=FNAME,
         max_runs=MAX_RUNS,
-        points_count=POINTS_COUNT,
+        points_amount=POINTS_AMOUNT,
     )  # type: Dict[str, Any]
 
     create_maps(**evo_parameters)
 
-# TODO: amount vs count naming convention
 # TODO: private functions analyze, etc.
 # TODO: check everything again
-# TODO: pylint check
 
 # TODO: tests
