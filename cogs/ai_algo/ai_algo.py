@@ -85,8 +85,6 @@ async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
 
-# TODO: evo - remember previous fitness attempts
-# TODO: evo - parameters could be done better in create_maps(?) method
 # TODO: chain - optimize creating props
 # TODO: gspread parameter loading
 # TODO: update ai repo and make local parameter loading there
