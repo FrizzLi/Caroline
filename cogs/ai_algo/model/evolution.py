@@ -249,9 +249,11 @@ def _evolutionize(
     """
 
     found_solution = False
-    attempt_number = 1
+    attempt_number = 0
 
     while not found_solution and attempt_number <= max_runs:
+        attempt_number += 1
+        print(f"\nAttempt number {attempt_number}.\n{'-' * 60}")
 
         # simplify 2D map into 1D dict (it is faster in raking)
         map_tuple = {
@@ -288,7 +290,6 @@ def _evolutionize(
                 map_tuple_filled, raking_paths = _rake_map(
                     population[j], copy.copy(map_tuple), rows, cols
                 )
-
                 fit_val = _calculate_fitness(map_tuple_filled, to_rake_amount)
                 fit_vals.append(fit_val)
                 if fit_val > fit_max:
@@ -297,7 +298,7 @@ def _evolutionize(
                     fit_max_path = raking_paths
                     fit_max_index = j
 
-            # found better population
+            # print result if found better population
             if prev_max < fit_max and print_stats:
                 print(f"Generation: {i+1},", end="\t")
                 print(f"Raked: {fit_max} (out of {to_rake_amount})", end="\t")
@@ -314,40 +315,9 @@ def _evolutionize(
                 mut_rate + 0.01 if mut_rate < MAX_MUT_RATE else MAX_MUT_RATE
             )
 
-            # creating next generation
-            children = []  # type: List[Any]
-            for i in range(CHROMOSOMES):
-
-                # pick a winning chromosomes out of 2
-                rand1, rand2 = random.sample(range(CHROMOSOMES), 2)
-                win = rand1 if fit_vals[rand1] > fit_vals[rand2] else rand2
-
-                # copying winning chromosome into children
-                children.append([])
-                for j in range(map_perimeter - 1):
-                    children[i].append(population[win][j])
-
-                if random.random() > CROSS_RATE:
-                    continue
-
-                # mutating chromosome with uniform crossover
-                # (both inherit the same amount of genetic info)
-                for rand_index in range(map_perimeter - 1):
-                    if random.random() < mut_rate:
-
-                        # create random gene and search for it in children
-                        rand_val = random.randint(0, map_perimeter - 1)
-                        rand_val *= random.choice([-1, 1])
-                        found_index = False
-                        if rand_val in children[i]:
-                            found_index = children[i].index(rand_val)
-
-                        if found_index:  # swap it with g gene if it was found
-                            tmp = children[i][rand_index]
-                            children[i][rand_index] = children[i][found_index]
-                            children[i][found_index] = tmp
-                        else:  # replace it with rand_val
-                            children[i][rand_index] = rand_val
+            children = _create_next_generation(
+                map_perimeter, mut_rate, population, fit_vals
+            )
 
             # keep the best chromosome for next generation
             for i in range(map_perimeter - 1):
@@ -367,10 +337,6 @@ def _evolutionize(
             print(f"Total time elapsed is {total}s,", end="\t")
             print(f"each generation took {avg}s in average.")
             print(f"Chromosome: {chromo}")
-
-            attempt_number += 1
-            if not found_solution and attempt_number <= max_runs:
-                print(f"\nAttempt number {attempt_number}.")
 
     map_2d_filled = _fill_map(map_2d, fit_max_map)
 
@@ -610,6 +576,62 @@ def _calculate_fitness(
     raked_count = to_rake_amount - unraked_count
 
     return raked_count
+
+
+def _create_next_generation(
+    map_perimeter: int,
+    mut_rate: float,
+    population: List[List[int]],
+    fit_vals: List[int],
+) -> List[List[int]]:
+    """Generates new generation using genetic algorithm.
+
+    Args:
+        map_perimeter (int): perimeter of the map
+        mut_rate (float): mutation rate - probability of mutating with
+            uniform crossover
+        population (List[List[int]]): old generation
+        fit_vals (List[int]): fitness values for picking better candidates
+
+    Returns:
+        List[List[int]]: new generation - children
+    """
+
+    children = []  # type: List[Any]
+    for i in range(CHROMOSOMES):
+
+        # pick a winning chromosomes out of 2
+        rand1, rand2 = random.sample(range(CHROMOSOMES), 2)
+        win = rand1 if fit_vals[rand1] > fit_vals[rand2] else rand2
+
+        # copying winning chromosome into children
+        children.append([])
+        for j in range(map_perimeter - 1):
+            children[i].append(population[win][j])
+
+        if random.random() > CROSS_RATE:
+            continue
+
+        # mutating chromosome with uniform crossover
+        # (both inherit the same amount of genetic info)
+        for rand_index in range(map_perimeter - 1):
+            if random.random() < mut_rate:
+
+                # create random gene and search for it in children
+                rand_val = random.randint(0, map_perimeter - 1)
+                rand_val *= random.choice([-1, 1])
+                found_index = False
+                if rand_val in children[i]:
+                    found_index = children[i].index(rand_val)
+
+                if found_index:  # swap it with g gene if it was found
+                    tmp = children[i][rand_index]
+                    children[i][rand_index] = children[i][found_index]
+                    children[i][found_index] = tmp
+                else:  # replace it with rand_val
+                    children[i][rand_index] = rand_val
+
+    return children
 
 
 def _fill_map(
