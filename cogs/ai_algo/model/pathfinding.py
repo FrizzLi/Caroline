@@ -149,16 +149,17 @@ def dijkstra(
             Access via Map[start][destination].dist
     """
 
-    nodes_map[start].dist = 0
+    nodes = deepcopy(nodes_map.nodes)
+    nodes[start].dist = 0
     heap = []  # type: List[Node]
-    heapq.heappush(heap, nodes_map[start])
+    heapq.heappush(heap, nodes[start])
 
     while heap:
         node = heapq.heappop(heap)
         for move in moves:
             next_pos = node.pos[0] + move[0], node.pos[1] + move[1]
             if passable(next_pos, nodes_map):
-                next_node = nodes_map[next_pos]
+                next_node = nodes[next_pos]
                 step_dist = get_next_dist(node.terr, next_node.terr, climb)
                 next_node_dist = node.dist + step_dist
 
@@ -167,7 +168,7 @@ def dijkstra(
                     next_node.parent = node.pos
                     heapq.heappush(heap, next_node)
 
-    return nodes_map
+    return nodes
 
 
 def a_star(
@@ -192,10 +193,11 @@ def a_star(
             Access via Map[start][destination].dist
     """
 
-    nodes_map[start].g = 0
+    nodes = deepcopy(nodes_map.nodes)
+    nodes[start].g = 0
     open_list = []  # type: List[Node]
     close_list = []
-    heapq.heappush(open_list, nodes_map[start])
+    heapq.heappush(open_list, nodes[start])
 
     while open_list:
         node = heapq.heappop(open_list)
@@ -206,16 +208,16 @@ def a_star(
         for move in moves:
             next_pos = node.pos[0] + move[0], node.pos[1] + move[1]
             if passable(next_pos, nodes_map) and next_pos not in close_list:
-                next_node = nodes_map[next_pos]
+                next_node = nodes[next_pos]
 
                 # heuristic - distance between destination and next_node
                 x_diff = abs(next_node.pos[0] - dest[0])
                 y_diff = abs(next_node.pos[1] - dest[1])
-                h = x_diff + y_diff  
+                h = x_diff + y_diff
                 
                 # distance between start and next_node
                 step_dist = get_next_dist(node.terr, next_node.terr, climb)
-                g = node.g + step_dist  
+                g = node.g + step_dist
 
                 f = g + h  # estimated distance between start and destination
                 if f < next_node.dist:
@@ -226,7 +228,7 @@ def a_star(
                 if next_node not in open_list:
                     heapq.heappush(open_list, next_node)
 
-    return nodes_map
+    return nodes
 
 
 def naive_permutations(
@@ -273,7 +275,7 @@ def held_karp(
         Tuple[List[Any], int]: (order of properties' coordinates, distance)
     """
 
-    points, home, start = tuple(pro_data.values())[0].properties.values()
+    points, home, start = pro_data.properties.values()
     points = frozenset(points)
 
     key = Tuple[Tuple[int, int], FrozenSet[int]]
@@ -358,25 +360,31 @@ def find_shortest_distances(
             is measured with abs(current terrain number - next terrain number)
 
     Returns:
-        Dict[Tuple[int, int], Map]: Contains distances between all properties.
+        Dict[Tuple[int, int], Node]: Contains distances between all properties.
             Access via Dict[start][destination].dist
     """
 
     points, home, start = nodes_map.properties.values()
 
-    from_start_to_home = a_star(deepcopy(nodes_map), moves, climb, start, home)
-    from_home_to_all = dijkstra(deepcopy(nodes_map), moves, climb, home)
+    from_start_to_home = a_star(nodes_map, moves, climb, start, home)
+    from_home_to_all = dijkstra(nodes_map, moves, climb, home)
     from_points_to_all = {
-        point: dijkstra(deepcopy(nodes_map), moves, climb, point)
+        point: dijkstra(nodes_map, moves, climb, point)
         for point in points
     }
 
-    shortest_distances_between_properties = {
+    shortest_distance_nodes_between_properties = {
         start: from_start_to_home,
         home: from_home_to_all,
         **from_points_to_all,
     }
-    return shortest_distances_between_properties
+
+    # been creating maps for every property
+    # every map had access to all nodes, which was not needed
+    # reduced to just one map, and only have propertied nodes!
+    nodes_map.nodes = shortest_distance_nodes_between_properties
+
+    return nodes_map
 
 
 def get_paths(
