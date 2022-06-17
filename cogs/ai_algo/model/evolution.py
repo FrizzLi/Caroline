@@ -349,9 +349,10 @@ def _rake_map(
     rows: int,
     cols: int,
 ) -> Tuple[Dict[Tuple[int, int], int], Dict[Tuple[int, int], int]]:
-    """Rakes the map with terrain by chromosome that consists of instructions
-    known as genes.
-    Each gene defines the starting position and direction of raking.
+    """Rakes the map with terrain by chromosome.
+    
+    Chromosome consists of instructions known as genes. Each gene defines
+    the starting position and direction of raking.
 
     Args:
         chromosome (List[int]): ordered set of genes (instructions)
