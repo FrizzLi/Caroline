@@ -7,10 +7,6 @@ from sys import maxsize
 from typing import Any, Dict, FrozenSet, List, Tuple, Union
 
 
-class PositionError(Exception):
-    pass
-
-
 class MovementError(Exception):
     pass
 
@@ -41,12 +37,11 @@ class Node:
 
 
 class Map:
-    fname = ""  # type: str
-    width = 0  # type: int
-    height = 0  # type: int
-    properties = {}  # type: Dict[str, Any]
-
     def __init__(self, fname) -> None:
+        self.fname = ""  # type: str
+        self.width = 0  # type: int
+        self.height = 0  # type: int
+        self.properties = {}  # type: Dict[str, Any]
         self.nodes = {}  # type: Dict[Tuple[int, int], Node]
         self._load_map(fname)
 
@@ -79,16 +74,16 @@ class Map:
 
         height, width = max(nodes)
         if all(properties.values()):
-            Map.fname = fname
-            Map.height = height + 1
-            Map.width = width + 1
-            Map.properties = properties
+            self.fname = fname
+            self.height = height + 1
+            self.width = width + 1
+            self.properties = properties
             self.nodes = nodes
 
     def __getitem__(self, pos):
         assert len(pos) == 2, "Coordinate must have two values."
         if not (0 <= pos[0] < self.height and 0 <= pos[1] < self.width):
-            raise PositionError(str(pos))
+            return None  # position out of bounds of the map
         return self.nodes[pos]
 
 
@@ -103,11 +98,11 @@ def passable(next_pos: Tuple[int, int], nodes_map: Map):
         bool: passability
     """
 
-    return (
-        0 <= next_pos[0] < nodes_map.height
-        and 0 <= next_pos[1] < nodes_map.width
-        and not nodes_map[next_pos].terr < 0
-    )
+    valid_pos = nodes_map[next_pos]
+    if valid_pos:
+        valid_pos = not valid_pos.terr < 0
+
+    return valid_pos
 
 
 def get_next_dist(prev_terr: int, next_terr: int, climb: bool) -> int:
@@ -261,7 +256,7 @@ def naive_permutations(
 
 
 def held_karp(
-    pro_data: Dict[Tuple[int, int], Map], subset_size: int
+    map_: Dict[Tuple[int, int], Map], subset_size: int
 ) -> Tuple[List[Any], int]:
     """Finds the shortest combination of paths between properties
     using Held Karp's algorithm.
@@ -275,49 +270,49 @@ def held_karp(
         Tuple[List[Any], int]: (order of properties' coordinates, distance)
     """
 
-    points, home, start = pro_data.properties.values()
-    points = frozenset(points)
+    points, home, start = map_.properties.values()
+    points_set = frozenset(points)
 
     key = Tuple[Tuple[int, int], FrozenSet[int]]
     value = Tuple[int, Tuple[int, int]]
     nodes = {}  # type: Dict[key, value]
 
     # get the shortest combinations of all sizes
-    for row in range(subset_size):
-        for comb in combinations(points, row):
+    for comb_size in range(subset_size):
+        for comb in combinations(points_set, comb_size):
             comb_set = frozenset(comb)
-            for dest in points - comb_set:
+            for dest in (points_set - comb_set):
                 routes = []
-                if comb_set == frozenset():  # case for home starting
-                    cost = (
-                        pro_data[home][dest].dist + pro_data[start][home].dist
-                    )
-                    nodes[dest, frozenset()] = cost, home
-                else:
-                    for begin in comb_set:  # single val from set
+                if comb_set != frozenset():  # single val from set
+                    for begin in comb_set:
                         sub_comb = comb_set - frozenset({begin})
                         prev_cost = nodes[begin, sub_comb][0]
-                        cost = pro_data[begin][dest].dist + prev_cost
+                        cost = map_[begin][dest].dist + prev_cost
                         routes.append((cost, begin))
                     nodes[dest, comb_set] = min(routes)
+                else:  # case for home starting
+                    cost = (
+                        map_[home][dest].dist + map_[start][home].dist
+                    )
+                    nodes[dest, frozenset()] = cost, home
 
     # get final destination and its parent
     com = []
     for i, node in enumerate(reversed(dict(nodes))):
-        if i < len(points):
+        if i < len(points_set):
             com.append((nodes.pop(node), node[0]))
-        elif i == len(points):
+        elif i == len(points_set):
             val, step = min(com)
-            points -= {step}
+            points_set -= {step}
             path = [step]
             cost, next_step = val
             break
 
-    # backtrack remaining properties
+    # backtrack remaining props
     for _ in range(subset_size - 1):
         path.append(next_step)
-        points -= {next_step}
-        next_step = nodes[next_step, points][1]
+        points_set -= {next_step}
+        next_step = nodes[next_step, points_set][1]
     path.extend([home, start])
 
     return path[::-1], cost
@@ -536,19 +531,18 @@ def find_shortest_path(
     }
 
     try:
-        # set up parameters for pathfinding algs
-        nodes_map = Map(fname)
+        map_ = Map(fname)
         moves, visit_points_amount, algorithm = validate_and_set_input_pars(
             movement_type,
             visit_points_amount,
-            nodes_map.properties["points"],
+            map_.properties["points"],
             algorithm,
         )
 
-        nodes_map = find_shortest_distances(nodes_map, moves, climb)
+        shorted_map = find_shortest_distances(map_, moves, climb)
         # ! START HERE
-        pro_order, dist = alg_opts[algorithm](nodes_map, visit_points_amount)
-        paths = get_paths(nodes_map, pro_order)
+        pro_order, dist = alg_opts[algorithm](shorted_map, visit_points_amount)
+        paths = get_paths(shorted_map, pro_order)
 
         print_solution(paths, dist)
 
