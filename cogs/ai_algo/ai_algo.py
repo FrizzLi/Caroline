@@ -87,5 +87,6 @@ async def setup(bot):
 
 # TODO: chain - optimize creating props
 
+# TODO: use consistent variable naming inside and outside functions?
 # TODO: gspread parameter loading
 # TODO: update ai repo and make local parameter loading there
