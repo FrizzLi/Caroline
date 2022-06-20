@@ -118,9 +118,6 @@ def create_terrain(fname: str, max_runs: int, display: bool = False) -> str:
     """
 
     walled_map = _load_map(fname, "_wal")
-    if not walled_map:
-        raise FileNotFoundError("Invalid file name for creating terrain!")
-
     terrained_map, rake_paths, result_msg = _evolutionize(
         walled_map, max_runs, display
     )
@@ -152,9 +149,6 @@ def create_properties(
     """
 
     terrained_map = _load_map(fname, "_ter")
-    if not terrained_map:
-        raise FileNotFoundError("Invalid import name for creating properties!")
-
     propertied_map = _generate_properties(terrained_map, points_amount)
 
     propertied_fname = fname + "_pro"
@@ -223,9 +217,9 @@ def _load_map(fname: str, suffix: str) -> List[List[str]]:
                 map_.append(line.split())
                 prev_length = len(line)
     except FileNotFoundError:
-        map_ = []
-
-    return map_
+        print("Invalid file name!")
+    else:
+        return map_
 
 
 def _evolutionize(
@@ -738,7 +732,7 @@ if __name__ == "__main__":
     QUERY = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"
     FNAME = "queried"
     MAX_RUNS = 3
-    POINTS_AMOUNT = 10
+    POINTS_AMOUNT = 4
 
     evo_parameters = dict(
         begin_from=BEGIN_FROM,
