@@ -218,8 +218,8 @@ def _load_map(fname: str, suffix: str) -> List[List[str]]:
                 prev_length = len(line)
     except FileNotFoundError:
         print("Invalid file name!")
-    else:
-        return map_
+        exit()
+    return map_
 
 
 def _evolutionize(
@@ -344,7 +344,7 @@ def _rake_map(
     cols: int,
 ) -> Tuple[Dict[Tuple[int, int], int], Dict[Tuple[int, int], int]]:
     """Rakes the map with terrain by chromosome.
-    
+
     Chromosome consists of instructions known as genes. Each gene defines
     the starting position and direction of raking.
 
