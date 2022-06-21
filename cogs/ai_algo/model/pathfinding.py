@@ -403,17 +403,17 @@ def held_karp(
             properties, distance of the path)
     """
 
+    key = Tuple[Tuple[int, int], FrozenSet[int]]
+    val = Tuple[int, Tuple[int, int]]
+    
     points, home, start = map_.properties.values()
     points_set = frozenset(points)
+    nodes = {}  # type: Dict[key, val]
 
-    key = Tuple[Tuple[int, int], FrozenSet[int]]
-    value = Tuple[int, Tuple[int, int]]
-    nodes = {}  # type: Dict[key, value]
-
-    for comb_size in range(visit_points_amount):  # O(N)
-        for comb in combinations(points_set, comb_size):  # O(2^N)
+    for comb_size in range(visit_points_amount):
+        for comb in combinations(points_set, comb_size):
             comb_set = frozenset(comb)
-            for dest in (points_set - comb_set):  # O(N)
+            for dest in (points_set - comb_set):
                 routes = []
                 if comb_set:
                     for begin in comb_set:
@@ -422,7 +422,7 @@ def held_karp(
                         cost = map_[begin][dest].dist + prev_cost
                         routes.append((cost, begin))
                     nodes[dest, comb_set] = min(routes)
-                else:  # init first visit (home)
+                else:  # first visit (start -> home)
                     cost = (
                         map_[home][dest].dist + map_[start][home].dist
                     )
