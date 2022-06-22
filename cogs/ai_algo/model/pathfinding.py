@@ -403,17 +403,18 @@ def held_karp(
             properties, distance of the path)
     """
 
-    key = Tuple[Tuple[int, int], FrozenSet[int]]
-    val = Tuple[int, Tuple[int, int]]
+    coor_and_subset = Tuple[Tuple[int, int], FrozenSet[int]]
+    cost_and_parent_coor = Tuple[int, Tuple[int, int]]
     
     points, home, start = map_.properties.values()
     points_set = frozenset(points)
-    nodes = {}  # type: Dict[key, val]
+    nodes = {}  # type: Dict[coor_and_subset, cost_and_parent_coor]
 
     for comb_size in range(visit_points_amount):
         for comb in combinations(points_set, comb_size):
             comb_set = frozenset(comb)
-            for dest in (points_set - comb_set):
+            points_to_visit = points_set - comb_set
+            for dest in points_to_visit:
                 routes = []
                 if comb_set:
                     for begin in comb_set:
@@ -468,16 +469,16 @@ def naive_permutations(
     """
 
     points, home, start = map_.properties.values()
-    cost = maxsize
+    total_cost = maxsize
 
     for permutation in permutations(points, visit_points_amount):
         distance = map_[start][home].dist
         for begin, finish in zip((home,) + permutation, permutation):
             distance += map_[begin][finish].dist
-        if distance < cost:
-            cost, path = distance, permutation
+        if distance < total_cost:
+            total_cost, path = distance, permutation
 
-    return list((start, home) + path), cost
+    return list((start, home) + path), total_cost
 
 
 # ? really needed? if nn, search for "and sets the algorithm" docstr
