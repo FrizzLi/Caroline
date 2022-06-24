@@ -475,9 +475,9 @@ def naive_permutations(
         for begin, finish in zip((home,) + permutation, permutation):
             distance += map_[begin][finish].dist
         if distance < total_cost:
-            total_cost, path = distance, permutation
+            total_cost, permutation_path = distance, permutation
 
-    return list((start, home) + path), total_cost
+    return list((start, home) + permutation_path), total_cost
 
 
 # ? really needed? if nn, search for "and sets the algorithm" docstr
@@ -498,11 +498,12 @@ def no_comb(
     """
 
     points, home, start = map_.properties.values()
-    path, dist = [start, home], map_[start][home].dist
+    path = [start, home]
+    dist = map_[start][home].dist
     if visit_points_amount:
-        point, dist_to_p = min([(p, map_[home][p].dist) for p in points])
+        point = points[0]
+        dist += map_[home][point].dist
         path.append(point)
-        dist += dist_to_p
 
     return path, dist
 
@@ -580,7 +581,7 @@ if __name__ == "__main__":
     MOVEMENT_TYPE = "M"
     CLIMB = False
     ALGORITHM = "HK"
-    VISIT_POINTS_AMOUNT = 4  # TODO: TEST dependency on evo prob
+    VISIT_POINTS_AMOUNT = 1  # TODO: TEST dependency on evo prob
 
     path_parameters = dict(
         fname=FNAME,
