@@ -403,12 +403,14 @@ def held_karp(
             properties, distance of the path)
     """
 
-    coor_and_subset = Tuple[Tuple[int, int], FrozenSet[int]]
-    cost_and_parent_coor = Tuple[int, Tuple[int, int]]
-    
+    COST = 0
+    PARENT = 1
     points, home, start = map_.properties.values()
     points_set = frozenset(points)
-    nodes = {}  # type: Dict[coor_and_subset, cost_and_parent_coor]
+
+    coor_and_comb = Tuple[Tuple[int, int], FrozenSet[int]]
+    cost_and_parent_coor = Tuple[int, Tuple[int, int]]
+    nodes = {}  # type: Dict[coor_and_comb, cost_and_parent_coor]
 
     for comb_size in range(visit_points_amount):
         for comb in combinations(points_set, comb_size):
@@ -419,33 +421,30 @@ def held_karp(
                 if comb_set:
                     for begin in comb_set:
                         sub_comb = comb_set - frozenset({begin})
-                        prev_cost = nodes[begin, sub_comb][0]
+                        prev_cost = nodes[begin, sub_comb][COST]
                         cost = map_[begin][dest].dist + prev_cost
                         routes.append((cost, begin))
                     nodes[dest, comb_set] = min(routes)
+
                 else:  # first visit (start -> home)
                     cost = (
                         map_[home][dest].dist + map_[start][home].dist
                     )
                     nodes[dest, frozenset()] = cost, home
 
-    # get final destination and its parent
-    com = []
-    for i, node in enumerate(reversed(dict(nodes))):
-        if i < len(points_set):
-            com.append((nodes.pop(node), node[0]))
-        elif i == len(points_set):
-            val, step = min(com)
-            points_set -= {step}
-            path = [step]
-            cost, next_step = val
-            break
+    # get total cost, ending node and its parent
+    last_nodes = list(nodes.items())[-len(points_set):]
+    last_nodes = [(*node[1], node[0][0]) for node in last_nodes]
+    last_optimal_node = min(last_nodes)
+    cost, parent, end = last_optimal_node
+    points_set -= {end}
+    path = [end]
 
-    # backtrack remaining props
+    # backtrack remaining nodes
     for _ in range(visit_points_amount - 1):
-        path.append(next_step)
-        points_set -= {next_step}
-        next_step = nodes[next_step, points_set][1]
+        path.append(parent)
+        points_set -= {parent}
+        parent = nodes[parent, points_set][PARENT]
     path.extend([home, start])
 
     return path[::-1], cost
@@ -581,7 +580,7 @@ if __name__ == "__main__":
     MOVEMENT_TYPE = "M"
     CLIMB = False
     ALGORITHM = "HK"
-    VISIT_POINTS_AMOUNT = 4  # TODO: dependency on evo prob
+    VISIT_POINTS_AMOUNT = 4  # TODO: TEST dependency on evo prob
 
     path_parameters = dict(
         fname=FNAME,
