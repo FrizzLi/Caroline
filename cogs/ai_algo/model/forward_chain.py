@@ -9,61 +9,83 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 
-def loadRules(fname_rules: str) -> List[Any]:
+def load_rules(fname_rules: str) -> List[Any]:
     """Loads rules from the file.
 
     Args:
-        fname_rules (str): name of file from which we load rules
+        fname_rules (str): name of the file from which we load rules
 
     Returns:
         List[Any]: namedtuples with these attributes:
             name - name of the rule (unused)
-            conds - conditions to fulfil actions
+            conds - conditions to fulfill actions
             acts - actions (message, add or remove fact from the set of facts)
     """
 
-    Rules = col.namedtuple("Rule", "name conds acts")
-    rules = []
+    Rules = col.namedtuple("Rules", "name conds acts")
 
-    # non-whitespace character
-    # ?X in each comma seperated statement
-    # remove/add/message and ?<any word char> in each comma seperated statement
-    # (instead of ".*?," we could use "[^,]*,", or combine it "[^,]*?,")
+    # regexp for loading a rule - name, conds and acts, each in one line
     patterns = [
         re.compile(r"\S+"),
         re.compile(r"((\?[A-Z]+)[^,]*, )*.*\?[A-Z].*"),
         re.compile(
-            r"((add|remove|message).*\?\w.*?, )*(add|remove|message).*\?\w.*"
-        ),
+            r"((add|remove|message) \?\w.*?, )*(add|remove|message).*\?\w.*"
+        ),  # instead of ".*?," we could use "[^,]*,", or combine it "[^,]*?,"
     ]
 
-    current_dir = dirname(dirname(os.path.abspath(__file__)))
-    with open(f"{current_dir}\\data\\knowledge\\{fname_rules}.txt") as f:
-        while rule := [line.rstrip("\n:") for line in islice(f, 4)]:
-            if rule.pop():
-                print("There is no empty line after rule!")
-            for i in range(len(Rules._fields)):
+    current_dir = Path(__file__).parents[1]
+    fname_path = Path(f"{current_dir}/data/knowledge/{fname_rules}.txt")
+
+    rules = []
+    with open(fname_path, encoding="utf-8") as file:
+        while rule := _get_4_lines_from_file(file):
+            fields_amount = len(Rules._fields)
+            for i in range(fields_amount):
                 if not patterns[i].match(rule[i]):
                     print(Rules._fields[i], "field is set wrong!")
-                    return []
+                    exit()  # TODO: tests for this..!
+
             rules.append(Rules(*rule))
 
     return rules
 
 
-def loadFacts(fname_facts: str) -> List[str]:
+def _get_4_lines_from_file(file) -> Tuple[str, str, str]:
+    """Reads and prepares 3 lines from the file for next processing.
+
+    Args:
+        file (file): opened file
+
+    Returns:
+        Tuple[str]: 3 lines that represent single rule
+    """
+
+    rule = tuple(line.rstrip("\n:") for line in islice(file, 4))
+
+    # last line of file is not being read for some reason
+    # need to skip last element (empty string) except for the last line
+    if len(rule) == 4:
+        rule = rule[:-1]
+
+    return rule
+
+
+
+def load_facts(fname_facts: str) -> List[str]:
     """Loads facts from the file.
 
     Args:
-        fname_facts (str): name of file from which we load facts
+        fname_facts (str): name of the file from which we load facts
 
     Returns:
-        List[str]: fact sentences
+        List[str]: facts in sentences
     """
 
-    current_dir = dirname(dirname(os.path.abspath(__file__)))
-    with open(f"{current_dir}\\data\\knowledge\\{fname_facts}.txt") as f:
-        facts = [fact.rstrip() for fact in f]
+    current_dir = Path(__file__).parents[1]
+    fname_path = Path(f"{current_dir}/data/knowledge/{fname_facts}.txt")
+
+    with open(fname_path, encoding="utf-8") as file:
+        facts = [fact.rstrip() for fact in file]
 
     return facts
 
@@ -276,8 +298,8 @@ def runProduction(
             will be saved we save solution
     """
 
-    rules = loadRules(load_fname_rules)
-    facts = loadFacts(load_fname_facts)
+    rules = load_rules(load_fname_rules)
+    facts = load_facts(load_fname_facts)
     if facts_random_order:
         random.shuffle(facts)
     if facts_amount < len(facts):
@@ -344,7 +366,7 @@ if __name__ == "__main__":
     load_fname_rules = "rules"
     step_by_step = True
     facts_amount = 11
-    facts_random_order = True
+    facts_random_order = False
     fname = "queried"
 
     chain_parameters = dict(
