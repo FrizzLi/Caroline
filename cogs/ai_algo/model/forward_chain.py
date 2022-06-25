@@ -1,10 +1,8 @@
 import collections as col
 import json
-import os
 import random
 import re
 from itertools import islice
-from os.path import dirname
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -97,7 +95,7 @@ def init_facts(
     return facts
 
 
-def find_actions(rules: List[Any], facts: List[str]) -> List[List[str]]:
+def find_actions(rules: List[Any], facts: List[str]) -> List[str]:
     """Finds all actions that can be done given the rules and facts.
 
     Args:
@@ -108,7 +106,7 @@ def find_actions(rules: List[Any], facts: List[str]) -> List[List[str]]:
         facts (List[str]): known facts in sentences
 
     Returns:
-        List[List[str]]: actions that can be done
+        List[str]: actions that can be done
     """
 
     found_actions = []
@@ -121,14 +119,14 @@ def find_actions(rules: List[Any], facts: List[str]) -> List[List[str]]:
                 action_type, action = action.split(" ", maxsplit=1)
                 for key, value in labelled_action.items():
                     action = action.replace(key, value)
-                found_actions.append([action_type + " " + action])  # TODO ? why list
+                found_actions.append(action_type + " " + action)
 
     return found_actions
 
 
 def remove_duplicates(
-    actions: List[List[str]], facts: List[str]
-) -> List[List[str]]:
+    actions: List[str], facts: List[str]
+) -> List[str]:
     """Removes those actions whose outcomes are already present in the facts.
 
     Args:
@@ -136,83 +134,44 @@ def remove_duplicates(
         using_facts (List[str]): facts that we're using
 
     Returns:
-        List[List[str]]: appliable actions
+        List[str]: appliable actions
     """
 
-    i = 0
     appliable_actions = []
-    # actions2 = []
-    # for i in range(len(actions)):
-    #     for j in range(len(actions[i])):
-    #         actions2.append(actions[i][j])
-
-    # loop over each rule
-    # for action in actions2:
-    #     type_, act = action.split(" ", 1)
-    #     if (
-    #         (type_ == "add" and act not in facts)
-    #         or (type_ == "remove" and act not in facts)
-    #     ):
-    #         appliable_actions.append(action)
+    for action in actions:
+        type_, act = action.split(" ", 1)
+        if (
+            (type_ == "add" and act not in facts)
+            or (type_ == "remove" and act in facts)
+        ):
+            appliable_actions.append(action)
     
-    # return appliable_actions
-
-    for _ in range(len(actions)):
-        message = True
-        j = 0
-
-        # loop over actions found from each rule
-        for _ in range(len(actions[i])):
-            type_, act = actions[i][j].split(" ", 1)
-            if (
-                (type_ == "add" and act in facts)
-                or (type_ == "remove" and act not in facts)
-                or (type_ == "message" and not message)
-            ):
-                del actions[i][j]
-                message = False  # remove msg act if prev. act was deleted
-            else:
-                j += 1
-
-        # remove empty set of actions
-        if not actions[i]:
-            del actions[i]
-        else:
-            i += 1
-
-    # actions2 = []
-    # for i in range(len(actions)):
-    #     for j in range(len(actions[i])):
-    #         actions2.append(actions[i][j])
-
-    return actions
+    return appliable_actions
 
 
-def applyActions(
-    appliable_actions: List[List[str]], facts: List[str]
-) -> Tuple[str, List[str], List[str]]:
+def apply_actions(
+    appliable_actions: List[str], facts: List[str]
+) -> Tuple[List[str], List[str]]:
     """Applies list of actions that is first in the queue.
 
     Args:
-        appliable_actions (List[List[str]]): lists of appliable actions
+        appliable_actions (List[str]): lists of appliable actions
         facts (List[str]): known facts in sentences
 
     Returns:
-        Tuple[str, List[str], List[str]]: (applied action,
-            known facts in sentences, messages)
+        Tuple[List[str], List[str]]: (applied action, known facts in sentences)
     """
 
-    messages = []
-    for action in appliable_actions[0]:
+    applied_actions = []
+    for action in appliable_actions:
         type_, act = action.split(" ", 1)
         if type_ == "add":
             facts.append(act)
         elif type_ == "remove":
             facts.remove(act)
-        elif type_ == "message":
-            messages.append(act)
+        applied_actions.append(act)
 
-    return action, facts, messages
+    return applied_actions, facts
 
 
 def expand(
@@ -380,13 +339,13 @@ def run_forward_chain(
     new_facts = []
     while True:
         found_actions = find_actions(rules, using_facts)
-        appliable_actions = remove_duplicates(found_actions, using_facts)  # ? remove double list! and fix this f.
+        appliable_actions = remove_duplicates(found_actions, using_facts)
 
         if not appliable_actions:
             break
 
-        applied_act, using_facts, msgs = applyActions(appliable_actions, using_facts)
-        new_facts.append(applied_act)
+        applied_acts, using_facts = apply_actions(appliable_actions, using_facts)
+        new_facts += applied_acts
 
     return new_facts, using_facts
 
@@ -412,8 +371,3 @@ if __name__ == "__main__":
     )  # type: Dict[str, Any]
 
     run_production(**chain_parameters)
-
-# TODO: bug.. ADD:
-# Uncle:
-# ?Y is brother of ?Z, ?Z is parent of ?X
-# add ?Y is uncle of ?X, message ?X has uncle
