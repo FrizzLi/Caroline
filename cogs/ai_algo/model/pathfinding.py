@@ -4,7 +4,7 @@ from copy import deepcopy
 from itertools import combinations, permutations
 from pathlib import Path
 from sys import maxsize
-from typing import Any, Dict, FrozenSet, List, Tuple, Union
+from typing import Any, Dict, FrozenSet, List, Tuple
 
 
 class MovementError(Exception):
@@ -92,7 +92,7 @@ def find_shortest_path(
     movement_type: str,
     climb: bool,
     algorithm: str,
-    visit_points_amount: Union[int, None],
+    visit_points_amount: int,
 ) -> None:
     """Finds the shortest visiting path order between all the properties on the
     map.
@@ -107,8 +107,8 @@ def find_shortest_path(
         algorithm (string): determines what algorithm to use to find the
             shortest path
             Options: "NP", "HK" (Naive Permutations or Held Karp)
-        visit_points_amount (Union[int, None]): Amount of points to visit.
-            None means all. Must be at least 1.
+        visit_points_amount (int): Amount of points to visit.
+            0 means all. Must be at least 1.
     """
 
     alg_opts = {
@@ -143,7 +143,7 @@ def find_shortest_path(
 
 def validate_and_set_input_pars(
     movement_type: str,
-    visit_points_amount: Union[int, None],
+    visit_points_amount: int,
     map_points: List[Tuple[int, int]],
     algorithm: str,
 ) -> Tuple[List[Tuple[int, int]], int, str]:
@@ -159,8 +159,8 @@ def validate_and_set_input_pars(
     Args:
         movement_type (str): determines movement options throughout the map
             Options: "M", "D" (Manhattan or Diagonal + Manhattan)
-        visit_points_amount (Union[int, None]): Amount of points to visit.
-            None means all. Must be at least 1.
+        visit_points_amount (int): Amount of points to visit.
+            0 means all. Must be at least 1.
         map_points (List[Tuple[int, int]]): coordinates of points on the map
         algorithm (str): determines what algorithm to use to find the
             shortest path
@@ -187,15 +187,13 @@ def validate_and_set_input_pars(
         raise MovementError("Invalid movement type!")
 
     # validate and set visit_points_amount
-    if visit_points_amount is None or visit_points_amount > len(map_points):
+    if not visit_points_amount or visit_points_amount > len(map_points):
         visit_points_amount = len(map_points)
     if visit_points_amount < 0:
         raise SubsetSizeError("Invalid subset size!")
 
     # validate algorithm
-    if visit_points_amount < 2:
-        algorithm = "NC"
-    elif algorithm not in ("NC", "NP", "HK"):
+    if algorithm not in ("NP", "HK"):
         raise AlgorithmError("Invalid algorithm input!")
 
     return moves, visit_points_amount, algorithm
