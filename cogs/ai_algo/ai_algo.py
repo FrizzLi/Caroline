@@ -84,7 +84,7 @@ class AiAlgo(commands.Cog):
 async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
-# TODO: var names outside and inside functions
+# TODO: var names outside and inside functions - NOTE: Naming onsistency in f. calls is rly not necessary-using_facts ex.
 # TODO: chain - optimize creating props
 
 # TODO: use consistent variable naming inside and outside functions?

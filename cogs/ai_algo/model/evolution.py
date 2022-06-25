@@ -164,7 +164,7 @@ def _save_map(
     """Saves a map from 2D list into file.
 
     Args:
-        fname (str): name of the file into which the map is going to be saved.
+        fname (str): name of the file into which the map is going to be saved
         map_2d (List[List[str]]): 2D map that will be saved into file
         display (bool, optional): Option to print saved map into console.
             Defaults to False.
