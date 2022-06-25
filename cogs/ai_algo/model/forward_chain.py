@@ -132,15 +132,31 @@ def remove_duplicates(
     """Removes those actions whose outcomes are already present in the facts.
 
     Args:
-        actions (List[List[str]]): found actions given the rules and facts
-        facts (List[str]): known facts in sentences
+        found_actions (List[List[str]]): actions found given the rules and facts
+        using_facts (List[str]): facts that we're using
 
     Returns:
         List[List[str]]: appliable actions
     """
 
     i = 0
+    appliable_actions = []
+    # actions2 = []
+    # for i in range(len(actions)):
+    #     for j in range(len(actions[i])):
+    #         actions2.append(actions[i][j])
+
     # loop over each rule
+    # for action in actions2:
+    #     type_, act = action.split(" ", 1)
+    #     if (
+    #         (type_ == "add" and act not in facts)
+    #         or (type_ == "remove" and act not in facts)
+    #     ):
+    #         appliable_actions.append(action)
+    
+    # return appliable_actions
+
     for _ in range(len(actions)):
         message = True
         j = 0
@@ -163,6 +179,11 @@ def remove_duplicates(
             del actions[i]
         else:
             i += 1
+
+    # actions2 = []
+    # for i in range(len(actions)):
+    #     for j in range(len(actions[i])):
+    #         actions2.append(actions[i][j])
 
     return actions
 
@@ -345,7 +366,7 @@ def run_forward_chain(
     new facts along with already known facts will be saved to text file.
 
     Args:
-        using_facts (List[str]): facts that we're going to use
+        using_facts (List[str]): facts that we're using
         rules (List[Any]): namedtuples with these attributes:
             name - name of the rule (unused)
             conds - conditions to fulfill actions
