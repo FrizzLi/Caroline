@@ -519,6 +519,7 @@ def _print_solution(
         dist (int): total distance
     """
 
+    # TODO: we could also store it into file! Bool opt.?
     for i, routed_path in enumerate(routed_paths, 1):
         print(f"{i}: ", *routed_path)
 
@@ -528,7 +529,8 @@ def _print_solution(
 def _save_solution(
     routed_paths: List[List[Tuple[int, int]]], fname: str
 ) -> None:
-    """Saves the solution (routed paths) into pickle file.
+    """Saves the solution (routed paths) into pickle file for gif
+    visualization.
 
     Args:
         routed_paths (List[List[Tuple[int, int]]]): routed paths (solution)
