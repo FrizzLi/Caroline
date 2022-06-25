@@ -112,26 +112,26 @@ def find_shortest_path(
     """
 
     alg_opts = {
-        "NP": naive_permutations,
-        "HK": held_karp,
+        "NP": _naive_permutations,
+        "HK": _held_karp,
     }
 
     try:
         map_ = Map(fname)
-        moves, visit_points_amount, algorithm = validate_and_set_input_pars(
+        moves, visit_points_amount, algorithm = _validate_and_set_input_pars(
             movement_type,
             visit_points_amount,
             map_.properties["points"],
             algorithm,
         )
 
-        disted_map = find_shortest_distances(map_, moves, climb)
+        disted_map = _find_shortest_distances(map_, moves, climb)
         node_paths, dist = alg_opts[algorithm](disted_map, visit_points_amount)
-        routed_paths = get_routes(disted_map, node_paths)
+        routed_paths = _get_routes(disted_map, node_paths)
 
-        print_solution(routed_paths, dist)
+        _print_solution(routed_paths, dist)
 
-        save_solution(routed_paths, fname)
+        _save_solution(routed_paths, fname)
 
     except FileNotFoundError as err:
         print(err)
@@ -141,7 +141,7 @@ def find_shortest_path(
         print(err)
 
 
-def validate_and_set_input_pars(
+def _validate_and_set_input_pars(
     movement_type: str,
     visit_points_amount: int,
     map_points: List[Tuple[int, int]],
@@ -199,12 +199,12 @@ def validate_and_set_input_pars(
     return moves, visit_points_amount, algorithm
 
 
-def find_shortest_distances(
+def _find_shortest_distances(
     map_: Map, moves: List[Tuple[int, int]], climb: bool
 ) -> Map:
     """Finds shortest distances between all properties.
 
-    Uses A* algorithm from start, from all the others Dijkstra is used.
+    Uses A* algorithm from start, from all the others _Dijkstra is used.
 
     Args:
         map_ (Map): contains information about the map
@@ -221,10 +221,10 @@ def find_shortest_distances(
 
     points, home, start = map_.properties.values()
 
-    from_start_to_home = a_star(map_, moves, climb, start, home)
-    from_home_to_all = dijkstra(map_, moves, climb, home)
+    from_start_to_home = _a_star(map_, moves, climb, start, home)
+    from_home_to_all = _dijkstra(map_, moves, climb, home)
     from_points_to_all = {
-        point: dijkstra(map_, moves, climb, point)
+        point: _dijkstra(map_, moves, climb, point)
         for point in points
     }
 
@@ -239,7 +239,7 @@ def find_shortest_distances(
     return map_
 
 
-def a_star(
+def _a_star(
     nodes_map: Map,
     moves: List[Tuple[int, int]],
     climb: bool,
@@ -277,7 +277,7 @@ def a_star(
         close_list.append(node.pos)
         for move in moves:
             next_pos = node.pos[0] + move[0], node.pos[1] + move[1]
-            if passable(next_pos, nodes_map) and next_pos not in close_list:
+            if _passable(next_pos, nodes_map) and next_pos not in close_list:
                 next_node = nodes[next_pos]
 
                 # heuristic - distance between destination and next_node
@@ -286,7 +286,7 @@ def a_star(
                 h = x_diff + y_diff
 
                 # distance between start and next_node
-                step_dist = get_next_dist(node.terr, next_node.terr, climb)
+                step_dist = _get_next_dist(node.terr, next_node.terr, climb)
                 g = node.g + step_dist
 
                 f = g + h  # estimated distance between start and destination
@@ -301,7 +301,7 @@ def a_star(
     return nodes
 
 
-def dijkstra(
+def _dijkstra(
     nodes_map: Map,
     moves: List[Tuple[int, int]],
     climb: bool,
@@ -332,9 +332,9 @@ def dijkstra(
         node = heapq.heappop(heap)
         for move in moves:
             next_pos = node.pos[0] + move[0], node.pos[1] + move[1]
-            if passable(next_pos, nodes_map):
+            if _passable(next_pos, nodes_map):
                 next_node = nodes[next_pos]
-                step_dist = get_next_dist(node.terr, next_node.terr, climb)
+                step_dist = _get_next_dist(node.terr, next_node.terr, climb)
                 next_node_dist = node.dist + step_dist
 
                 if next_node.dist > next_node_dist:
@@ -345,7 +345,7 @@ def dijkstra(
     return nodes
 
 
-def passable(next_pos: Tuple[int, int], nodes_map: Map):
+def _passable(next_pos: Tuple[int, int], nodes_map: Map):
     """Checks whether next_pos position is passable (not walled or out of map).
 
     Args:
@@ -363,7 +363,7 @@ def passable(next_pos: Tuple[int, int], nodes_map: Map):
     return valid_pos
 
 
-def get_next_dist(prev_terr: int, next_terr: int, climb: bool) -> int:
+def _get_next_dist(prev_terr: int, next_terr: int, climb: bool) -> int:
     """Gets next distance based on whether its climbing approach or not.
 
     Args:
@@ -383,7 +383,7 @@ def get_next_dist(prev_terr: int, next_terr: int, climb: bool) -> int:
         return next_terr
 
 
-def held_karp(
+def _held_karp(
     map_: Map, visit_points_amount: int
 ) -> Tuple[List[Tuple[int, int]], int]:
     """Finds the shortest visiting path order between all the properties on the
@@ -447,7 +447,7 @@ def held_karp(
     return path[::-1], cost
 
 
-def naive_permutations(
+def _naive_permutations(
     map_: Map, visit_points_amount: int
 ) -> Tuple[List[Tuple[int, int]], int]:
     """Gets all visiting path orders between all the properties on the map in
@@ -477,7 +477,7 @@ def naive_permutations(
     return list((start, home) + permutation_path), total_cost
 
 
-def get_routes(
+def _get_routes(
     map_: Map, node_paths: List[Tuple[int, int]]
 ) -> List[List[Tuple[int, int]]]:
     """Gets step by step coordinate routes from the shortest visiting path
@@ -506,7 +506,7 @@ def get_routes(
     return paths
 
 
-def print_solution(
+def _print_solution(
     routed_paths: List[List[Tuple[int, int]]], dist: int
 ) -> None:
     """Prints the routed paths.
@@ -525,7 +525,7 @@ def print_solution(
     print("Cost: " + str(dist) + "\n")
 
 
-def save_solution(
+def _save_solution(
     routed_paths: List[List[Tuple[int, int]]], fname: str
 ) -> None:
     """Saves the solution (routed paths) into pickle file.
