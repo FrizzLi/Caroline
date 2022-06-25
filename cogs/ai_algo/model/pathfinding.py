@@ -108,11 +108,10 @@ def find_shortest_path(
             shortest path
             Options: "NP", "HK" (Naive Permutations or Held Karp)
         visit_points_amount (Union[int, None]): Amount of points to visit.
-            None means all
+            None means all. Must be at least 1.
     """
 
     alg_opts = {
-        "NC": no_comb,
         "NP": naive_permutations,
         "HK": held_karp,
     }
@@ -155,13 +154,13 @@ def validate_and_set_input_pars(
     Validates and sets amount of points to visit. If its None or higher than
     the amount of points on the map, it will be reduced down to the map's
     amount.
-    Validates algorithm option and sets the algorithm.
+    Validates algorithm option.
 
     Args:
         movement_type (str): determines movement options throughout the map
             Options: "M", "D" (Manhattan or Diagonal + Manhattan)
         visit_points_amount (Union[int, None]): Amount of points to visit.
-            None means all
+            None means all. Must be at least 1.
         map_points (List[Tuple[int, int]]): coordinates of points on the map
         algorithm (str): determines what algorithm to use to find the
             shortest path
@@ -480,34 +479,6 @@ def naive_permutations(
     return list((start, home) + permutation_path), total_cost
 
 
-# ? really needed? if nn, search for "and sets the algorithm" docstr
-def no_comb(
-    map_: Map, visit_points_amount: int
-) -> Tuple[List[Tuple[int, int]], int]:
-    """Gets the shortest path between properties with 0 or 1 point.
-
-    Args:
-        map_ (Map): Map that contains information about the shortest distances
-            between all properties in nodes attribute.
-            (Access via Dict[start][destination].dist)
-        visit_points_amount (int): amount of points to visit (0 or 1)
-
-    Returns:
-        Tuple[List[Tuple[int, int]], int]: (shortest visiting path order of
-            properties, distance of the path)
-    """
-
-    points, home, start = map_.properties.values()
-    path = [start, home]
-    dist = map_[start][home].dist
-    if visit_points_amount:
-        point = points[0]
-        dist += map_[home][point].dist
-        path.append(point)
-
-    return path, dist
-
-
 def get_routes(
     map_: Map, node_paths: List[Tuple[int, int]]
 ) -> List[List[Tuple[int, int]]]:
@@ -581,7 +552,7 @@ if __name__ == "__main__":
     MOVEMENT_TYPE = "M"
     CLIMB = False
     ALGORITHM = "HK"
-    VISIT_POINTS_AMOUNT = 1  # TODO: TEST dependency on evo prob
+    VISIT_POINTS_AMOUNT = 4  # TODO: TEST evo dependency, must be 1 at least
 
     path_parameters = dict(
         fname=FNAME,
