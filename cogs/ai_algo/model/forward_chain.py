@@ -68,7 +68,6 @@ def _get_4_lines_from_file(file) -> Tuple[str, str, str]:
     return rule
 
 
-
 def init_facts(
     fname_facts: str, facts_amount: int, randomize_facts_order: bool
 ) -> List[str]:
@@ -111,7 +110,8 @@ def find_actions(rules: List[Any], using_facts: List[str]) -> List[str]:
 
     found_acts = []
     for rule in rules:
-        labelled_acts = expand(rule.conds.split(), using_facts, {})  # TODO
+        cond_words = rule.conds.split()
+        labelled_acts = expand(cond_words, using_facts, {})
         acts = rule.acts.split(", ")
 
         for labelled_act in labelled_acts:
@@ -140,9 +140,8 @@ def remove_duplicates(
     applicable_acts = []
     for found_act in found_acts:
         type_, act = found_act.split(" ", 1)
-        if (
-            (type_ == "add" and act not in using_facts)
-            or (type_ == "remove" and act in using_facts)
+        if (type_ == "add" and act not in using_facts) or (
+            type_ == "remove" and act in using_facts
         ):
             applicable_acts.append(found_act)
 
@@ -175,13 +174,15 @@ def apply_actions(
 
 
 def expand(
-    conds: List[str], facts: List[str], label: Dict[str, str]
+    cond_words: List[str], facts: List[str], label: Dict[str, str]
 ) -> List[Dict[str, str]]:
     """Loops over conditions of rule recursively and finds all
     condition-matching labels from given facts.
 
+    Runs through the rule's conditions recursively
+
     Args:
-        conds (List[str]): conditions on rule's actions
+        cond_words (List[str]): words of condition(s) on rule's actions
         facts (List[str]): known facts in sentences
         label (Dict[str, str]): represent entities (?X -> <entity from fact>)
 
@@ -189,38 +190,38 @@ def expand(
         List[Dict[str, str]]: labels
     """
 
-    if conds[0] == "<>":  # identity checking is included in label checking
+    if cond_words[0] == "<>":  # ? identity checking is included in label checking
         return [label]
 
     labels = []
-    # loop over facts
-    for fact_str in facts:
-        fact_list = fact_str.split()
+
+    for fact in facts:
+        fact_words = fact.split()
         tmp_label = {}
         continue_ = True
-        for i, (c, f) in enumerate(zip(conds, fact_list)):
-            c_key = c.rstrip(",")
+        for i, (cond_word, fact_word) in enumerate(zip(cond_words, fact_words)):
+            c_key = cond_word.rstrip(",")  # might be at the end of condition
             # label checking for "?"
-            if c_key.startswith("?") and f[0].isupper():  # new entity
+            if c_key.startswith("?") and fact_word[0].isupper():  # new entity
                 if c_key not in label:
-                    if f not in label.values():
-                        tmp_label[c_key] = f
+                    if fact_word not in label.values():
+                        tmp_label[c_key] = fact_word
                     else:
                         continue_ = False  # f already exist
-                elif label[c_key] != f:
+                elif label[c_key] != fact_word:
                     continue_ = False  # c and f does not match
-            elif c_key != f:
+            elif c_key != fact_word:
                 continue_ = False  # unmatched condition with fact
 
             if not continue_:
                 break
 
             # next condition -> recursive call
-            if c.endswith(","):
-                labels += expand(conds[i + 1 :], facts, {**label, **tmp_label})
+            if cond_word.endswith(","):
+                labels += expand(cond_words[i + 1 :], facts, {**label, **tmp_label})
 
         # label match found for action
-        if continue_ and not c.endswith(","):
+        if continue_ and not cond_word.endswith(","):
             labels.append({**label, **tmp_label})
 
     return labels
