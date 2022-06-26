@@ -176,26 +176,26 @@ def apply_actions(
 def expand(
     cond_words: List[str], facts: List[str], labels: Dict[str, str]
 ) -> List[Dict[str, str]]:
-    """Loops over conditions of rule recursively and finds all
-    condition-matching labels from given facts.
-
-    Runs through the rule's conditions recursively
+    """Runs through the rule's conditions recursively and tries to label 
+    entities from given facts and rules.
 
     Entities must start with capitalized characters!
 
     Args:
         cond_words (List[str]): words of condition(s) on rule's actions
         facts (List[str]): known facts in sentences
-        labels (Dict[str, str]): represent entities (?X -> <entity from fact>)
+        labels (Dict[str, str]): labels of entities (?X -> entity)
 
     Returns:
-        List[Dict[str, str]]: labels
+        List[Dict[str, str]]: found labels
     """
 
-    if cond_words[0] == "<>":  # ? identity checking is included in label checking
+    if cond_words[0] == "<>":  # labels must be different
+        if labels[cond_words[1]] == labels[cond_words[2]]:
+            return []  # TODO: test
         return [labels]
 
-    new_labels = []
+    found_labels = []
     for fact in facts:
         fact_words = fact.split()
         tmp_label = {}
@@ -205,16 +205,16 @@ def expand(
             next_condition = c_word.endswith(",")
             c_word = c_word.rstrip(",") if next_condition else c_word
 
-            # label check for entity
-            if c_word.startswith("?") and f_word[0].isupper():  # entity found
+            # encountering label with entity
+            if c_word.startswith("?") and f_word[0].isupper():
                 if c_word not in labels:
                     if f_word not in labels.values():
-                        tmp_label[c_word] = f_word  # ? saving new label for new entity
+                        tmp_label[c_word] = f_word  # saving label for entity
 
                     else:
-                        continue_ = False  # ? entity is already labelled (new label does not exist)
+                        continue_ = False  # entity already exist in labels
                 elif labels[c_word] != f_word:
-                    continue_ = False  # ? entity is already labelled (new label already exist)
+                    continue_ = False  # label already exist for other entity
             elif c_word != f_word:
                 continue_ = False  # words in the sentence stopped matching
 
@@ -223,13 +223,15 @@ def expand(
 
             if next_condition:
                 next_cond_words = cond_words[i + 1 :]
-                new_labels += expand(next_cond_words, facts, {**labels, **tmp_label})
+                found_labels += expand(
+                    next_cond_words, facts, {**labels, **tmp_label}
+                )
 
-        # ? new label found label match found for action
+        # new label found
         if continue_ and not next_condition:
-            new_labels.append({**labels, **tmp_label})
+            found_labels.append({**labels, **tmp_label})
 
-    return new_labels  # ? some of them are duplicated tho!
+    return found_labels
 
 
 def save_facts(facts: List[str], fname_save_facts: str) -> None:
