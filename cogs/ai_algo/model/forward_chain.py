@@ -174,57 +174,62 @@ def apply_actions(
 
 
 def expand(
-    cond_words: List[str], facts: List[str], label: Dict[str, str]
+    cond_words: List[str], facts: List[str], labels: Dict[str, str]
 ) -> List[Dict[str, str]]:
     """Loops over conditions of rule recursively and finds all
     condition-matching labels from given facts.
 
     Runs through the rule's conditions recursively
 
+    Entities must start with capitalized characters!
+
     Args:
         cond_words (List[str]): words of condition(s) on rule's actions
         facts (List[str]): known facts in sentences
-        label (Dict[str, str]): represent entities (?X -> <entity from fact>)
+        labels (Dict[str, str]): represent entities (?X -> <entity from fact>)
 
     Returns:
         List[Dict[str, str]]: labels
     """
 
     if cond_words[0] == "<>":  # ? identity checking is included in label checking
-        return [label]
+        return [labels]
 
-    labels = []
-
+    new_labels = []
     for fact in facts:
         fact_words = fact.split()
         tmp_label = {}
         continue_ = True
-        for i, (cond_word, fact_word) in enumerate(zip(cond_words, fact_words)):
-            c_key = cond_word.rstrip(",")  # might be at the end of condition
-            # label checking for "?"
-            if c_key.startswith("?") and fact_word[0].isupper():  # new entity
-                if c_key not in label:
-                    if fact_word not in label.values():
-                        tmp_label[c_key] = fact_word
+
+        for i, (c_word, f_word) in enumerate(zip(cond_words, fact_words)):
+            next_condition = c_word.endswith(",")
+            c_word = c_word.rstrip(",") if next_condition else c_word
+
+            # label check for entity
+            if c_word.startswith("?") and f_word[0].isupper():  # entity found
+                if c_word not in labels:
+                    if f_word not in labels.values():
+                        tmp_label[c_word] = f_word  # ? saving new label for new entity
+
                     else:
-                        continue_ = False  # f already exist
-                elif label[c_key] != fact_word:
-                    continue_ = False  # c and f does not match
-            elif c_key != fact_word:
-                continue_ = False  # unmatched condition with fact
+                        continue_ = False  # ? entity is already labelled (new label does not exist)
+                elif labels[c_word] != f_word:
+                    continue_ = False  # ? entity is already labelled (new label already exist)
+            elif c_word != f_word:
+                continue_ = False  # words in the sentence stopped matching
 
             if not continue_:
                 break
 
-            # next condition -> recursive call
-            if cond_word.endswith(","):
-                labels += expand(cond_words[i + 1 :], facts, {**label, **tmp_label})
+            if next_condition:
+                next_cond_words = cond_words[i + 1 :]
+                new_labels += expand(next_cond_words, facts, {**labels, **tmp_label})
 
-        # label match found for action
-        if continue_ and not cond_word.endswith(","):
-            labels.append({**label, **tmp_label})
+        # ? new label found label match found for action
+        if continue_ and not next_condition:
+            new_labels.append({**labels, **tmp_label})
 
-    return labels
+    return new_labels  # ? some of them are duplicated tho!
 
 
 def save_facts(facts: List[str], fname_save_facts: str) -> None:
