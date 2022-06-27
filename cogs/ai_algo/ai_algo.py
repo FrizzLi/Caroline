@@ -37,8 +37,8 @@ class AiAlgo(commands.Cog):
     view_skip_rake = False
 
     async def send_file_message(self, ctx):
-        current_dir = Path(__file__).parents[1]
-        gif_path = Path(f"{current_dir}/data/{self.shared_fname}.gif")
+        source_dir = Path(__file__).parents[1]
+        gif_path = Path(f"{source_dir}/data/{self.shared_fname}.gif")
         with open(gif_path, "rb") as file:
             await ctx.message.channel.send(file=File(file))
 

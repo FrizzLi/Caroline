@@ -31,8 +31,8 @@ def init_rules(fname_rules: str) -> List[Any]:
         ),  # instead of ".*?," we could use "[^,]*,", or combine it "[^,]*?,"
     ]
 
-    current_dir = Path(__file__).parents[1]
-    fname_path = Path(f"{current_dir}/data/knowledge/{fname_rules}.txt")
+    source_dir = Path(__file__).parents[1]
+    fname_path = Path(f"{source_dir}/data/knowledge/{fname_rules}.txt")
 
     rules = []
     with open(fname_path, encoding="utf-8") as file:
@@ -82,8 +82,8 @@ def init_facts(
         List[str]: known facts in sentences
     """
 
-    current_dir = Path(__file__).parents[1]
-    fname_path = Path(f"{current_dir}/data/knowledge/{fname_facts}.txt")
+    source_dir = Path(__file__).parents[1]
+    fname_path = Path(f"{source_dir}/data/knowledge/{fname_facts}.txt")
 
     with open(fname_path, encoding="utf-8") as file:
         facts = [fact.rstrip() for fact in file][:facts_amount]
@@ -242,8 +242,8 @@ def save_facts(facts: List[str], fname_save_facts: str) -> None:
         fname_save_facts (str): name of file into which we save facts
     """
 
-    current_dir = Path(__file__).parents[1]
-    knowledge_dir = Path(f"{current_dir}/data/knowledge")
+    source_dir = Path(__file__).parents[1]
+    knowledge_dir = Path(f"{source_dir}/data/knowledge")
     knowledge_dir.mkdir(parents=True, exist_ok=True)
     fname_path = Path(f"{knowledge_dir}/{fname_save_facts}.txt")
     with open(fname_path, "w", encoding="utf-8") as file:
@@ -261,8 +261,8 @@ def save_solution(
         fname (str): name of json file into which the solution will be saved
     """
 
-    current_dir = Path(__file__).parents[1]
-    solutions_dir = Path(f"{current_dir}/data/solutions")
+    source_dir = Path(__file__).parents[1]
+    solutions_dir = Path(f"{source_dir}/data/solutions")
     solutions_dir.mkdir(parents=True, exist_ok=True)
     fname_path = f"{solutions_dir}/{fname}_rule.json"
     with open(fname_path, "w", encoding="utf-8") as file:
