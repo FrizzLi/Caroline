@@ -176,7 +176,7 @@ def apply_actions(
 def expand(
     cond_words: List[str], facts: List[str], labels: Dict[str, str]
 ) -> List[Dict[str, str]]:
-    """Runs through the rule's conditions recursively and tries to label 
+    """Runs through the rule's conditions recursively and tries to label
     entities from given facts and rules.
 
     Entities must start with capitalized characters!

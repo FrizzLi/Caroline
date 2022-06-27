@@ -117,7 +117,7 @@ def create_terrain(fname: str, max_runs: int, display: bool = False) -> str:
         str: message announcing whether the solution was found or not
     """
 
-    walled_map = _load_map(fname, "_wal")
+    walled_map = load_map(fname, "_wal")
     terrained_map, rake_paths, result_msg = _evolutionize(
         walled_map, max_runs, display
     )
@@ -148,7 +148,7 @@ def create_properties(
         FileNotFoundError: file does not exist
     """
 
-    terrained_map = _load_map(fname, "_ter")
+    terrained_map = load_map(fname, "_ter")
     propertied_map = _generate_properties(terrained_map, points_amount)
 
     propertied_fname = fname + "_pro"
@@ -188,7 +188,7 @@ def _save_map(
                 print()
 
 
-def _load_map(fname: str, suffix: str) -> List[List[str]]:
+def load_map(fname: str, suffix: str) -> List[List[str]]:
     """Loads a map from file into 2D map list.
 
     Args:

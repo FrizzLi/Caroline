@@ -43,9 +43,9 @@ class Map:
         self.height = 0  # type: int
         self.properties = {}  # type: Dict[str, Any]
         self.nodes = {}  # type: Dict[Tuple[int, int], Node]
-        self._load_map(fname)
+        self.load_map(fname)
 
-    def _load_map(self, fname) -> None:
+    def load_map(self, fname) -> None:
         properties = {
             "points": [],
             "home": 0,
@@ -286,7 +286,7 @@ def _a_star(
                 h = x_diff + y_diff
 
                 # distance between start and next_node
-                step_dist = _get_next_dist(node.terr, next_node.terr, climb)
+                step_dist = get_next_dist(node.terr, next_node.terr, climb)
                 g = node.g + step_dist
 
                 f = g + h  # estimated distance between start and destination
@@ -334,7 +334,7 @@ def _dijkstra(
             next_pos = node.pos[0] + move[0], node.pos[1] + move[1]
             if _passable(next_pos, nodes_map):
                 next_node = nodes[next_pos]
-                step_dist = _get_next_dist(node.terr, next_node.terr, climb)
+                step_dist = get_next_dist(node.terr, next_node.terr, climb)
                 next_node_dist = node.dist + step_dist
 
                 if next_node.dist > next_node_dist:
@@ -363,7 +363,7 @@ def _passable(next_pos: Tuple[int, int], nodes_map: Map):
     return valid_pos
 
 
-def _get_next_dist(prev_terr: int, next_terr: int, climb: bool) -> int:
+def get_next_dist(prev_terr: int, next_terr: int, climb: bool) -> int:
     """Gets next distance based on whether its climbing approach or not.
 
     Args:
