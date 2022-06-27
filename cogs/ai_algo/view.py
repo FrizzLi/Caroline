@@ -40,7 +40,7 @@ def load_json(fname: str, suffix: str) -> Dict[str, Any]:
 
     source_dir = Path(__file__).parents[0]
     fname_path = Path(f"{source_dir}/data/solutions/{fname}{suffix}.json")
-    with open(fname_path, encoding="r") as file:
+    with open(fname_path, encoding="utf-8") as file:
         return json.load(file)
 
 
@@ -110,6 +110,7 @@ def draw_rectangles(draw, width, height, step_size, terrained_map):
 
     return rects
 
+
 def draw_facts_text_explanation(draw, width, small_font_bold):
     row = 1
     text_h = row * 15
@@ -120,8 +121,19 @@ def draw_facts_text_explanation(draw, width, small_font_bold):
 
     return row
 
-# def draw_raking(draw, rects, all_hue_values, color_step, hue, saturation, luminance, font):
-def draw_raking(frames, rake_solved, rake_frames, rects, all_hue_values, color_step, saturation, luminance, font):
+
+def draw_raking(
+    frames,
+    rake_solved,
+    rake_frames,
+    rects,
+    all_hue_values,
+    color_step,
+    saturation,
+    luminance,
+    font,
+    skip_rake,
+):
     for rake_step in rake_solved.items():
         frame = rake_frames[-1].copy()
         draw = ImageDraw.Draw(frame)
@@ -138,7 +150,8 @@ def draw_raking(frames, rake_solved, rake_frames, rects, all_hue_values, color_s
         frames[-1] = rake_frames[-1]
     else:
         frames.extend(rake_frames)
-    return rake_frames, frame, rects, draw
+    return rake_frames, frame, draw
+
 
 def draw_properties(draw, get_map_coordinate, properties):
     start_coor = get_map_coordinate(properties["start"])
@@ -148,6 +161,7 @@ def draw_properties(draw, get_map_coordinate, properties):
     for point in properties["points"]:
         point_coor = get_map_coordinate(point)
         draw.ellipse(point_coor, fill="blue", outline="blue")
+
 
 def draw_solution(
     rule_solved,
@@ -164,7 +178,8 @@ def draw_solution(
     font,
     width,
     height,
-    row
+    row,
+    climb,
 ):
     x2, y2 = None, None
     fact_iterator = iter(rule_solved.items())
@@ -195,10 +210,11 @@ def draw_solution(
             saved_frames.append(saving_frame)
 
             # draw circle and last movement
+            next_step_coor = get_map_coordinate(next_step)
             showing_frame = saving_frame.copy()
             draw_head = ImageDraw.Draw(showing_frame)
             draw_head.line((center1, center2), fill="black", width=10)
-            draw_head.ellipse(get_map_coordinate(next_step), fill="black", outline="black")
+            draw_head.ellipse(next_step_coor, fill="black", outline="black")
             prev_terr = int(terrained_map[x1][y1])
             next_terr = int(terrained_map[x2][y2])
 
@@ -243,6 +259,7 @@ def draw_solution(
     draw.text((text_w, text_h), text, fill="black", font=small_font_bold)
     frames.append(saving_frame)
 
+
 def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
     """Creates gif animation that visualizes the solution.
 
@@ -255,14 +272,15 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
 
     # TODO?: visualization only works on rake_solved maps
     # TODO?: we must specify climb bool value
+    # TODO?: remove so many args in functions.., understand the code and opt.
     try:
         map_props = path.Map(fname)
         terrained_map = evo.load_map(fname, "_ter")
         rake_solved = load_pickle(fname, "_rake")
         paths_solved = load_pickle(fname, "_path")
         rule_solved = load_json(fname, "_rule")
-    except FileNotFoundError as e:
-        print(e)
+    except FileNotFoundError:
+        print("Invalid file name!")
         exit()
 
     # parameters
@@ -296,7 +314,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
 
     rects = draw_rectangles(draw, width, height, step_size, terrained_map)
     row = draw_facts_text_explanation(draw, width, small_font_bold)
-    rake_frames, frame, rects, draw = draw_raking(
+    rake_frames, frame, draw = draw_raking(
         frames,
         rake_solved,
         rake_frames,
@@ -306,11 +324,12 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
         saturation,
         luminance,
         font,
+        skip_rake,
     )
-    get_map_coordinate = partial(get_center_circle, rects, step_half_size, circle_radius)
+    get_map_coordinate = partial(
+        get_center_circle, rects, step_half_size, circle_radius
+    )
     draw_properties(draw, get_map_coordinate, properties)
-
-    frames[-1] = frame
 
     draw_solution(
         rule_solved,
@@ -327,10 +346,11 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
         font,
         width,
         height,
-        row
+        row,
+        climb,
     )
 
-    # leave the last frame for longer
+    # make last frame last longer
     frames.extend([frames[-1]] * 30)
 
     save_gif(fname, frames)
@@ -338,8 +358,8 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
 
 if __name__ == "__main__":
 
-    fname = "queried"
-    skip_rake = True
-    climb = True
+    FNAME = "queried"
+    SKIP_RAKE = True
+    CLIMB = True
 
-    create_gif(fname, skip_rake, climb)
+    create_gif(FNAME, SKIP_RAKE, CLIMB)
