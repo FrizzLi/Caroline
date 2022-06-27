@@ -1,8 +1,8 @@
 import json
-import os
 import pickle
 from functools import partial
 from typing import Any, Dict, List, Tuple
+from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -10,34 +10,36 @@ from .model import evolution as evo
 from .model import pathfinding as path
 
 
-def loadPickle(fname: str) -> Any:
+def load_pickle(fname: str) -> Any:
     """Loads a pickle file.
 
     Args:
-        fname (str): root name of the file to load
+        fname (str): name of the file to load
 
     Returns:
         Any: pickled content
     """
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    with open(f"{current_dir}\\data\\solutions\\{fname}", "rb") as handle:
+    source_dir = Path(__file__).parents[1]
+    fname_path = Path(f"{source_dir}/data/solutions/{fname}")
+    with open(fname_path, "rb") as handle:
         return pickle.loads(handle.read())
 
 
-def loadJson(fname: str) -> Dict[str, Any]:
-    """Loads a pickle file.
+def load_json(fname: str) -> Dict[str, Any]:
+    """Loads a json file.
 
     Args:
-        fname (str): root name of the file to load
+        fname (str): name of the file to load
 
     Returns:
         Dict[str, Any]: json-ed content
     """
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    with open(f"{current_dir}\\data\\solutions\\{fname}.json", "r") as f:
-        return json.load(f)
+    source_dir = Path(__file__).parents[1]
+    fname_path = Path(f"{source_dir}/data/solutions/{fname}.json")
+    with open(fname_path) as file:
+        return json.loads(file.read())
 
 
 def saveGif(frames, fname: str) -> None:
@@ -101,9 +103,9 @@ def createGif(fname: str, skip_rake: bool, climb: bool) -> None:
     try:
         map_props = path.Map(fname)
         terrained_map = evo.load_map(fname + "_ter")
-        rake_solved = loadPickle(fname + "_rake")
-        paths_solved = loadPickle(fname + "_path")
-        rule_solved = loadJson(fname + "_rule")
+        rake_solved = load_pickle(fname + "_rake")
+        paths_solved = load_pickle(fname + "_path")
+        rule_solved = load_json(fname + "_rule")
     except FileNotFoundError as e:
         print(e)
         return
