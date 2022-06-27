@@ -86,3 +86,5 @@ async def setup(bot):
 # TODO: gspread parameter loading
 # TODO: update ai repo and make local parameter loading there
 # TODO: clean commits (?)
+# NOTE: var names difference inside and outsides difference (context)
+# NOTE: spaghetti code - function (multiple calls, parameter read, testing)
