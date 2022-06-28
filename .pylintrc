@@ -246,7 +246,7 @@ good-names=i,
 
            m,
            h,
-           s
+           s  # CTRL+SHIFT+F "pylint:" for specific lines
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted

@@ -41,7 +41,7 @@ def init_rules(fname_rules: str) -> List[Any]:
             for i in range(fields_amount):
                 if not patterns[i].match(rule[i]):
                     print(Rules._fields[i], "field is set wrong!")
-                    exit()  # TODO: tests for this..!
+                    exit()
 
             rules.append(Rules(*rule))
 
@@ -192,7 +192,7 @@ def expand(
 
     if cond_words[0] == "<>":  # labels must be different
         if labels[cond_words[1]] == labels[cond_words[2]]:
-            return []  # TODO: test
+            return []
         return [labels]
 
     found_labels = []

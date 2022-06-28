@@ -10,9 +10,9 @@ import pandas as pd
 import pytz
 import youtube_dl
 from cogs.music.player import MusicPlayer
-from cogs.music.player_view import get_readable_duration  # pylint:import-error
+from cogs.music.player_view import get_readable_duration
 from cogs.music.player_view import SearchView
-from cogs.music.source import ytdl  # pylint: import-error
+from cogs.music.source import ytdl
 from cogs.music.source import YTDLSource
 from discord import app_commands
 from discord.ext import commands

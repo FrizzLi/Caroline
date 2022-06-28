@@ -26,11 +26,11 @@ class Commands(commands.Cog):
 
         while not msg.content.startswith(f"{ctx.prefix}"):
             try:  # with return
-                ans = eval(msg.content)  # pylint: disable=eval-used
+                ans = eval(msg.content)
                 await ctx.send(ans)
             except Exception:  # no return
                 try:
-                    exec(msg.content)  # pylint: disable=exec-used
+                    exec(msg.content)
                 except Exception as err:  # invalid input
                     await ctx.send(err)
             msg = await self.bot.wait_for("message", check=check)

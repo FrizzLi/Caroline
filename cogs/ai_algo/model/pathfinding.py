@@ -552,7 +552,7 @@ if __name__ == "__main__":
     MOVEMENT_TYPE = "M"
     CLIMB = False
     ALGORITHM = "HK"
-    VISIT_POINTS_AMOUNT = 4  # TODO: TEST evo dependency, must be 1 at least
+    VISIT_POINTS_AMOUNT = 4  # TODO: check for right amount (dependency)
 
     path_parameters = dict(
         fname=FNAME,

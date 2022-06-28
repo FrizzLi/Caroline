@@ -68,14 +68,5 @@ except ModuleNotFoundError:
 bot = MyBot()
 bot.run(TOKEN)
 
-# TODO: use all that I have in docs + check Python news, improve docs
-# TODO: (ai -> music -> korean (priority)) - Deep check, ALL WHILE:
-# clean + apply all python elements
-# Git/VSCode deeper run (cheatsheet + docs improve)
-# Docstring
-# Logs (instead of print)
-# Tests (+coverage)
-
-# TODO: Interaction CMDs + check groups
-# TODO: Restart bot CMD for refresh.. Heroku CLI?
-# TODO: Ctrl+Shift+F "pylint:" errors, pylintrc
+# TODO: Logs (instead of print)
+# TODO: Tests (+coverage) -> setup.py necessary?
