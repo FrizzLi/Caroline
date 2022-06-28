@@ -68,5 +68,7 @@ except ModuleNotFoundError:
 bot = MyBot()
 bot.run(TOKEN)
 
+# TODO: Study exceptions [Docs] - rewrite
+# TODO: Study imports
 # TODO: Logs (instead of print)
 # TODO: Tests (+coverage) -> setup.py necessary?
