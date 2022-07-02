@@ -410,3 +410,4 @@ async def setup(bot):
 
 
 # TODO: competitive mode, stats summary after session, knowledge visualization
+# TODO: (lesson context makes it easier, vocab gdoc -> gsheets (grammar?)

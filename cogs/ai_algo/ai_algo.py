@@ -70,12 +70,16 @@ class AiAlgo(commands.Cog):
             fname=self.shared_fname,
         )
 
+        view_parameters = dict(
+            fname=self.shared_fname,
+            skip_rake=self.view_skip_rake,
+            climb=self.shared_climb,
+        )
+
         evo.create_maps(**evo_parameters)
         path.find_shortest_path(**path_parameters)
         chain.run_production(**chain_parameters)
-        view.createGif(
-            self.shared_fname, self.view_skip_rake, self.shared_climb
-        )
+        view.create_gif(**view_parameters)
 
         self.send_file_message(ctx)
 

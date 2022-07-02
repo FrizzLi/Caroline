@@ -363,3 +363,5 @@ if __name__ == "__main__":
     CLIMB = True
 
     create_gif(FNAME, SKIP_RAKE, CLIMB)
+
+# TODO: opt the args, visualize color better maybe, speed
