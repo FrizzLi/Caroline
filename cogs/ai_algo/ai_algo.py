@@ -1,11 +1,12 @@
 from pathlib import Path
 
+from discord import File
+from discord.ext import commands
+
 import cogs.ai_algo.model.evolution as evo
 import cogs.ai_algo.model.forward_chain as chain
 import cogs.ai_algo.model.pathfinding as path
 import cogs.ai_algo.view as view
-from discord import File
-from discord.ext import commands
 
 
 class AiAlgo(commands.Cog):
@@ -87,8 +88,9 @@ class AiAlgo(commands.Cog):
 async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
-# TODO: gspread parameter loading
+
 # TODO: update ai repo and make local parameter loading there
 # TODO: clean commits (?)
-# NOTE: var names difference inside and outsides difference (context)
-# NOTE: spaghetti code - function (multiple calls, parameter read, testing)
+# TODO: Finalize code cleaning (read all)
+# TODO: Add docstrings (module, class, function)
+# TODO: Apply concepts from Python GDoc as much as possible

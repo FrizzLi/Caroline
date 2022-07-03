@@ -83,12 +83,12 @@ def get_center_circle(
         Tuple[Tuple[int, int], Tuple[int, int]]: box coordinates of circle
     """
 
-    x, y = coor
-    center = tuple((c + step_half_size for c in rect_pos[y][x][0]))
-    c1 = tuple((start - circle_radius for start in center))
-    c2 = tuple((end + circle_radius for end in center))
+    i, j = coor
+    center = tuple((c + step_half_size for c in rect_pos[j][i][0]))
+    square_edge1 = tuple((start - circle_radius for start in center))
+    square_edge2 = tuple((end + circle_radius for end in center))
 
-    return c1, c2
+    return square_edge1, square_edge2
 
 
 def draw_rectangles(draw, width, height, step_size, terrained_map):
@@ -141,7 +141,7 @@ def draw_raking(
         rect_start_pos = rects[y][x][0]
         order_num = rake_step[1]
         hue = all_hue_values - (order_num * color_step)
-        color = "hsl(%d, %d%%, %d%%)" % (hue, saturation, luminance)
+        color = f"hsl({hue}, {saturation}%, {luminance}%)"
 
         draw.rectangle(rects[y][x], fill=color, outline="black")
         draw.text(rect_start_pos, str(order_num), fill="black", font=font)
@@ -364,4 +364,5 @@ if __name__ == "__main__":
 
     create_gif(FNAME, SKIP_RAKE, CLIMB)
 
+# TODO: linters apply.. but opt first
 # TODO: opt the args, visualize color better maybe, speed

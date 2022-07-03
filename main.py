@@ -68,8 +68,4 @@ except ModuleNotFoundError:
 bot = MyBot()
 bot.run(TOKEN)
 
-# TODO: Fix linting probs
-# TODO: Finalize code cleaning (read all)
-# TODO: Apply concepts from Python GDoc as much as possible
-# TODO: Logs (instead of print)
-# TODO: Tests (+coverage) -> setup.py necessary?
+# TODO: Logs and Tests

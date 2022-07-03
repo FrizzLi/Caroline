@@ -127,7 +127,6 @@ class Language(commands.Cog):
         """In the case of review session, audio files will be loaded only from
         level that is set in the settings."""
 
-        # TODO: this could be placed in a wrapper (voice.py) (?)
         voice = get(self.bot.voice_clients, guild=ctx.guild)
         user_voice = ctx.message.author.voice
         if not voice and not user_voice:
@@ -284,7 +283,6 @@ class Language(commands.Cog):
             await msg_counter.edit(content=counter)
             await msg.edit(content=msg_display)
 
-    # TODO: needs paths fix and polish
     @commands.command(brief="start vocab exercise", aliases=["e"])
     async def exercise(self, ctx):
 
@@ -391,11 +389,9 @@ class Language(commands.Cog):
                 break
 
         # print and save stats
-        await ctx.send(
-            "{} answers were right out of {}! ({:.2f}%)".format(
-                corrects, attempts, corrects / attempts * 100
-            )
-        )
+        accuracy = corrects / attempts * 100
+        msg = f"{corrects} answers were right out of {attempts}! ({accuracy:.2f}%)"
+        await ctx.send(msg)
         if self.personalization:
             with open(
                 f"cogs/edu/{nick}-{lesson}.json", "w", encoding="utf-8"
@@ -408,6 +404,3 @@ class Language(commands.Cog):
 async def setup(bot):
     await bot.add_cog(Language(bot))
 
-
-# TODO: competitive mode, stats summary after session, knowledge visualization
-# TODO: (lesson context makes it easier, vocab gdoc -> gsheets (grammar?)

@@ -2,20 +2,18 @@ import json
 import os
 import random
 import re
-from asyncio import TimeoutError
 
 import discord
 import gspread
 import pandas as pd
 import pytz
 import youtube_dl
-from cogs.music.player import MusicPlayer
-from cogs.music.player_view import get_readable_duration
-from cogs.music.player_view import SearchView
-from cogs.music.source import ytdl
-from cogs.music.source import YTDLSource
 from discord import app_commands
 from discord.ext import commands
+
+from cogs.music.player import MusicPlayer
+from cogs.music.player_view import SearchView, get_readable_duration
+from cogs.music.source import YTDLSource, ytdl
 
 
 class Music(commands.Cog):
@@ -102,7 +100,7 @@ class Music(commands.Cog):
         table_data = []
         i = 0
         async for elem in ctx.channel.history(limit=limit):
-            if elem.content.startswith("___") and (elem.author.name == 'GLaDOS' or elem.author.name == 'Caroline'):  # TODO: remove Caroline at the end
+            if elem.content.startswith("___") and (elem.author.name == 'GLaDOS' or elem.author.name == 'Caroline'):
                 break
             i += 1
 
@@ -110,8 +108,8 @@ class Music(commands.Cog):
             if elem.content.lower()[1:].startswith("play"):
                 try:
                     datetime, author, title, webpage_url = self.get_ytb_cmd_data(elem)
-                except Exception as e:
-                    print(f"{i}. Error: {e}. It is a playlist or there's other problem. command: {elem.content}")
+                except Exception as err:
+                    print(f"{i}. Error: {err}. It is a playlist or there's other problem. command: {elem.content}")
                     continue
 
                 rec = datetime, author, title, webpage_url
@@ -124,9 +122,10 @@ class Music(commands.Cog):
                 matching_expr = r"Queued \[(.+?)\]\((.+?)\) \[<@!?(\d+)>]"
 
                 result = re.match(matching_expr, msg)
-                title = result[1].replace('"',"'")
-                webpage_url = result[2].replace('"',"'")
-                author_id = result[3]
+                if result:
+                    title = result[1].replace('"',"'")
+                    webpage_url = result[2].replace('"',"'")
+                    author_id = result[3]
                 author = await ctx.guild.fetch_member(author_id)
                 tz_aware_date = elem.created_at.astimezone(pytz.timezone('Europe/Berlin'))
                 datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")  # %Z%z
@@ -137,26 +136,26 @@ class Music(commands.Cog):
 
         # save to gsheets
         credentials_dict_string = os.environ.get("GOOGLE_CREDENTIALS")
-        credentials_dict = json.loads(credentials_dict_string)
-        gc = gspread.service_account_from_dict(credentials_dict)
-        sh = gc.open("Discord Music Log")
-        wks = sh.worksheet("Commands Log")  # for creation sh.add_worksheet("Commands Log", df.shape[0], df.shape[1])
+        credentials_dict = json.loads(credentials_dict_string)  # TODO?
+        g_credentials = gspread.service_account_from_dict(credentials_dict)
+        g_sheet = g_credentials.open("Discord Music Log")
+        g_work_sheet = g_sheet.worksheet("Commands Log")  # for creation sh.add_worksheet("Commands Log", df.shape[0], df.shape[1])
         df = pd.DataFrame(table_data, index=None)
         wks_formatted_rows = df.values.tolist()
-        wks.append_rows(wks_formatted_rows, value_input_option='USER_ENTERED')
+        g_work_sheet.append_rows(wks_formatted_rows, value_input_option='USER_ENTERED')
 
         await ctx.send("___Messages saved up to this point.___")
 
     @commands.command()
-    async def createStats(self, ctx):
+    async def create_stats(self, ctx):
         """Saves history of songs into Google Sheets."""
 
         # get pandas format
         credentials_dict_string = os.environ.get("GOOGLE_CREDENTIALS")
         credentials_dict = json.loads(credentials_dict_string)
-        gc = gspread.service_account_from_dict(credentials_dict)
-        sh = gc.open("Discord Music Log")
-        cmd_wks = sh.worksheet("Commands Log")
+        g_credendials = gspread.service_account_from_dict(credentials_dict)
+        g_sheet = g_credendials.open("Discord Music Log")
+        cmd_wks = g_sheet.worksheet("Commands Log")
         cmd_df = pd.DataFrame(cmd_wks.get_all_records())
         cmd_df['Date'] = pd.to_datetime(cmd_df['Date'])
         now = pd.Timestamp.now()
@@ -172,7 +171,7 @@ class Music(commands.Cog):
 
         for sheet_name, offset in name_offset_dict.items():
             print(sheet_name, "-----BEGINS-----")
-            track_wks = sh.worksheet(sheet_name)
+            track_wks = g_sheet.worksheet(sheet_name)
             track_df = pd.DataFrame(track_wks.get_all_records())
             if track_df.empty:
                 track_df = pd.DataFrame(columns=[
@@ -213,8 +212,8 @@ class Music(commands.Cog):
                 if not all(ytb_stats):
                     try:
                         duration, views, categories = self.get_ytb_track_data(row)
-                    except Exception as e:
-                        print(f"{i}. error: {e}. (row: {row})")
+                    except Exception as err:
+                        print(f"{i}. error: {err}. (row: {row})")
                         continue
 
                     merged_df.at[row.Index, 'Duration'] = duration.replace(":", "︰")
@@ -257,8 +256,8 @@ class Music(commands.Cog):
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
         try:
             entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False)
-        except youtube_dl.utils.DownloadError as e:
-            await interaction.followup.send(e)
+        except youtube_dl.utils.DownloadError as err:
+            await interaction.followup.send(err)
             return
 
         player = self.get_player(interaction)
@@ -313,7 +312,7 @@ class Music(commands.Cog):
                 will be made.
         """
 
-        if not channel:
+        if channel is None:
             try:
                 channel = interaction.user.voice.channel
             except AttributeError:
@@ -466,8 +465,8 @@ class Music(commands.Cog):
         # get entries
         try:
             entries = await YTDLSource.search_source(search, loop=self.bot.loop, download=False)
-        except youtube_dl.utils.DownloadError as e:
-            await interaction.followup.send(e)
+        except youtube_dl.utils.DownloadError as err:
+            await interaction.followup.send(err)
             return
 
         # load it into view
@@ -485,8 +484,8 @@ class Music(commands.Cog):
         # get entries
         try:
             entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False, playlist=True)
-        except youtube_dl.utils.DownloadError as e:
-            await interaction.followup.send(e)
+        except youtube_dl.utils.DownloadError as err:
+            await interaction.followup.send(err)
             return
 
         # load it into view
@@ -562,9 +561,5 @@ async def setup(bot):
         )]
     )
 
-# TODO: Deeper code check!
-# TODO: Extend class - regular commands into separate file
-# TODO: remove previous song -> makes going songs fast
-# TODO: resolve download
-# TODO: resolve _ before function and after
+# TODO: Code check: linting, download case, _ before and after f.!
 # TODO: refresh duration not minus.. say not playing anything

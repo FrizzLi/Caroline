@@ -48,7 +48,7 @@ def init_rules(fname_rules: str) -> List[Any]:
     return rules
 
 
-def _get_4_lines_from_file(file) -> Tuple[str, str, str]:
+def _get_4_lines_from_file(file: Any) -> Tuple[Any, ...]:
     """Reads and prepares 3 lines from the file for next processing.
 
     Args:
@@ -65,7 +65,7 @@ def _get_4_lines_from_file(file) -> Tuple[str, str, str]:
     if len(rule) == 4:
         rule = rule[:-1]
 
-    return rule
+    return rule  # -> Tuple[str, str, str]
 
 
 def init_facts(

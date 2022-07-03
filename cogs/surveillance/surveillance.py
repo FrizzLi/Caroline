@@ -108,7 +108,3 @@ class Surveillance(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Surveillance(bot))
-
-
-# TODO: Config in GSheets: Blacklist, Log channel (global use)
-# TODO: Helping method for stats observing in graphs

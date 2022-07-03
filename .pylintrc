@@ -244,9 +244,14 @@ good-names=i,
            Run,
            _,
 
-           m,
+           m,  # time
            h,
-           s  # CTRL+SHIFT+F "pylint:" for specific lines
+           s,
+           f,  # a_star
+           g,
+           df,  # dataframe (pandas)
+           vc  # voice
+           # CTRL+SHIFT+F "pylint:" for specific lines
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted

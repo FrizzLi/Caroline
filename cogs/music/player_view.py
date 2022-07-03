@@ -127,7 +127,7 @@ class PlayerView(View):
 
         return track_list
 
-    async def on_error(self, error, item, interaction):
+    async def on_error(self, interaction, error, item):
         msg = f"Item '{item}' has failed the dispatch. Error: {error}."
         await interaction.response.send_message(msg)
 

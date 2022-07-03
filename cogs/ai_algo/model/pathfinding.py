@@ -234,7 +234,7 @@ def _find_shortest_distances(
         **from_points_to_all,
     }
 
-    map_.nodes = shortest_distance_nodes_between_properties
+    map_.nodes = shortest_distance_nodes_between_properties  # TODO?
 
     return map_
 
@@ -400,14 +400,12 @@ def _held_karp(
             properties, distance of the path)
     """
 
-    COST = 0
-    PARENT = 1
     points, home, start = map_.properties.values()
     points_set = frozenset(points)
 
     coor_and_comb = Tuple[Tuple[int, int], FrozenSet[int]]
     cost_and_parent_coor = Tuple[int, Tuple[int, int]]
-    nodes = {}  # type: Dict[coor_and_comb, cost_and_parent_coor]
+    nodes: Dict[coor_and_comb, cost_and_parent_coor] = {}
 
     for comb_size in range(visit_points_amount):
         for comb in combinations(points_set, comb_size):
@@ -418,7 +416,7 @@ def _held_karp(
                 if comb_set:
                     for begin in comb_set:
                         sub_comb = comb_set - frozenset({begin})
-                        prev_cost = nodes[begin, sub_comb][COST]
+                        prev_cost = nodes[begin, sub_comb][0]
                         cost = map_[begin][dest].dist + prev_cost
                         routes.append((cost, begin))
                     nodes[dest, comb_set] = min(routes)
@@ -430,8 +428,8 @@ def _held_karp(
                     nodes[dest, frozenset()] = cost, home
 
     # get total cost, ending node and its parent
-    last_nodes = list(nodes.items())[-len(points_set):]
-    last_nodes = [(*node[1], node[0][0]) for node in last_nodes]
+    last_nodes_raw = list(nodes.items())[-len(points_set):]
+    last_nodes = [(*node[1], node[0][0]) for node in last_nodes_raw]
     last_optimal_node = min(last_nodes)
     cost, parent, end = last_optimal_node
     points_set -= {end}
@@ -441,7 +439,7 @@ def _held_karp(
     for _ in range(visit_points_amount - 1):
         path.append(parent)
         points_set -= {parent}
-        parent = nodes[parent, points_set][PARENT]
+        parent = nodes[parent, points_set][1]
     path.extend([home, start])
 
     return path[::-1], cost
