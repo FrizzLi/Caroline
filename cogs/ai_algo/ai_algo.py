@@ -89,8 +89,7 @@ async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
 
-# TODO: update ai repo and make local parameter loading there
-# TODO: clean commits (?)
-# TODO: Finalize code cleaning (read all)
-# TODO: Add docstrings (module, class, function)
+# TODO: Docstrings (module, class, function), TODOs, Final clean
 # TODO: Apply concepts from Python GDoc as much as possible
+# TODO: clean commits (?)
+# TODO: update ai repo and make local parameter loading there
