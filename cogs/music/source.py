@@ -42,13 +42,11 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def create_source(
-        cls, interaction, search: str, *, loop, download=False, playlist=False
+        cls, interaction, search: str, *, loop, playlist=False
     ):
         loop = loop or asyncio.get_event_loop()
 
-        to_run = functools.partial(
-            ytdl.extract_info, url=search, download=download
-        )
+        to_run = functools.partial(ytdl.extract_info, url=search)
         data = await loop.run_in_executor(None, to_run)
 
         if "entries" in data:
@@ -67,25 +65,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
             )
             await interaction.followup.send(embed=embed)
 
-        if download:
-            source = ytdl.prepare_filename(data["entries"])
-        else:
-            return data["entries"]
+        return data["entries"]
 
-        return cls(
-            discord.FFmpegPCMAudio(source),
-            data=data["entries"],
-            requester=interaction.user,
-        )
 
     @classmethod
-    async def search_source(
-        cls, search: str, *, loop, download=False
-    ):
+    async def search_source(cls, search: str, *, loop):
         loop = loop or asyncio.get_event_loop()
 
         to_run = functools.partial(
-            ytdl.extract_info, url="ytsearch10: " + search, download=download
+            ytdl.extract_info, url="ytsearch10: " + search
         )
         data = await loop.run_in_executor(None, to_run)
 
@@ -99,9 +87,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
         requester = data["requester"]
 
-        to_run = functools.partial(
-            ytdl.extract_info, url=data["webpage_url"], download=False
-        )
+        to_run = functools.partial(ytdl.extract_info, url=data["webpage_url"])
         data = await loop.run_in_executor(None, to_run)
 
         # set timestamp for last 5 seconds if set too high
