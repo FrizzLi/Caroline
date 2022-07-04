@@ -8,7 +8,7 @@ create_maps                         - main function
                 _get_start_pos      - gets starting position
                 _in_bounds          - checks whether we are out of map
                 _get_row_movement   - get new row movement
-                _get_col_movement   - get new column movement 
+                _get_col_movement   - get new column movement
             _calculate_fitness      - evaluate solution
             _create_next_generation - creating next generation evolutionary
             _fill_map               - fills walled map with terrain
@@ -36,7 +36,7 @@ CROSS_RATE = 0.90
 
 
 class QueryError(Exception):
-    pass
+    """Exception for walled map inquiry: wrong size or rocks positioning."""
 
 
 def create_maps(
