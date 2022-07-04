@@ -1,3 +1,25 @@
+"""Runs first stage of creating simulation - Evolution map creating.
+
+create_maps                         - main function
+    create_walls                    - creates walls from query into file
+    create_terrain                  - creates terrain from walls into file
+        _evolutionize               - runs evolutionary algorithm
+            _rake_map               - raking the map with one solution each
+                _get_start_pos      - gets starting position
+                _in_bounds          - checks whether we are out of map
+                _get_row_movement   - get new row movement
+                _get_col_movement   - get new column movement 
+            _calculate_fitness      - evaluate solution
+            _create_next_generation - creating next generation evolutionary
+            _fill_map               - fills walled map with terrain
+        _save_solution              - save solution for animation
+    create_properties               - creating properties
+        _save_map                   - saving map (walls/terrain/properties)
+        load_map                    - loading map (terrain/properties)
+        _generate_properties        - generates properties
+            free_position_finder    - finds free position for safe generation
+"""
+
 import copy
 import pickle
 import random

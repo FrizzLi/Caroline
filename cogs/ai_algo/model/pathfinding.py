@@ -1,3 +1,19 @@
+"""Runs second stage of creating simulation - Pathfinding.
+
+find_shortest_path                  - main function
+    _validate_and_set_input_pars    - sets parameters
+    _find_shortest_distances        - gets shortest distances between points
+        _a_star                     - from start to end
+        _dijkstra                   - from start to everywhere
+            _passable               - checks whether place on map is passable
+            get_next_dist           - gets next distance (climb/no climb)
+    _held_karp                      - optimal way to find shortest combo path
+    _naive_permutations             - greedy way to find shortest combo path
+    _get_routes                     - gets the whole path via parent nodes
+    _print_solution                 - prints the routes - solution
+    _save_solution                  - saves the solution into pickle file
+"""
+
 import heapq
 import pickle
 from copy import deepcopy

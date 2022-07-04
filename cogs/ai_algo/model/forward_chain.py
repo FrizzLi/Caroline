@@ -1,3 +1,19 @@
+"""Runs third stage of creating simulation - Rule Based Production System.
+
+run_production                  - main function
+    init_rules                  - loads rules from file
+        _get_4_lines_from_file  - load one rule from 4 lines
+    init_facts                  - loads facts from file
+    run_forward_chain           - solution finder
+        find_actions            - finds all possible actions
+            expand              - labelling entities
+        remove_duplicates       - remove duplicate actions
+        apply_actions           - apply actions
+    save_facts                  - saves all facts into file
+    print_solution              - prints the solution
+    save_solution               - save the solution into file
+"""
+
 import collections as col
 import json
 import random
@@ -5,6 +21,54 @@ import re
 from itertools import islice
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
+
+
+def run_production(
+    fname_save_facts: str,
+    fname_load_facts: str,
+    fname_load_rules: str,
+    step_by_step: bool,
+    facts_amount: int,
+    randomize_facts_order: bool,
+    fname: str,
+) -> None:
+    """Sets parameters for running rule-based system with forward chaining.
+
+    Args:
+        fname_save_facts (str): name of file into which facts will be saved
+        fname_load_facts (str): name of file from which we load facts
+        fname_load_rules (str): name of file from which we load rules
+        step_by_step (bool): entering one loaded fact by each production run
+        facts_amount (int): number of facts we want to load (points)
+        randomize_facts_order (bool): option to shuffle loaded facts
+        fname (str): name of json file into which the solution will be saved
+    """
+
+    rules = init_rules(fname_load_rules)
+    known_facts = init_facts(
+        fname_load_facts, facts_amount, randomize_facts_order
+    )
+
+    if step_by_step:
+        facts = []  # type: List[str]
+        fact_discovery_flow = {}
+
+        for known_fact in known_facts:
+            using_facts = facts + [known_fact]
+            new_facts, facts = run_forward_chain(
+                using_facts, rules, fname_save_facts
+            )
+            fact_discovery_flow[known_fact] = new_facts
+
+    else:
+        new_facts, facts = run_forward_chain(
+            known_facts, rules, fname_save_facts
+        )
+        fact_discovery_flow = {"All steps at once": new_facts}
+
+    save_facts(facts, fname_save_facts)
+    print_solution(fact_discovery_flow)
+    save_solution(fact_discovery_flow, fname)
 
 
 def init_rules(fname_rules: str) -> List[Any]:
@@ -48,26 +112,6 @@ def init_rules(fname_rules: str) -> List[Any]:
     return rules
 
 
-def _get_4_lines_from_file(file: Any) -> Tuple[Any, ...]:
-    """Reads and prepares 3 lines from the file for next processing.
-
-    Args:
-        file (file): opened file
-
-    Returns:
-        Tuple[str]: 3 lines that represent single rule
-    """
-
-    rule = tuple(line.rstrip("\n:") for line in islice(file, 4))
-
-    # last line of file is not being read for some reason
-    # need to skip last element (empty string) except for the last line
-    if len(rule) == 4:
-        rule = rule[:-1]
-
-    return rule  # -> Tuple[str, str, str]
-
-
 def init_facts(
     fname_facts: str, facts_amount: int, randomize_facts_order: bool
 ) -> List[str]:
@@ -92,6 +136,59 @@ def init_facts(
         random.shuffle(facts)
 
     return facts
+
+
+def _get_4_lines_from_file(file: Any) -> Tuple[Any, ...]:
+    """Reads and prepares 3 lines from the file to get one rule.
+
+    Args:
+        file (file): opened file
+
+    Returns:
+        Tuple[str]: 3 lines that represent single rule
+    """
+
+    rule = tuple(line.rstrip("\n:") for line in islice(file, 4))
+
+    # last line of file is not being read for some reason
+    # need to skip last element (empty string) except for the last line
+    if len(rule) == 4:
+        rule = rule[:-1]
+
+    return rule  # -> Tuple[str, str, str]
+
+
+def run_forward_chain(
+    using_facts: List[str], rules: List[Any], fname_save_facts: str
+) -> Tuple[List[str], List[str]]:
+    """Runs forward chaining to discover new facts given the facts and rules.
+
+    Saves new facts along with already known ones into text file.
+
+    Args:
+        using_facts (List[str]): facts that we're using
+        rules (List[Any]): namedtuples with these attributes:
+            name - name of the rule (unused)
+            conds - conditions to fulfill actions
+            acts - actions (message, add or remove fact from the set of facts)
+        fname_save_facts (str): name of the file into which facts will be saved
+
+    Returns:
+        Tuple[List[str], List[str]]: (applied facts, facts that we used)
+    """
+
+    new_facts = []
+    while True:
+        found_acts = find_actions(rules, using_facts)
+        acts = remove_duplicates(found_acts, using_facts)
+
+        if not acts:
+            break
+
+        newly_found_facts, using_facts = apply_actions(acts, using_facts)
+        new_facts += newly_found_facts
+
+    return new_facts, using_facts
 
 
 def find_actions(rules: List[Any], using_facts: List[str]) -> List[str]:
@@ -250,6 +347,17 @@ def save_facts(facts: List[str], fname_save_facts: str) -> None:
         file.write("\n".join(facts))
 
 
+def print_solution(fact_discovery_flow: Dict[str, List[str]]) -> None:
+    """Prints the flow of finding out new facts.
+
+    Args:
+        fact_discovery_flow (Dict[str, List[str]]): path of discovering facts
+    """
+
+    for i, fact in enumerate(fact_discovery_flow, 1):
+        print(f"{str(i)}:  {fact} -> " + ", ".join(fact_discovery_flow[fact]))
+
+
 def save_solution(
     fact_discovery_flow: Dict[str, List[str]], fname: str
 ) -> None:
@@ -267,98 +375,6 @@ def save_solution(
     fname_path = f"{solutions_dir}/{fname}_rule.json"
     with open(fname_path, "w", encoding="utf-8") as file:
         json.dump(fact_discovery_flow, file, indent=4)
-
-
-def run_production(
-    fname_save_facts: str,
-    fname_load_facts: str,
-    fname_load_rules: str,
-    step_by_step: bool,
-    facts_amount: int,
-    randomize_facts_order: bool,
-    fname: str,
-) -> None:
-    """Sets parameters for running rule-based system with forward chaining.
-
-    Args:
-        fname_save_facts (str): name of file into which facts will be saved
-        fname_load_facts (str): name of file from which we load facts
-        fname_load_rules (str): name of file from which we load rules
-        step_by_step (bool): entering one loaded fact by each production run
-        facts_amount (int): number of facts we want to load (points)
-        randomize_facts_order (bool): option to shuffle loaded facts
-        fname (str): name of json file into which the solution will be saved
-    """
-
-    rules = init_rules(fname_load_rules)
-    known_facts = init_facts(
-        fname_load_facts, facts_amount, randomize_facts_order
-    )
-
-    if step_by_step:
-        facts = []  # type: List[str]
-        fact_discovery_flow = {}
-
-        for known_fact in known_facts:
-            using_facts = facts + [known_fact]
-            new_facts, facts = run_forward_chain(
-                using_facts, rules, fname_save_facts
-            )
-            fact_discovery_flow[known_fact] = new_facts
-
-    else:
-        new_facts, facts = run_forward_chain(
-            known_facts, rules, fname_save_facts
-        )
-        fact_discovery_flow = {"All steps at once": new_facts}
-
-    save_facts(facts, fname_save_facts)
-    print_solution(fact_discovery_flow)
-    save_solution(fact_discovery_flow, fname)
-
-
-def print_solution(fact_discovery_flow: Dict[str, List[str]]) -> None:
-    """Prints the flow of finding out new facts.
-
-    Args:
-        fact_discovery_flow (Dict[str, List[str]]): path of discovering facts
-    """
-
-    for i, fact in enumerate(fact_discovery_flow, 1):
-        print(f"{str(i)}:  {fact} -> " + ", ".join(fact_discovery_flow[fact]))
-
-
-def run_forward_chain(
-    using_facts: List[str], rules: List[Any], fname_save_facts: str
-) -> Tuple[List[str], List[str]]:
-    """Runs forward chaining to discover new facts given the facts and rules.
-
-    Saves new facts along with already known ones into text file.
-
-    Args:
-        using_facts (List[str]): facts that we're using
-        rules (List[Any]): namedtuples with these attributes:
-            name - name of the rule (unused)
-            conds - conditions to fulfill actions
-            acts - actions (message, add or remove fact from the set of facts)
-        fname_save_facts (str): name of the file into which facts will be saved
-
-    Returns:
-        Tuple[List[str], List[str]]: (applied facts, facts that we used)
-    """
-
-    new_facts = []
-    while True:
-        found_acts = find_actions(rules, using_facts)
-        acts = remove_duplicates(found_acts, using_facts)
-
-        if not acts:
-            break
-
-        newly_found_facts, using_facts = apply_actions(acts, using_facts)
-        new_facts += newly_found_facts
-
-    return new_facts, using_facts
 
 
 if __name__ == "__main__":
