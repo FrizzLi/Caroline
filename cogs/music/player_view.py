@@ -66,6 +66,7 @@ class PlayerView(View):
         end = timer()
         duration_left = self.source.duration - (end - self.start)
         duration = get_readable_duration(duration_left)
+        duration = "0:00:00" if duration.startswith("-") else duration
 
         remains = f"{remains} remaining track(s)"
         vol = f"Volume: {volume}"

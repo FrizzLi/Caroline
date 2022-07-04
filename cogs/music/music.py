@@ -561,5 +561,4 @@ async def setup(bot):
         )]
     )
 
-# TODO: Code check: linting, download case
-# TODO: refresh duration not minus.. say not playing anything
+# TODO: Code check: linting
