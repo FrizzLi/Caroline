@@ -134,11 +134,11 @@ class PlayerView(View):
     @discord.ui.button(emoji="⏸️", row=0)
     async def play_callback(self, interaction, button):
         if button.emoji.name == "⏸️":
-            error = await self.player.music.pause_(interaction)
+            error = await self.player.music._pause(interaction)
             if not error:
                 button.emoji.name = "▶️"
         elif button.emoji.name == "▶️":
-            error = await self.player.music.resume_(interaction)
+            error = await self.player.music._resume(interaction)
             if not error:
                 button.emoji.name = "⏸️"
 
@@ -146,24 +146,24 @@ class PlayerView(View):
 
     @discord.ui.button(emoji="⏭️", row=0)
     async def skip_callback(self, interaction, button):
-        await self.player.music.skip_(interaction)
+        await self.player.music._skip(interaction)
         await interaction.response.edit_message(view=self)
 
     @discord.ui.button(emoji="🔁", row=0)
     async def loop_q_callback(self, interaction, button):
-        await self.player.music.loop_queue_(interaction)
+        await self.player.music._loop_queue(interaction)
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
 
     @discord.ui.button(emoji="🔂", row=0)
     async def loop_t_callback(self, interaction, button):
-        await self.player.music.loop_track_(interaction)
+        await self.player.music._loop_track(interaction)
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
 
     @discord.ui.button(emoji="🔀", row=0)
     async def shuffle_callback(self, interaction, button):
-        await self.player.music.shuffle_(interaction)
+        await self.player.music._shuffle(interaction)
         msg = self.generate_message()
         await interaction.response.edit_message(content=msg, view=self)
 

@@ -250,12 +250,12 @@ class Music(commands.Cog):
         vc = interaction.guild.voice_client
         if not vc:
             channel = interaction.user.voice.channel
-            await channel.connect()  # simplified cuz cannot invoke connect_
+            await channel.connect()  # simplified cuz cannot invoke _connect
 
         # If download is False, source will be a list of entries which will be used to regather the stream.
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
         try:
-            entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False)
+            entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop)
         except youtube_dl.utils.DownloadError as err:
             await interaction.followup.send(err)
             return
@@ -302,7 +302,7 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='join')
-    async def connect_(self, interaction, *, channel: discord.VoiceChannel=None):
+    async def _connect(self, interaction, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
         This command also handles moving the bot to different channels.
 
@@ -343,7 +343,7 @@ class Music(commands.Cog):
                 await interaction.response.send_message(f'Connecting to channel: <{channel}> timed out.')
 
     @app_commands.command(name='leave')
-    async def leave_(self, interaction):
+    async def _leave(self, interaction):
         """Stop the currently playing song, clears queue and disconnects from voice."""
 
         vc = interaction.guild.voice_client
@@ -360,7 +360,7 @@ class Music(commands.Cog):
 
     # Invoked commands with voice check
     @app_commands.command(name="jump")
-    async def jump_(self, interaction, index: int):
+    async def _jump(self, interaction, index: int):
         """Jumps to specific track after currently playing song finishes."""
 
         vc = interaction.guild.voice_client
@@ -382,7 +382,7 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='remove')
-    async def remove_(self, interaction, index: int=None):
+    async def _remove(self, interaction, index: int=None):
         """Removes specified or lastly added song from the queue."""
 
         vc = interaction.guild.voice_client
@@ -411,7 +411,7 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='clear')
-    async def clear_(self, interaction):
+    async def _clear(self, interaction):
         """Deletes entire queue of songs."""
 
         vc = interaction.guild.voice_client
@@ -434,7 +434,7 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='seek')
-    async def seek_(self, interaction, second: int=0):
+    async def _seek(self, interaction, second: int=0):
         """Goes to a specific timestamp of currently played track."""
 
         vc = interaction.guild.voice_client
@@ -456,7 +456,7 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='search')
-    async def search_(self, interaction, search: str):
+    async def _search(self, interaction, search: str):
         """Searches 10 entries from query."""
 
         # making sure interaction timeout does not expire
@@ -475,7 +475,7 @@ class Music(commands.Cog):
         await interaction.channel.send(view.msg, view=view)
 
     @app_commands.command(name='playlist')
-    async def playlist_(self, interaction, search: str):
+    async def _playlist(self, interaction, search: str):
         """Display all songs from a playlist to pick from."""
 
         # making sure interaction timeout does not expire
@@ -483,7 +483,7 @@ class Music(commands.Cog):
 
         # get entries
         try:
-            entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, download=False, playlist=True)
+            entries = await YTDLSource.create_source(interaction, search, loop=self.bot.loop, playlist=True)
         except youtube_dl.utils.DownloadError as err:
             await interaction.followup.send(err)
             return
@@ -495,7 +495,7 @@ class Music(commands.Cog):
 
 
     # Button commands
-    async def pause_(self, interaction):
+    async def _pause(self, interaction):
         """Pause the currently playing song."""
 
         vc = interaction.guild.voice_client
@@ -506,7 +506,7 @@ class Music(commands.Cog):
 
         vc.pause()
 
-    async def resume_(self, interaction):
+    async def _resume(self, interaction):
         """Resume the currently paused song."""
 
         vc = interaction.guild.voice_client
@@ -517,7 +517,7 @@ class Music(commands.Cog):
 
         vc.resume()
 
-    async def skip_(self, interaction):
+    async def _skip(self, interaction):
         """Skips the song."""
 
         vc = interaction.guild.voice_client
@@ -528,7 +528,7 @@ class Music(commands.Cog):
 
         vc.stop()
 
-    async def shuffle_(self, interaction):
+    async def _shuffle(self, interaction):
         """Randomizes the position of tracks in queue."""
 
         player = self.get_player(interaction)
@@ -540,13 +540,13 @@ class Music(commands.Cog):
 
         player.queue = player.queue[:player.current_pointer+1] + shuffled_remains
 
-    async def loop_queue_(self, interaction):
+    async def _loop_queue(self, interaction):
         """Loops the queue of tracks."""
 
         player = self.get_player(interaction)
         player.loop_queue = not player.loop_queue
 
-    async def loop_track_(self, interaction):
+    async def _loop_track(self, interaction):
         """Loops the currently playing track."""
 
         player = self.get_player(interaction)
@@ -561,5 +561,5 @@ async def setup(bot):
         )]
     )
 
-# TODO: Code check: linting, download case, _ before and after f.!
+# TODO: Code check: linting, download case
 # TODO: refresh duration not minus.. say not playing anything
