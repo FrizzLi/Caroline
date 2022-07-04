@@ -10,7 +10,7 @@ class MyBot(commands.Bot):
         super().__init__(
             command_prefix=PREFIX,
             intents=discord.Intents().all(),
-            application_id=os.environ.get("CAROLINE_ID"),
+            application_id=APP_ID,
         )
 
     @commands.Cog.listener()
@@ -31,7 +31,7 @@ class MyBot(commands.Bot):
         }
         for dir_name in os.listdir("cogs"):
             if dir_name in py_files:
-                if PREFIX == PREFIXES[LOCAL] and dir_name in MB_LISTS[LOCAL]:
+                if dir_name in BLACK_LIST:
                     continue
                 try:
                     path = (
@@ -50,20 +50,18 @@ class MyBot(commands.Bot):
         )
 
 
-
-HOST = 0
-LOCAL = 1
-PREFIXES = ("?", ".")
-MB_LISTS = ((), ("music", "surveillance"))
-
 try:
     import keep_alive
     keep_alive.keep_alive()
     TOKEN = os.environ.get("GLADOS_TOKEN")
-    PREFIX = PREFIXES[HOST]
+    APP_ID = os.environ.get("GLADOS_ID")
+    BLACK_LIST = ()
+    PREFIX = "?"
 except ModuleNotFoundError:
     TOKEN = os.environ.get("CAROLINE_TOKEN")
-    PREFIX = PREFIXES[LOCAL]
+    APP_ID = os.environ.get("CAROLINE_ID")
+    BLACK_LIST = ("music", "surveillance")
+    PREFIX = "."
 
 bot = MyBot()
 bot.run(TOKEN)
