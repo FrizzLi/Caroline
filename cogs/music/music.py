@@ -67,11 +67,13 @@ class Music(commands.Cog):
                 data['title'] = data['entries'][0]['title']
                 data['webpage_url'] = data['entries'][0]['webpage_url']
 
-        tz_aware_date = elem.created_at.astimezone(pytz.timezone('Europe/Berlin'))
+        timezone = pytz.timezone('Europe/Berlin')
+        tz_aware_date = elem.created_at.astimezone(timezone)
         data['title'] = data['title'].replace('"',"'")
         data['webpage_url'] = data['webpage_url'].replace('"',"'")
 
-        datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")  # windows only #
+        # only windows only uses hashtag # before H
+        datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")
         author = elem.author.name
         title = data['title']
         webpage_url = data['webpage_url']
@@ -239,9 +241,9 @@ class Music(commands.Cog):
                 The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
 
-        await self.play_(interaction, search)
+        await self.play(interaction, search)
 
-    async def play_(self, interaction, search):
+    async def play(self, interaction, search):
 
         # making sure interaction timeout does not expire
         await interaction.response.send_message("...Looking for song(s)... wait...")
@@ -250,7 +252,7 @@ class Music(commands.Cog):
         vc = interaction.guild.voice_client
         if not vc:
             channel = interaction.user.voice.channel
-            await channel.connect()  # simplified cuz cannot invoke _connect
+            await channel.connect()  # simplified cuz cannot invoke connect f.
 
         # If download is False, source will be a list of entries which will be used to regather the stream.
         # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
@@ -302,7 +304,7 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='join')
-    async def _connect(self, interaction, *, channel: discord.VoiceChannel=None):
+    async def connect(self, interaction, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
         This command also handles moving the bot to different channels.
 
@@ -342,8 +344,8 @@ class Music(commands.Cog):
             except TimeoutError:
                 await interaction.response.send_message(f'Connecting to channel: <{channel}> timed out.')
 
-    @app_commands.command(name='leave')
-    async def _leave(self, interaction):
+    @app_commands.command()
+    async def leave(self, interaction):
         """Stop the currently playing song, clears queue and disconnects from voice."""
 
         vc = interaction.guild.voice_client
@@ -359,8 +361,8 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     # Invoked commands with voice check
-    @app_commands.command(name="jump")
-    async def _jump(self, interaction, index: int):
+    @app_commands.command()
+    async def jump(self, interaction, index: int):
         """Jumps to specific track after currently playing song finishes."""
 
         vc = interaction.guild.voice_client
@@ -381,8 +383,8 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name='remove')
-    async def _remove(self, interaction, index: int=None):
+    @app_commands.command()
+    async def remove(self, interaction, index: int=None):
         """Removes specified or lastly added song from the queue."""
 
         vc = interaction.guild.voice_client
@@ -410,8 +412,8 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name='clear')
-    async def _clear(self, interaction):
+    @app_commands.command()
+    async def clear(self, interaction):
         """Deletes entire queue of songs."""
 
         vc = interaction.guild.voice_client
@@ -433,8 +435,8 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name='seek')
-    async def _seek(self, interaction, second: int=0):
+    @app_commands.command()
+    async def seek(self, interaction, second: int=0):
         """Goes to a specific timestamp of currently played track."""
 
         vc = interaction.guild.voice_client
@@ -455,8 +457,8 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name='search')
-    async def _search(self, interaction, search: str):
+    @app_commands.command()
+    async def search(self, interaction, search: str):
         """Searches 10 entries from query."""
 
         # making sure interaction timeout does not expire
@@ -475,7 +477,7 @@ class Music(commands.Cog):
         await interaction.channel.send(view.msg, view=view)
 
     @app_commands.command(name='playlist')
-    async def _playlist(self, interaction, search: str):
+    async def playlist(self, interaction, search: str):
         """Display all songs from a playlist to pick from."""
 
         # making sure interaction timeout does not expire
@@ -495,7 +497,7 @@ class Music(commands.Cog):
 
 
     # Button commands
-    async def _pause(self, interaction):
+    async def pause(self, interaction):
         """Pause the currently playing song."""
 
         vc = interaction.guild.voice_client
@@ -506,7 +508,7 @@ class Music(commands.Cog):
 
         vc.pause()
 
-    async def _resume(self, interaction):
+    async def resume(self, interaction):
         """Resume the currently paused song."""
 
         vc = interaction.guild.voice_client
@@ -517,7 +519,7 @@ class Music(commands.Cog):
 
         vc.resume()
 
-    async def _skip(self, interaction):
+    async def skip(self, interaction):
         """Skips the song."""
 
         vc = interaction.guild.voice_client
@@ -528,7 +530,7 @@ class Music(commands.Cog):
 
         vc.stop()
 
-    async def _shuffle(self, interaction):
+    async def shuffle(self, interaction):
         """Randomizes the position of tracks in queue."""
 
         player = self.get_player(interaction)
@@ -540,13 +542,13 @@ class Music(commands.Cog):
 
         player.queue = player.queue[:player.current_pointer+1] + shuffled_remains
 
-    async def _loop_queue(self, interaction):
+    async def loop_queue(self, interaction):
         """Loops the queue of tracks."""
 
         player = self.get_player(interaction)
         player.loop_queue = not player.loop_queue
 
-    async def _loop_track(self, interaction):
+    async def loop_track(self, interaction):
         """Loops the currently playing track."""
 
         player = self.get_player(interaction)
