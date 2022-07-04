@@ -13,6 +13,20 @@ class MusicPlayer:
     When the bot disconnects from the Voice it's instance will be destroyed.
     """
 
+    __slots__ = (
+        "interaction",
+        "music",
+        "queue",
+        "next",
+        "np_msg",
+        "volume",
+        "current_pointer",
+        "next_pointer",
+        "loop_queue",
+        "loop_track",
+        "timestamp",
+    )
+
     def __init__(self, interaction, music):
         self.interaction = interaction
         self.music = music

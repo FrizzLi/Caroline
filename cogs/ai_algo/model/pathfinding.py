@@ -20,6 +20,9 @@ class AlgorithmError(Exception):
 
 
 class Node:
+
+    __slots__ = ("pos", "terr", "parent", "dist", "g", "h")
+
     def __init__(self, position, terrain):
         self.pos = position  # type: Tuple[int, int]
         self.terr = terrain  # type: int
@@ -37,6 +40,9 @@ class Node:
 
 
 class Map:
+
+    __slots__ = ("fname", "width", "height", "properties", "nodes", "h")
+
     def __init__(self, fname) -> None:
         self.fname = ""  # type: str
         self.width = 0  # type: int
@@ -517,7 +523,6 @@ def _print_solution(
         dist (int): total distance
     """
 
-    # TODO: we could also store it into file! Bool opt.?
     for i, routed_path in enumerate(routed_paths, 1):
         print(f"{i}: ", *routed_path)
 
@@ -550,7 +555,7 @@ if __name__ == "__main__":
     MOVEMENT_TYPE = "M"
     CLIMB = False
     ALGORITHM = "HK"
-    VISIT_POINTS_AMOUNT = 4  # TODO: check for right amount (dependency)
+    VISIT_POINTS_AMOUNT = 4
 
     path_parameters = dict(
         fname=FNAME,

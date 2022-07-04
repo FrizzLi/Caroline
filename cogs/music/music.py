@@ -19,8 +19,6 @@ from cogs.music.source import YTDLSource, ytdl
 class Music(commands.Cog):
     """Music related commands."""
 
-    __slots__ = ("bot", "players")
-
     def __init__(self, bot):
         self.bot = bot
         self.players = {}
