@@ -1,5 +1,12 @@
-"""Runs third stage of creating simulation - Rule Based Production System.
+"""This module serves to run 3. stage (out of 3) of creating simulation -
+Rule Based Production System.
 
+Production system belongs to knowledge systems that use data to create new
+knowledge. In this case, it deduces new facts from facts that are being
+collected in each blue node. Deduction is defined by set of rules that are
+loaded from the text file.
+
+Function hierarchy:
 run_production                  - main function
     init_rules                  - loads rules from file
         _get_4_lines_from_file  - load one rule from 4 lines

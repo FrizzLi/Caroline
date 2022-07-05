@@ -1,5 +1,13 @@
-"""Runs first stage of creating simulation - Evolution map creating.
+"""This module serves to run 1. stage (out of 3) of creating simulation -
+Evolution map creating.
 
+The task is to rake the sand on the entire Zen garden. Character always starts
+at the edge of the garden and leaves straight shaping path until it meets
+another edge or obstacle. On the edge, character can walk as he pleases.
+If it comes to an obstacle - wall or raked sand - he has to turn around,
+if he is not able to, raking is over.
+
+Function hierarchy:
 create_maps                         - main function
     create_walls                    - creates walls from query into file
     create_terrain                  - creates terrain from walls into file

@@ -1,3 +1,11 @@
+"""This module serves to visualize the outcome of all A.I. modules.
+
+It creates a gif file that shows all stages of simulation. (evolution.py,
+pathfinding.py, forward_chain.py).
+
+TODO: functions
+"""
+
 import json
 import pickle
 from functools import partial

@@ -1,5 +1,13 @@
-"""Runs second stage of creating simulation - Pathfinding.
+"""This module serves to run 2. stage (out of 3) of creating simulation -
+Pathfinding.
 
+Finds the shortest path to visit all nodes. First node to visit is the home
+node for which A* algorithm is used. Then, we run Dijkstra's algorithm for each
+point node to find the shortest distances to all other point nodes.
+To find the shortest path between all blue nodes we can use either greedy
+Naive permutation or Held-Karp algorithm which is alot faster.
+
+Function hierarchy:
 find_shortest_path                  - main function
     _validate_and_set_input_pars    - sets parameters
     _find_shortest_distances        - gets shortest distances between points
@@ -24,18 +32,34 @@ from typing import Any, Dict, FrozenSet, List, Tuple
 
 
 class MovementError(Exception):
-    pass
+    """Exception for movement type: only "M" and "D" is allowed."""
 
 
-class SubsetSizeError(Exception):
-    pass
+class PointsAmountError(Exception):
+    """Exception for points to visit amount: cannot be a negative number."""
 
 
 class AlgorithmError(Exception):
-    pass
+    """Exception for algorithm choice: only "NP" and "HK" is allowed."""
 
 
 class Node:
+    """Represents discrete coordinate position on the 2D map.
+
+    This class is being used in Map class. Map is composed of Nodes that
+    represent the space of the map.
+
+    Attributes:
+        pos (Tuple[int, int]): current position on the map
+        terr (int): terrain of current position
+        parent (Tuple[int, int]): parent position - neighbor position from
+            which we moved to current position
+        dist (int): distance to get to current position
+        g (int): heuristic variable for A* algorithm
+            (distance between start and next_node)
+        h (int): heuristic variable for A* algorithm
+            (distance between destination and next_node)
+    """
 
     __slots__ = ("pos", "terr", "parent", "dist", "g", "h")
 
@@ -56,18 +80,43 @@ class Node:
 
 
 class Map:
+    """Represents 2D map.
+
+    This is the main data structure for navigating in the map. Map is composed
+    of nodes that represent the space of the map. They are formed in another
+    class Node. Other attributes represent properties of the map.
+
+    Attributes:
+        fname (str): name of the file to load
+        height (int): represents height size (amount of x coordinate)
+        width (int): represents width size (amount of y coordinate)
+        properties (Dict[str, Any]): represents special positions
+            (points to visit, starting point, home)
+        nodes (Dict[Tuple[int, int], Node]): Properties of certain position.
+            Properties are represented with Node.
+
+    Methods:
+        load_map(fname: str): loads propertied map from the text file and
+            sets up the attributes
+    """
 
     __slots__ = ("fname", "width", "height", "properties", "nodes", "h")
 
-    def __init__(self, fname) -> None:
+    def __init__(self, fname: str) -> None:
         self.fname = ""  # type: str
-        self.width = 0  # type: int
         self.height = 0  # type: int
+        self.width = 0  # type: int
         self.properties = {}  # type: Dict[str, Any]
         self.nodes = {}  # type: Dict[Tuple[int, int], Node]
         self.load_map(fname)
 
-    def load_map(self, fname) -> None:
+    def load_map(self, fname: str) -> None:
+        """Loads a map and initializes instance's attributes with it.
+
+        Args:
+            fname (str): name of the file that is going to be loaded
+        """
+
         properties = {
             "points": [],
             "home": 0,
@@ -102,11 +151,11 @@ class Map:
             self.properties = properties
             self.nodes = nodes
 
-    def __getitem__(self, pos):
+    def __getitem__(self, pos: Tuple[int, int]):
         assert len(pos) == 2, "Coordinate must have two values."
         if not (0 <= pos[0] < self.height and 0 <= pos[1] < self.width):
             return None  # position out of bounds of the map
-        return self.nodes[pos]
+        return self.nodes[pos]  # Node
 
 
 def find_shortest_path(
@@ -159,7 +208,7 @@ def find_shortest_path(
         print(err)
     except MovementError as err:
         print(err)
-    except SubsetSizeError as err:
+    except PointsAmountError as err:
         print(err)
 
 
@@ -189,8 +238,8 @@ def _validate_and_set_input_pars(
             Options: "NP", "HK" (Naive Permutations or Held Karp)
 
     Raises:
-        MovementError: movement_type is not "M" or "N"
-        SubsetSizeError: visit_points_amount is negative number
+        MovementError: movement_type is not "M" or "D"
+        PointsAmountError: visit_points_amount is negative number
         AlgorithmError: wrong algorithm abbreviation string (NP or HK only!)
 
     Returns:
@@ -212,7 +261,7 @@ def _validate_and_set_input_pars(
     if not visit_points_amount or visit_points_amount > len(map_points):
         visit_points_amount = len(map_points)
     if visit_points_amount < 0:
-        raise SubsetSizeError("Invalid subset size!")
+        raise PointsAmountError("Invalid subset size!")
 
     # validate algorithm
     if algorithm not in ("NP", "HK"):
