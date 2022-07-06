@@ -1,6 +1,7 @@
 import os
 from glob import glob
 
+import pandas
 import discord
 from discord.ext import commands
 
