@@ -46,7 +46,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
     ):
         loop = loop or asyncio.get_event_loop()
 
-        to_run = functools.partial(ytdl.extract_info, url=search)
+        to_run = functools.partial(
+            ytdl.extract_info, url=search, download=False
+        )
         data = await loop.run_in_executor(None, to_run)
 
         if "entries" in data:
@@ -73,7 +75,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
 
         to_run = functools.partial(
-            ytdl.extract_info, url="ytsearch10: " + search
+            ytdl.extract_info, url="ytsearch10: " + search, download=False
         )
         data = await loop.run_in_executor(None, to_run)
 
@@ -87,7 +89,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
         requester = data["requester"]
 
-        to_run = functools.partial(ytdl.extract_info, url=data["webpage_url"])
+        to_run = functools.partial(
+            ytdl.extract_info, url=data["webpage_url"], download=False
+        )
         data = await loop.run_in_executor(None, to_run)
 
         # set timestamp for last 5 seconds if set too high
