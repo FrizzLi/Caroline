@@ -3,7 +3,7 @@
 It creates a gif file that shows all stages of simulation. (evolution.py,
 pathfinding.py, forward_chain.py).
 
-TODO: functions
+
 """
 
 import json
@@ -287,8 +287,8 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
         rake_solved = load_pickle(fname, "_rake")
         paths_solved = load_pickle(fname, "_path")
         rule_solved = load_json(fname, "_rule")
-    except FileNotFoundError:
-        print("Invalid file name!")
+    except FileNotFoundError as err:
+        print(f"Invalid file name! ({err})")
         exit()
 
     # parameters
@@ -334,6 +334,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
         font,
         skip_rake,
     )
+
     get_map_coordinate = partial(
         get_center_circle, rects, step_half_size, circle_radius
     )
@@ -372,5 +373,5 @@ if __name__ == "__main__":
 
     create_gif(FNAME, SKIP_RAKE, CLIMB)
 
-# TODO: linters apply.. but opt first
-# TODO: opt the args, visualize color better maybe, speed
+# TODO: opt, lint, improve color maybe, speed (pars like this!)
+# TODO: functions (module docstring)

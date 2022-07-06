@@ -50,18 +50,18 @@ class MyBot(commands.Bot):
         )
 
 
-try:
-    import keep_alive
-    keep_alive.keep_alive()
-    TOKEN = os.environ.get("GLADOS_TOKEN")
-    APP_ID = os.environ.get("GLADOS_ID")
-    BLACK_LIST = ()
-    PREFIX = "?"
-except ModuleNotFoundError:
-    TOKEN = os.environ.get("CAROLINE_TOKEN")
-    APP_ID = os.environ.get("CAROLINE_ID")
-    BLACK_LIST = ("music", "surveillance")
-    PREFIX = "."
+# try:
+    # import keep_alive
+    # keep_alive.keep_alive()
+TOKEN = os.environ.get("GLADOS_TOKEN")
+APP_ID = os.environ.get("GLADOS_ID")
+BLACK_LIST = ()
+PREFIX = "?"
+# except ModuleNotFoundError:
+#     TOKEN = os.environ.get("CAROLINE_TOKEN")
+#     APP_ID = os.environ.get("CAROLINE_ID")
+#     BLACK_LIST = ("music", "surveillance")
+#     PREFIX = "."
 
 bot = MyBot()
 bot.run(TOKEN)
