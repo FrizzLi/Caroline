@@ -33,6 +33,7 @@ import pickle
 import random
 import re
 import time
+import functools
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Tuple
 
@@ -88,7 +89,33 @@ def create_maps(
         print(err)
 
 
-def create_walls(fname: str, query: str, display: bool = False) -> None:
+def save_map(suffix_after: str):
+    """Decorator that ensures saving of the map into the file.
+
+    Args:
+        suffix_after (str): Suffix of fname.
+            Options: "_wal", "_ter", "_pro"
+    """
+
+    def decorator(function):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            # cant make decorator for load_map because it will call the
+            # function 2 times, could not do load_save_map because it returns
+            # results which we need to use as args in the function
+
+            # we also shouldnt be using results from the function, but just
+            # made this to show how decorators work!
+            save_args = function(*args, **kwargs)
+            _save_map(save_args[0] + suffix_after, *save_args[1:])
+        return wrapper
+    return decorator
+
+
+@save_map("_wal")
+def create_walls(
+    fname: str, query: str, display: bool = False
+) -> Tuple[str, List[List[str]], bool]:
     """Creates walled map from query and saves it into a file.
 
     Map is filled with "1" being walls and "0" being walkable space.
@@ -103,6 +130,13 @@ def create_walls(fname: str, query: str, display: bool = False) -> None:
 
     Raises:
         QueryError: query does not match regular expression
+
+    Returns:
+        Tuple[str, List[List[str]], bool]: (
+            name of the file that is going to be created
+            2D map that will be saved into file
+            option to print created walls into console
+        )
     """
 
     walled_map = []
@@ -122,11 +156,13 @@ def create_walls(fname: str, query: str, display: bool = False) -> None:
     if not walled_map:
         raise QueryError("Invalid query!")
 
-    walled_fname = fname + "_wal"
-    _save_map(walled_fname, walled_map, display)
+    return fname, walled_map, display
 
 
-def create_terrain(fname: str, max_runs: int, display: bool = False) -> str:
+@save_map("_ter")
+def create_terrain(
+    fname: str, max_runs: int, display: bool = False
+) -> Tuple[str, List[List[str]], bool]:
     """Creates terrained map from walled map and saves it into a file.
 
     Map is filled with "-1" being walls and walkable places are filled with
@@ -144,27 +180,26 @@ def create_terrain(fname: str, max_runs: int, display: bool = False) -> str:
         FileNotFoundError: file does not exist
 
     Returns:
-        str: message announcing whether the solution was found or not
+        Tuple[str, List[List[str]], bool]: (
+            name of the file that is going to be created
+            2D map that will be saved into file
+            option to print created walls into console
+        )
     """
 
     walled_map = load_map(fname, "_wal")
-    terrained_map, rake_paths, result_msg = _evolutionize(
-        walled_map, max_runs, display
-    )
-
+    terrained_map, rake_paths = _evolutionize(walled_map, max_runs, display)
     _save_solution(rake_paths, fname)
 
-    terrained_fname = fname + "_ter"
-    _save_map(terrained_fname, terrained_map, display)
-
-    return result_msg
+    return fname, terrained_map, display
 
 
+@save_map("_pro")
 def create_properties(
     fname: str,
     points_amount: int,
     display: bool = False,
-) -> None:
+) -> Tuple[str, List[List[str]], bool, str]:
     """Creates propertied map from terrained map and saves it into a file.
 
     Args:
@@ -176,13 +211,19 @@ def create_properties(
 
     Raises:
         FileNotFoundError: file does not exist
+
+    Returns:
+        Tuple[str, List[List[str]], bool]: (
+            name of the file that is going to be created
+            2D map that will be saved into file
+            option to print created walls into console
+        )
     """
 
     terrained_map = load_map(fname, "_ter")
     propertied_map = _generate_properties(terrained_map, points_amount)
 
-    propertied_fname = fname + "_pro"
-    _save_map(propertied_fname, propertied_map, display, "{:^5}")
+    return fname, propertied_map, display, "{:^5}"
 
 
 def _save_map(
@@ -254,7 +295,7 @@ def load_map(fname: str, suffix: str) -> List[List[str]]:
 
 def _evolutionize(
     map_2d: List[List[str]], max_runs: int, print_stats: bool = True
-) -> Tuple[List[List[str]], Dict[Tuple[int, int], int], str]:
+) -> Tuple[List[List[str]], Dict[Tuple[int, int], int]]:
     """Runs evolutionary algorithm on walled map attempting to fill it
     completely with terrain.
 
@@ -268,7 +309,6 @@ def _evolutionize(
         Tuple[List[List[str]], Dict[Tuple[int, int], int], str]: (
             2D map filled with terrain (wall being -1, unraked being -2)
             dict of ordered raking paths, keys - coordinates, vals - terrain
-            informational message about whether the solution was found
         )
     """
 
@@ -364,7 +404,7 @@ def _evolutionize(
 
     map_2d_filled = _fill_map(map_2d, fit_max_map)
 
-    return map_2d_filled, fit_max_path, result_msg
+    return map_2d_filled, fit_max_path
 
 
 def _rake_map(
