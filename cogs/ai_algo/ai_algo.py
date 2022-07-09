@@ -89,6 +89,6 @@ async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
 # TODO: Remake View
-# TODO: Apply GDoc + Final clean
+# TODO: Final clean
 # TODO: Clean commits (?)
 # TODO: Update AI repo

@@ -21,10 +21,10 @@ run_production                  - main function
     save_solution               - save the solution into file
 """
 
-import collections as col
 import json
 import random
 import re
+from collections import namedtuple
 from itertools import islice
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -91,7 +91,7 @@ def init_rules(fname_rules: str) -> List[Any]:
             acts - actions (message, add or remove fact from the set of facts)
     """
 
-    Rules = col.namedtuple("Rules", "name conds acts")
+    Rules = namedtuple("Rules", "name conds acts")
 
     # regexp for loading a rule - name, conds and acts, each in one line
     patterns = [

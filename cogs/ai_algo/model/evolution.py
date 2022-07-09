@@ -28,13 +28,13 @@ create_maps                         - main function
             free_position_finder    - finds free position for safe generation
 """
 
-import copy
+import functools
 import pickle
 import random
 import re
-import time
-import functools
+from copy import copy
 from pathlib import Path
+from time import time
 from typing import Any, Dict, Generator, List, Tuple
 
 CHROMOSOMES = 30
@@ -108,7 +108,9 @@ def save_map(suffix_after: str):
             # made this to show how decorators work!
             save_args = function(*args, **kwargs)
             _save_map(save_args[0] + suffix_after, *save_args[1:])
+
         return wrapper
+
     return decorator
 
 
@@ -339,20 +341,20 @@ def _evolutionize(
             chromosome = [num * random.choice([-1, 1]) for num in genes]
             population.append(chromosome)
 
-        start_time = time.time()
+        start_time = time()
         generation_times = []
 
         # loop over generations - evolution
         prev_max = 0
         mut_rate = MIN_MUT_RATE
         for i in range(GENERATIONS):  # generation - set of all chromosomes
-            generation_time = time.time()
+            generation_time = time()
 
             # evaluate all chromosomes and save the best one
             fit_vals, fit_max, fit_max_index = [], 0, 0
             for j in range(CHROMOSOMES):
                 map_tuple_filled, raking_paths = _rake_map(
-                    population[j], copy.copy(map_tuple), rows, cols
+                    population[j], copy(map_tuple), rows, cols
                 )
                 fit_val = _calculate_fitness(map_tuple_filled, to_rake_amount)
                 fit_vals.append(fit_val)
@@ -371,7 +373,7 @@ def _evolutionize(
             # found solution
             if fit_max == to_rake_amount:
                 found_solution = True
-                generation_times.append(time.time() - generation_time)
+                generation_times.append(time() - generation_time)
                 break
 
             # increase mutation rate each generation to prevent local maximum
@@ -389,11 +391,11 @@ def _evolutionize(
 
             population = children
             prev_max = fit_max
-            generation_times.append(time.time() - generation_time)
+            generation_times.append(time() - generation_time)
 
         # printing stats, solution and map
         if print_stats:
-            total = round(time.time() - start_time, 2)
+            total = round(time() - start_time, 2)
             avg = round(sum(generation_times) / len(generation_times), 2)
             chromo = " ".join(map(str, population[fit_max_index]))
             result_msg = f"Solution {'' if found_solution else 'not '}found!"
@@ -780,7 +782,7 @@ def _generate_properties(
                 reserved.add((i, j))
                 yield (i, j)
 
-    free = free_position_finder(map_2d)
+    free = free_position_finder(map_2d)  # closure
 
     first_i, first_j = next(free)
     start_i, start_j = next(free)
