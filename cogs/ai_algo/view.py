@@ -101,7 +101,7 @@ def get_center_circle(
 
 def draw_rectangles(draw, width, height, step_size, terrained_map):
     # draw window of empty rectangles and unpassable locations
-    # also save rectangle coordinate system
+    # also stores rectangle coordinate system
 
     rects = []  # type: List[List[Tuple[Tuple[int, int], Tuple[int, int]]]]
     for i, x in enumerate(range(0, width, step_size)):
@@ -135,13 +135,15 @@ def draw_raking(
     rake_solved,
     rake_frames,
     rects,
-    all_hue_values,
-    color_step,
-    saturation,
-    luminance,
-    font,
+    map_colors_fonts,
     skip_rake,
 ):
+    all_hue_values = map_colors_fonts['all_hue_values']
+    color_step = map_colors_fonts['color_step']
+    saturation = map_colors_fonts['saturation']
+    luminance = map_colors_fonts['luminance']
+    font = map_colors_fonts['font']
+
     for rake_step in rake_solved.items():
         frame = rake_frames[-1].copy()
         draw = ImageDraw.Draw(frame)
@@ -158,7 +160,7 @@ def draw_raking(
         frames[-1] = rake_frames[-1]
     else:
         frames.extend(rake_frames)
-    return rake_frames, frame, draw
+    return frame, draw
 
 
 def draw_properties(draw, get_map_coordinate, properties):
@@ -174,18 +176,13 @@ def draw_properties(draw, get_map_coordinate, properties):
 def draw_solution(
     rule_solved,
     paths_solved,
-    properties,
+    map_size_props,
     frame,
     frames,
-    step_half_size,
     get_map_coordinate,
     terrained_map,
     rects,
-    small_font_bold,
-    small_font,
-    font,
-    width,
-    height,
+    map_colors_fonts,
     row,
     climb,
 ):
@@ -278,9 +275,6 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             with abs(current terrain number - next terrain number)
     """
 
-    # TODO?: visualization only works on rake_solved maps
-    # TODO?: we must specify climb bool value
-    # TODO?: remove so many args in functions.., understand the code and opt.
     try:
         map_props = path.Map(fname)
         terrained_map = evo.load_map(fname, "_ter")
@@ -295,44 +289,40 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
     step_size = 50  # should not be changed, other sizes are not scalled
     info_space = 350
 
-    # get sizes of window, drawings, text, circles
-    height = map_props.height * step_size
-    width = map_props.width * step_size
-    properties = map_props.properties
-    map_width = width + info_space
-    map_height = height + 1
-    step_half_size = int(step_size / 2)
-    circle_radius = int(step_size / 5)
+    map_size_props = dict(
+        step_size = step_size,
+        height = map_props.height * step_size,
+        width = map_props.width * step_size,
+        properties = map_props.properties,
+        step_half_size = int(step_size / 2),
+        circle_radius = int(step_size / 5)
+    )
 
-    # get raking colors, sat/lum
-    all_hue_values = 180
     last_rake_value = tuple(rake_solved.values())[-1]
-    color_step = int(all_hue_values / last_rake_value)
-    saturation, luminance = 100, 50
+    all_hue_values = 180
+    map_colors_fonts = dict(
+        all_hue_values = all_hue_values,
+        color_step = int(all_hue_values / last_rake_value),
+        saturation = 100,
+        luminance = 50,
+        font = ImageFont.truetype("arial", map_size_props["step_half_size"]),
+        small_font = ImageFont.truetype("arial", int(step_half_size / 2)),
+        small_font_bold = ImageFont.truetype("arialbd", int(step_half_size / 2))
+    )
 
-    # create first image and font
+    # preparing and drawing first image
+    map_width = map_props['width'] + info_space
+    map_height = map_props['height'] + 1
     image = Image.new(mode="RGB", size=(map_width, map_height), color="white")
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("arial", step_half_size)
-    small_font = ImageFont.truetype("arial", int(step_half_size / 2))
-    small_font_bold = ImageFont.truetype("arialbd", int(step_half_size / 2))
-
     frames = [image]
     rake_frames = [image]
 
     rects = draw_rectangles(draw, width, height, step_size, terrained_map)
-    row = draw_facts_text_explanation(draw, width, small_font_bold)
-    rake_frames, frame, draw = draw_raking(
-        frames,
-        rake_solved,
-        rake_frames,
-        rects,
-        all_hue_values,
-        color_step,
-        saturation,
-        luminance,
-        font,
-        skip_rake,
+    row_num = draw_facts_text_explanation(draw, width, small_font_bold)
+    
+    frame, draw = draw_raking(
+        frames, rake_solved, rake_frames, rects, map_colors_fonts, skip_rake
     )
 
     get_map_coordinate = partial(
@@ -343,19 +333,14 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
     draw_solution(
         rule_solved,
         paths_solved,
-        properties,
+        map_size_props,
         frame,
         frames,
-        step_half_size,
         get_map_coordinate,
         terrained_map,
         rects,
-        small_font_bold,
-        small_font,
-        font,
-        width,
-        height,
-        row,
+        map_colors_fonts,
+        row_num,
         climb,
     )
 
@@ -373,5 +358,8 @@ if __name__ == "__main__":
 
     create_gif(FNAME, SKIP_RAKE, CLIMB)
 
+# TODO?: visualization only works on rake_solved maps
+# TODO?: we must specify climb bool value
+# TODO?: remove so many args in functions.., understand the code and opt.
 # TODO: opt, lint, improve color maybe, speed (pars like this!)
 # TODO: functions (module docstring)
