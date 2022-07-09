@@ -99,10 +99,57 @@ def get_center_circle(
     return square_edge1, square_edge2
 
 
-def draw_rectangles(draw, width, height, step_size, terrained_map):
+def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
+    """Creates gif animation that visualizes the solution.
+
+    Args:
+        fname (str): name of the file to load
+        skip_rake (bool): skips the raking part
+        climb (bool): Climbing distance approach. If True, distance is measured
+            with abs(current terrain number - next terrain number)
+    """
+
+    try:
+        map_props = path.Map(fname)
+        terrained_map = evo.load_map(fname, "_ter")
+        rake_solved = load_pickle(fname, "_rake")
+        paths_solved = load_pickle(fname, "_path")
+        rule_solved = load_json(fname, "_rule")
+    except FileNotFoundError as err:
+        print(f"Invalid file name! ({err})")
+        exit()
+
+    # parameters
+    step_size = 50  # should not be changed, other sizes are not scalled
+    info_space = 350
+
+    # get sizes of window, drawings, text, circles
+    height = map_props.height * step_size
+    width = map_props.width * step_size
+    properties = map_props.properties
+    map_width = width + info_space
+    map_height = height + 1
+    step_half_size = int(step_size / 2)
+    circle_radius = int(step_size / 5)
+
+    # get raking colors, sat/lum
+    all_hue_values = 180
+    last_rake_value = tuple(rake_solved.values())[-1]
+    color_step = int(all_hue_values / last_rake_value)
+    saturation, luminance = 100, 50
+
+    # create first image and font
+    image = Image.new(mode="RGB", size=(map_width, map_height), color="white")
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype("arial", step_half_size)
+    small_font = ImageFont.truetype("arial", int(step_half_size / 2))
+    small_font_bold = ImageFont.truetype("arialbd", int(step_half_size / 2))
+
+    frames = [image]
+    rake_frames = [image]
+
     # draw window of empty rectangles and unpassable locations
     # also save rectangle coordinate system
-
     rects = []  # type: List[List[Tuple[Tuple[int, int], Tuple[int, int]]]]
     for i, x in enumerate(range(0, width, step_size)):
         rects.append([])
@@ -116,10 +163,7 @@ def draw_rectangles(draw, width, height, step_size, terrained_map):
             else:
                 draw.rectangle(rect, outline="black")
 
-    return rects
-
-
-def draw_facts_text_explanation(draw, width, small_font_bold):
+    # draw facts text explanation
     row = 1
     text_h = row * 15
     text_w = width + 25
@@ -127,21 +171,8 @@ def draw_facts_text_explanation(draw, width, small_font_bold):
     draw.text((text_w, text_h), text, fill="black", font=small_font_bold)
     row += 1
 
-    return row
-
-
-def draw_raking(
-    frames,
-    rake_solved,
-    rake_frames,
-    rects,
-    all_hue_values,
-    color_step,
-    saturation,
-    luminance,
-    font,
-    skip_rake,
-):
+    # draw raking solution
+    rake_frames = [image]
     for rake_step in rake_solved.items():
         frame = rake_frames[-1].copy()
         draw = ImageDraw.Draw(frame)
@@ -154,14 +185,16 @@ def draw_raking(
         draw.rectangle(rects[y][x], fill=color, outline="black")
         draw.text(rect_start_pos, str(order_num), fill="black", font=font)
         rake_frames.append(frame)
+
     if skip_rake:
         frames[-1] = rake_frames[-1]
     else:
         frames.extend(rake_frames)
-    return rake_frames, frame, draw
 
-
-def draw_properties(draw, get_map_coordinate, properties):
+    # draw properties
+    get_map_coordinate = partial(
+        get_center_circle, rects, step_half_size, circle_radius
+    )
     start_coor = get_map_coordinate(properties["start"])
     base_coor = get_map_coordinate(properties["home"])
     draw.ellipse(start_coor, fill="white", outline="white")
@@ -170,25 +203,7 @@ def draw_properties(draw, get_map_coordinate, properties):
         point_coor = get_map_coordinate(point)
         draw.ellipse(point_coor, fill="blue", outline="blue")
 
-
-def draw_solution(
-    rule_solved,
-    paths_solved,
-    properties,
-    frame,
-    frames,
-    step_half_size,
-    get_map_coordinate,
-    terrained_map,
-    rects,
-    small_font_bold,
-    small_font,
-    font,
-    width,
-    height,
-    row,
-    climb,
-):
+    # draw path solution
     x2, y2 = None, None
     fact_iterator = iter(rule_solved.items())
     fact_found = None
@@ -267,98 +282,6 @@ def draw_solution(
     draw.text((text_w, text_h), text, fill="black", font=small_font_bold)
     frames.append(saving_frame)
 
-
-def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
-    """Creates gif animation that visualizes the solution.
-
-    Args:
-        fname (str): name of the file to load
-        skip_rake (bool): skips the raking part
-        climb (bool): Climbing distance approach. If True, distance is measured
-            with abs(current terrain number - next terrain number)
-    """
-
-    # TODO?: visualization only works on rake_solved maps
-    # TODO?: we must specify climb bool value
-    # TODO?: remove so many args in functions.., understand the code and opt.
-    try:
-        map_props = path.Map(fname)
-        terrained_map = evo.load_map(fname, "_ter")
-        rake_solved = load_pickle(fname, "_rake")
-        paths_solved = load_pickle(fname, "_path")
-        rule_solved = load_json(fname, "_rule")
-    except FileNotFoundError as err:
-        print(f"Invalid file name! ({err})")
-        exit()
-
-    # parameters
-    step_size = 50  # should not be changed, other sizes are not scalled
-    info_space = 350
-
-    # get sizes of window, drawings, text, circles
-    height = map_props.height * step_size
-    width = map_props.width * step_size
-    properties = map_props.properties
-    map_width = width + info_space
-    map_height = height + 1
-    step_half_size = int(step_size / 2)
-    circle_radius = int(step_size / 5)
-
-    # get raking colors, sat/lum
-    all_hue_values = 180
-    last_rake_value = tuple(rake_solved.values())[-1]
-    color_step = int(all_hue_values / last_rake_value)
-    saturation, luminance = 100, 50
-
-    # create first image and font
-    image = Image.new(mode="RGB", size=(map_width, map_height), color="white")
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("arial", step_half_size)
-    small_font = ImageFont.truetype("arial", int(step_half_size / 2))
-    small_font_bold = ImageFont.truetype("arialbd", int(step_half_size / 2))
-
-    frames = [image]
-    rake_frames = [image]
-
-    rects = draw_rectangles(draw, width, height, step_size, terrained_map)
-    row = draw_facts_text_explanation(draw, width, small_font_bold)
-    rake_frames, frame, draw = draw_raking(
-        frames,
-        rake_solved,
-        rake_frames,
-        rects,
-        all_hue_values,
-        color_step,
-        saturation,
-        luminance,
-        font,
-        skip_rake,
-    )
-
-    get_map_coordinate = partial(
-        get_center_circle, rects, step_half_size, circle_radius
-    )
-    draw_properties(draw, get_map_coordinate, properties)
-
-    draw_solution(
-        rule_solved,
-        paths_solved,
-        properties,
-        frame,
-        frames,
-        step_half_size,
-        get_map_coordinate,
-        terrained_map,
-        rects,
-        small_font_bold,
-        small_font,
-        font,
-        width,
-        height,
-        row,
-        climb,
-    )
-
     # make last frame last longer
     frames.extend([frames[-1]] * 30)
 
@@ -373,5 +296,7 @@ if __name__ == "__main__":
 
     create_gif(FNAME, SKIP_RAKE, CLIMB)
 
-# TODO: opt, lint, improve color maybe, speed (pars like this!)
-# TODO: functions (module docstring)
+# TODO?: visualization only works on rake_solved maps
+# TODO?: we must specify climb bool value
+# TODO: understand the code and opt., lint
+# TODO: improve color maybe, speed (pars like this!)
