@@ -250,7 +250,9 @@ good-names=i,
            f,  # a_star
            g,
            df,  # dataframe (pandas)
-           vc  # voice
+           vc,  # voice
+           x,   # coordinate system! (view)
+           y
            # CTRL+SHIFT+F "pylint:" for specific lines
 
 # Good variable names regexes, separated by a comma. If names match any regex,
