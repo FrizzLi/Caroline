@@ -2,8 +2,6 @@
 
 It creates a gif file that shows all stages of simulation. (evolution.py,
 pathfinding.py, forward_chain.py).
-
-
 """
 
 import json
@@ -119,6 +117,9 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
         print(f"Invalid file name! ({err})")
         exit()
 
+    # helping vars
+    last_rake_value = tuple(rake_solved.values())[-1]
+
     # parameters
     step_size = 50  # should not be changed, other sizes are not scalled
     info_space = 350
@@ -132,24 +133,22 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
     step_half_size = int(step_size / 2)
     circle_radius = int(step_size / 5)
 
-    # get raking colors, sat/lum
+    # get raking colors, sat/lum, font
     all_hue_values = 180
-    last_rake_value = tuple(rake_solved.values())[-1]
     color_step = int(all_hue_values / last_rake_value)
-    saturation, luminance = 100, 50
-
-    # create first image and font
-    image = Image.new(mode="RGB", size=(map_width, map_height), color="white")
-    draw = ImageDraw.Draw(image)
+    saturation = 100
+    luminance = 50
     font = ImageFont.truetype("arial", step_half_size)
     small_font = ImageFont.truetype("arial", int(step_half_size / 2))
     small_font_bold = ImageFont.truetype("arialbd", int(step_half_size / 2))
 
+    # create first image
+    image = Image.new(mode="RGB", size=(map_width, map_height), color="white")
+    draw = ImageDraw.Draw(image)
     frames = [image]
-    rake_frames = [image]
 
     # draw window of empty rectangles and unpassable locations
-    # also save rectangle coordinate system
+    # store rectangled size coordinate system
     rects = []  # type: List[List[Tuple[Tuple[int, int], Tuple[int, int]]]]
     for i, x in enumerate(range(0, width, step_size)):
         rects.append([])
@@ -177,15 +176,14 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
         frame = rake_frames[-1].copy()
         draw = ImageDraw.Draw(frame)
         x, y = rake_step[0]
-        rect_start_pos = rects[y][x][0]
         order_num = rake_step[1]
         hue = all_hue_values - (order_num * color_step)
         color = f"hsl({hue}, {saturation}%, {luminance}%)"
 
+        rect_start_pos = rects[y][x][0]
         draw.rectangle(rects[y][x], fill=color, outline="black")
         draw.text(rect_start_pos, str(order_num), fill="black", font=font)
         rake_frames.append(frame)
-
     if skip_rake:
         frames[-1] = rake_frames[-1]
     else:
@@ -196,15 +194,15 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
         get_center_circle, rects, step_half_size, circle_radius
     )
     start_coor = get_map_coordinate(properties["start"])
-    base_coor = get_map_coordinate(properties["home"])
+    home_coor = get_map_coordinate(properties["home"])
     draw.ellipse(start_coor, fill="white", outline="white")
-    draw.ellipse(base_coor, fill="black", outline="black")
+    draw.ellipse(home_coor, fill="black", outline="black")
     for point in properties["points"]:
         point_coor = get_map_coordinate(point)
         draw.ellipse(point_coor, fill="blue", outline="blue")
 
     # draw path solution
-    x2, y2 = None, None
+    x_head, y_head = None, None
     fact_iterator = iter(rule_solved.items())
     fact_found = None
     deductions = []  # type: List[str]
@@ -214,8 +212,8 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
 
     for i, path_solved in enumerate(paths_solved, 1):
         # remember last position from previous path
-        if x2 is not None:
-            path_solved.insert(0, (x2, y2))
+        if x_head is not None:
+            path_solved.insert(0, (x_head, y_head))
         else:
             path_solved.insert(0, properties["start"])
 
@@ -225,23 +223,28 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             draw = ImageDraw.Draw(saving_frame)
 
             # draw thin lines that will be saved
-            x1, y1 = path_solved[j]
-            x2, y2 = next_step
-            center1 = tuple((c + step_half_size for c in rects[y1][x1][0]))
-            center2 = tuple((c + step_half_size for c in rects[y2][x2][0]))
-            draw.line((center1, center2), fill="white", width=4)
+            x_tail, y_tail = path_solved[j]
+            x_head, y_head = next_step
+            rect_tail = rects[y_tail][x_tail][0]
+            rect_head = rects[y_head][x_head][0]
+            center_tail = tuple((c + step_half_size for c in rect_tail))
+            center_head = tuple((c + step_half_size for c in rect_head))
+            draw.line((center_tail, center_head), fill="white", width=4)
             saved_frames.append(saving_frame)
 
             # draw circle and last movement
             next_step_coor = get_map_coordinate(next_step)
             showing_frame = saving_frame.copy()
             draw_head = ImageDraw.Draw(showing_frame)
-            draw_head.line((center1, center2), fill="black", width=10)
+            draw_head.line((center_tail, center_head), fill="black", width=10)
             draw_head.ellipse(next_step_coor, fill="black", outline="black")
-            prev_terr = int(terrained_map[x1][y1])
-            next_terr = int(terrained_map[x2][y2])
+            prev_terr = int(terrained_map[x_tail][y_tail])
+            next_terr = int(terrained_map[x_head][y_head])
 
             # draw distance
+            # need parameter climb to draw distance because we are using
+            # get_next_dist function that is in the path module. It would be a
+            # hassle to compute the distances and putting them to the results
             next_dist = path.get_next_dist(prev_terr, next_terr, climb)
             point_dist += next_dist
             total_dist += next_dist
@@ -253,7 +256,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             )
             frames.append(showing_frame)
 
-        # draw point ordering, distances, facts
+        # draw visited points, distances, facts
         if i > 1:  # we have to skip HOME
             fact_found, deductions = next(fact_iterator)
         text_h = row * 15
@@ -271,18 +274,18 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             draw.text((text_w, text_h), text, fill="black", font=small_font)
             row += 1
 
-        # draw path order in map
-        center2 = center2[0] + 10, center2[1]
-        draw.text(center2, str(i), fill="white", font=font)
+        # draw order number of points in map
+        center_head = center_head[0] + 10, center_head[1]
+        draw.text(center_head, str(i), fill="white", font=font)
 
-    # need to draw again cuz last frame is without total distance
+    # draw total distance again for the ending frame that has no tail or head
     text_w = width + 25
     text_h = height - 25
     text = f"Total distance: {total_dist}"
     draw.text((text_w, text_h), text, fill="black", font=small_font_bold)
-    frames.append(saving_frame)
 
-    # make last frame last longer
+    # ending frame, make it last longer
+    frames.append(saving_frame)
     frames.extend([frames[-1]] * 30)
 
     save_gif(fname, frames)
@@ -296,7 +299,5 @@ if __name__ == "__main__":
 
     create_gif(FNAME, SKIP_RAKE, CLIMB)
 
-# TODO?: visualization only works on rake_solved maps
-# TODO?: we must specify climb bool value
-# TODO: understand the code and opt., lint
 # TODO: improve color maybe, speed (pars like this!)
+# TODO: more docs to write, add functions like elsewhere
