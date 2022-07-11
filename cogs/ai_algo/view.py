@@ -2,6 +2,13 @@
 
 It creates a gif file that shows all stages of simulation. (evolution.py,
 pathfinding.py, forward_chain.py).
+
+Function hierarchy:
+create_gif
+    load_pickle
+    load_json
+    save_gif
+    get_center_circle
 """
 
 import json
@@ -67,7 +74,7 @@ def save_gif(fname: str, frames: List[Any]) -> None:
         save_all=True,
         duration=200,
         loop=0,
-    )  # ? why list for frames?, type?
+    )
 
 
 def get_center_circle(
@@ -298,6 +305,3 @@ if __name__ == "__main__":
     CLIMB = True
 
     create_gif(FNAME, SKIP_RAKE, CLIMB)
-
-# TODO: improve color maybe, speed (pars like this!)
-# TODO: more docs to write, add functions like elsewhere
