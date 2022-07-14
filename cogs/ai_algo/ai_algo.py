@@ -3,10 +3,10 @@ from pathlib import Path
 from discord import File
 from discord.ext import commands
 
-import cogs.ai_algo.stage_1_evolution as evo
-import cogs.ai_algo.stage_2_forward_chain as chain
-import cogs.ai_algo.stage_3_pathfinding as path
-import cogs.ai_algo.view as view
+from cogs.ai_algo import stage_1_evolution
+from cogs.ai_algo import stage_2_forward_chain
+from cogs.ai_algo import stage_3_pathfinding
+from cogs.ai_algo import view
 
 
 class AiAlgo(commands.Cog):
@@ -38,7 +38,7 @@ class AiAlgo(commands.Cog):
     view_skip_rake = False
 
     async def send_file_message(self, ctx):
-        source_dir = Path(__file__).parents[1]
+        source_dir = Path(__file__).parents[0]
         gif_path = Path(f"{source_dir}/data/{self.shared_fname}.gif")
         with open(gif_path, "rb") as file:
             await ctx.message.channel.send(file=File(file))
@@ -77,9 +77,9 @@ class AiAlgo(commands.Cog):
             climb=self.shared_climb,
         )
 
-        evo.create_maps(**evo_parameters)
-        path.find_shortest_path(**path_parameters)
-        chain.run_production(**chain_parameters)
+        stage_1_evolution.create_maps(**evo_parameters)
+        stage_2_forward_chain.find_shortest_path(**path_parameters)
+        stage_3_pathfinding.run_production(**chain_parameters)
         view.create_gif(**view_parameters)
 
         self.send_file_message(ctx)
