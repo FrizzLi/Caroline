@@ -19,8 +19,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from model import evolution as evo
-from model import pathfinding as path
+import stage_1_evolution as evo
+import stage_2_pathfinding as path
 
 
 def load_pickle(fname: str, suffix: str) -> Any:

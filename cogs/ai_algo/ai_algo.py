@@ -3,9 +3,9 @@ from pathlib import Path
 from discord import File
 from discord.ext import commands
 
-import cogs.ai_algo.model.evolution as evo
-import cogs.ai_algo.model.forward_chain as chain
-import cogs.ai_algo.model.pathfinding as path
+import cogs.ai_algo.stage_1_evolution as evo
+import cogs.ai_algo.stage_2_forward_chain as chain
+import cogs.ai_algo.stage_3_pathfinding as path
 import cogs.ai_algo.view as view
 
 
@@ -88,7 +88,6 @@ class AiAlgo(commands.Cog):
 async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
-# TODO: Remake View
 # TODO: Final clean
 # TODO: Clean commits (?)
 # TODO: Update AI repo
