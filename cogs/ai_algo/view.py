@@ -1,14 +1,14 @@
-"""This module serves to visualize the outcome of all A.I. modules.
+"""This module serves to create a visualizing simulation of all used stages.
 
-It creates a gif file that shows all stages of simulation. (evolution.py,
-pathfinding.py, forward_chain.py).
+It creates a gif file that shows the outcome of all the AI algorithms.
+(stage_1_evolution.py, stage_2_pathfinding.py, stage_3_forward_chain.py).
 
 Function hierarchy:
 create_gif
-    load_pickle
-    load_json
-    save_gif
-    get_center_circle
+    _load_pickle
+    _load_json
+    _save_gif
+    _get_center_circle
 """
 
 import json
@@ -23,8 +23,10 @@ import stage_1_evolution as evo
 import stage_2_pathfinding as path
 
 
-def load_pickle(fname: str, suffix: str) -> Any:
-    """Loads a pickle file.
+def _load_pickle(fname: str, suffix: str) -> Any:
+    """Loads a pickle file that has the solution. (rakes, paths)
+
+    The solution is being loaded from /data/solutions directory.
 
     Args:
         fname (str): name of the file to load
@@ -40,8 +42,10 @@ def load_pickle(fname: str, suffix: str) -> Any:
         return pickle.loads(handle.read())
 
 
-def load_json(fname: str, suffix: str) -> Dict[str, Any]:
-    """Loads a json file.
+def _load_json(fname: str, suffix: str) -> Dict[str, Any]:
+    """Loads a json file that has the solution. (facts)
+
+    The solution is being loaded from /data/solutions directory.
 
     Args:
         fname (str): name of the file to load
@@ -57,11 +61,13 @@ def load_json(fname: str, suffix: str) -> Dict[str, Any]:
         return json.load(file)
 
 
-def save_gif(fname: str, frames: List[Any]) -> None:
+def _save_gif(fname: str, frames: List[Any]) -> None:
     """Saves all frames into gif file.
 
+    Saves the gif animation into /data directory.
+
     Args:
-        fname (str): name of the file to load
+        fname (str): name of the file that is going to be created
         frames (Image]): drawn images
     """
 
@@ -77,11 +83,11 @@ def save_gif(fname: str, frames: List[Any]) -> None:
     )
 
 
-def get_center_circle(
+def _get_center_circle(
     rect_pos: List[List[Tuple[Tuple[int, int], Tuple[int, int]]]],
     step_half_size: int,
     circle_radius: int,
-    coor: Tuple[int, int],
+    point_coordinate: Tuple[int, int],
 ) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
     """Gets coordinates for drawing circle at the center of rectangle.
 
@@ -90,13 +96,14 @@ def get_center_circle(
             rectangle coordinate system
         step_half_size (int): half size of a rectangle step
         circle_radius (int): size of circle
-        coor (Tuple[int, int]): 2D coordinate from array
+        point_coordinate (Tuple[int, int]): coordinate of a point that is used
+            as an index for rect_pos
 
     Returns:
         Tuple[Tuple[int, int], Tuple[int, int]]: box coordinates of circle
     """
 
-    i, j = coor
+    i, j = point_coordinate
     center = tuple((c + step_half_size for c in rect_pos[j][i][0]))
     square_edge1 = tuple((start - circle_radius for start in center))
     square_edge2 = tuple((end + circle_radius for end in center))
@@ -117,15 +124,12 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
     try:
         map_props = path.Map(fname)
         terrained_map = evo.load_map(fname, "_ter")
-        rake_solved = load_pickle(fname, "_rake")
-        paths_solved = load_pickle(fname, "_path")
-        rule_solved = load_json(fname, "_rule")
+        rake_solved = _load_pickle(fname, "_rake")
+        paths_solved = _load_pickle(fname, "_path")
+        rule_solved = _load_json(fname, "_rule")
     except FileNotFoundError as err:
         print(f"Invalid file name! ({err})")
         exit()
-
-    # helping vars
-    last_rake_value = tuple(rake_solved.values())[-1]
 
     # parameters
     step_size = 50  # should not be changed, other sizes are not scalled
@@ -142,6 +146,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
 
     # get raking colors, sat/lum, font
     all_hue_values = 180
+    last_rake_value = tuple(rake_solved.values())[-1]
     color_step = int(all_hue_values / last_rake_value)
     saturation = 100
     luminance = 50
@@ -198,15 +203,15 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
 
     # draw properties
     get_map_coordinate = partial(
-        get_center_circle, rects, step_half_size, circle_radius
+        _get_center_circle, rects, step_half_size, circle_radius
     )
     start_coor = get_map_coordinate(properties["start"])
     home_coor = get_map_coordinate(properties["home"])
     draw.ellipse(start_coor, fill="white", outline="white")
     draw.ellipse(home_coor, fill="black", outline="black")
     for point in properties["points"]:
-        point_coor = get_map_coordinate(point)
-        draw.ellipse(point_coor, fill="blue", outline="blue")
+        point_coordinate = get_map_coordinate(point)
+        draw.ellipse(point_coordinate, fill="blue", outline="blue")
 
     # draw path solution
     x_head, y_head = None, None
@@ -218,7 +223,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
     saved_frames = [frame]
 
     for i, path_solved in enumerate(paths_solved, 1):
-        # remember last position from previous path
+        # remember last position from the previous path
         if x_head is not None:
             path_solved.insert(0, (x_head, y_head))
         else:
@@ -229,7 +234,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             saving_frame = saved_frames[-1].copy()
             draw = ImageDraw.Draw(saving_frame)
 
-            # draw thin lines that will be saved
+            # draw thin lines that will persist
             x_tail, y_tail = path_solved[j]
             x_head, y_head = next_step
             rect_tail = rects[y_tail][x_tail][0]
@@ -251,7 +256,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             # draw distance
             # need parameter climb to draw distance because we are using
             # get_next_dist function that is in the path module. It would be a
-            # hassle to compute the distances and putting them to the results
+            # hassle to compute the distances and putting them to results
             next_dist = path.get_next_dist(prev_terr, next_terr, climb)
             point_dist += next_dist
             total_dist += next_dist
@@ -263,7 +268,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             )
             frames.append(showing_frame)
 
-        # draw visited points, distances, facts
+        # draw visited points, distances and facts
         if i > 1:  # we have to skip HOME
             fact_found, deductions = next(fact_iterator)
         text_h = row * 15
@@ -281,7 +286,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             draw.text((text_w, text_h), text, fill="black", font=small_font)
             row += 1
 
-        # draw order number of points in map
+        # draw visiting order number of points in the map
         center_head = center_head[0] + 10, center_head[1]
         draw.text(center_head, str(i), fill="white", font=font)
 
@@ -295,7 +300,7 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
     frames.append(saving_frame)
     frames.extend([frames[-1]] * 30)
 
-    save_gif(fname, frames)
+    _save_gif(fname, frames)
 
 
 if __name__ == "__main__":
@@ -304,4 +309,10 @@ if __name__ == "__main__":
     SKIP_RAKE = True
     CLIMB = True
 
-    create_gif(FNAME, SKIP_RAKE, CLIMB)
+    view_parameters = dict(
+        fname=FNAME,
+        skip_rake=SKIP_RAKE,
+        climb=CLIMB,
+    )  # type: Dict[str, Any]
+
+    create_gif(**view_parameters)

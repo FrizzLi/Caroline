@@ -119,6 +119,8 @@ class Map:
     def load_map(self, fname: str) -> None:
         """Loads a map and initializes instance's attributes with it.
 
+        The map is being loaded from /data/maps directory.
+
         Args:
             fname (str): name of the file that is going to be loaded
         """
@@ -215,17 +217,18 @@ def find_shortest_path(
 
     except (FileNotFoundError, InvalidParameter) as err:
         if isinstance(err, AlgorithmError):
-            error = f"{err} (Custom AlgorithmError exception was raised!)"
+            error = f"{err}: Custom AlgorithmError"
         elif isinstance(err, MovementError):
-            error = f"{err} (Custom MovementError exception was raised!)"
+            error = f"{err}: Custom MovementError"
         elif isinstance(err, PointsAmountError):
-            error = f"{err} (Custom PointsAmountError exception was raised!)"
+            error = f"{err}: Custom PointsAmountError"
 
         elif isinstance(err, FileNotFoundError):
-            error = f"{err} (Built-in FileNotFoundError exception was raised!)"
+            error = f"{err}: Built-in FileNotFoundError"
 
         # by grouping the exceptions and using isintance, we don't have to
         # repeat the code below for all cases
+        error += "exception was raised!"
         print(error)
         raise  # raises the catched exception
 
