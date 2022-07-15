@@ -11,14 +11,14 @@ run_production                  - main function
     init_rules                  - loads rules from file
         _get_4_lines_from_file  - load one rule from 4 lines
     init_facts                  - loads facts from file
-    _run_forward_chain          - solution finder
+    run_forward_chain           - solution finder
         _find_actions           - finds all possible actions
-            expand              - labelling entities
-        _remove_duplicates       - remove duplicate actions
-        _apply_actions           - apply actions
-    save_facts                  - saves all facts into file
-    print_solution              - prints the solution
-    save_solution               - save the solution into file
+            _expand             - labelling entities
+        _remove_duplicates      - remove duplicate actions
+        _apply_actions          - apply actions
+    _save_facts                 - saves all facts into file
+    _print_solution             - prints the solution
+    _save_solution              - save the solution into file
 """
 
 import json
@@ -66,25 +66,23 @@ def run_production(
 
         for known_fact in known_facts:
             using_facts += [known_fact]
-            new_facts = _run_forward_chain(
-                using_facts, rules, fname_save_facts
-            )
+            new_facts = run_forward_chain(using_facts, rules, fname_save_facts)
             fact_discovery_flow[known_fact] = new_facts
 
     else:
         using_facts = known_facts
-        new_facts = _run_forward_chain(
-            using_facts, rules, fname_save_facts
-        )
+        new_facts = run_forward_chain(using_facts, rules, fname_save_facts)
         fact_discovery_flow = {"All steps at once": new_facts}
 
-    save_facts(using_facts, fname_save_facts)
-    print_solution(fact_discovery_flow)
-    save_solution(fact_discovery_flow, fname)
+    _save_facts(using_facts, fname_save_facts)
+    _print_solution(fact_discovery_flow)
+    _save_solution(fact_discovery_flow, fname)
 
 
 def init_rules(fname_rules: str) -> List[Any]:
     """Loads rules from the file and initializes them to namedtuple structure.
+
+    The rules are being loaded from /data/knowledge directory.
 
     Args:
         fname_rules (str): name of the file from which we load rules
@@ -129,6 +127,8 @@ def init_facts(
 ) -> List[str]:
     """Loads facts from the file, initializes amount and order of them.
 
+    The facts are being loaded from /data/knowledge directory.
+
     Args:
         fname_facts (str): name of the file from which we load facts
         facts_amount (int): number of facts we want to load (points)
@@ -170,15 +170,16 @@ def _get_4_lines_from_file(file: Any) -> Tuple[Any, ...]:
     return rule  # -> Tuple[str, str, str]
 
 
-def _run_forward_chain(
+def run_forward_chain(
     known_facts: List[str], rules: List[Any], fname_save_facts: str
 ) -> List[str]:
-    """Runs forward chaining to discover new facts given the facts and rules.
+    """Discovers new facts from the given known facts and rules.
 
-    Discovers new facts new facts until there are no more actions to do.
+    Runs forward chaining to find actions that updates our facts collection
+    until there are no more actions to do.
 
     Args:
-        using_facts (List[str]): facts that we're using
+        known_facts (List[str]): facts that are going to be used
         rules (List[Any]): namedtuples with these attributes:
             name - name of the rule (unused)
             conds - conditions to fulfill actions
@@ -186,63 +187,60 @@ def _run_forward_chain(
         fname_save_facts (str): name of the file into which facts will be saved
 
     Returns:
-        Tuple[List[str], List[str]]: (
-            applied facts, (found facts)
-        )
+        List[str]: newly found facts that have been added by action
     """
 
     new_facts = []
     while True:
         found_acts = _find_actions(rules, known_facts)
         acts = _remove_duplicates(found_acts, known_facts)
-
         if not acts:
             break
 
-        newly_found_facts = _apply_actions(acts, known_facts)
-        new_facts += newly_found_facts
+        new_facts += _apply_actions(acts, known_facts)
 
     return new_facts
 
 
-def _find_actions(rules: List[Any], using_facts: List[str]) -> List[str]:
-    """Finds all actions that could be done given the rules and facts.
+def _find_actions(rules: List[Any], known_facts: List[str]) -> List[str]:
+    """Finds all actions that can be done from the given rules and facts.
 
     Args:
         rules (List[Any]): namedtuples with these attributes:
             name - name of the rule (unused)
             conds - conditions to fulfill actions
             acts - actions (message, add or remove fact from the set of facts)
-        using_facts (List[str]): facts that we're using
+        known_facts (List[str]): facts that are going to be used
 
     Returns:
-        List[str]: all actions that could be done
+        List[str]: all actions that can be done
     """
 
     found_acts = []
     for rule in rules:
         cond_words = rule.conds.split()
-        labelled_acts = expand(cond_words, using_facts, {})
-        acts = rule.acts.split(", ")
+        labelled_conds = _expand(cond_words, known_facts, {})
+        if labelled_conds:
+            acts = rule.acts.split(", ")
 
-        for labelled_act in labelled_acts:
-            for act in acts:
-                act_type, act = act.split(" ", maxsplit=1)
-                for key, value in labelled_act.items():
-                    act = act.replace(key, value)
-                found_acts.append(act_type + " " + act)
+            for labelled_cond in labelled_conds:
+                for act in acts:
+                    act_type, act = act.split(" ", maxsplit=1)
+                    for key, value in labelled_cond.items():
+                        act = act.replace(key, value)
+                    found_acts.append(act_type + " " + act)
 
     return found_acts
 
 
 def _remove_duplicates(
-    found_acts: List[str], using_facts: List[str]
+    found_acts: List[str], known_facts: List[str]
 ) -> List[str]:
     """Removes those actions whose outcomes are already present in the facts.
 
     Args:
         found_acts (List[List[str]]): actions that were found
-        using_facts (List[str]): facts that we're using
+        known_facts (List[str]): facts that were used
 
     Returns:
         List[str]: applicable actions
@@ -251,8 +249,8 @@ def _remove_duplicates(
     applicable_acts = []
     for found_act in found_acts:
         type_, act = found_act.split(" ", 1)
-        if (type_ == "add" and act not in using_facts) or (
-            type_ == "remove" and act in using_facts
+        if (type_ == "add" and act not in known_facts) or (
+            type_ == "remove" and act in known_facts
         ):
             applicable_acts.append(found_act)
 
@@ -262,14 +260,14 @@ def _remove_duplicates(
 def _apply_actions(
     acts: List[str], known_facts: List[str]
 ) -> List[str]:
-    """Applies actions to create newly found facts.
+    """Applies actions to update facts collection.
 
     Args:
         acts (List[str]): actions that we are about to perform
-        facts (List[str]): known facts in sentences
+        known_facts (List[str]): known facts in sentences
 
     Returns:
-        List[str]: newly found facts
+        List[str]: updated facts collection
     """
 
     newly_found_facts = []
@@ -280,25 +278,26 @@ def _apply_actions(
         elif type_ == "remove":
             known_facts.remove(act)
         newly_found_facts.append(act)
+        # TODO: with remove it might not work -> check when doing tests, naming
 
     return newly_found_facts
 
 
-def expand(
+def _expand(
     cond_words: List[str], facts: List[str], labels: Dict[str, str]
 ) -> List[Dict[str, str]]:
-    """Runs through the rule's conditions recursively and tries to label
-    entities from given facts and rules.
+    """Labels the entities from the given facts and conditions in a rule.
 
-    Entities must start with capitalized characters!
+    Runs through the rule's conditions recursively and tries to label all
+    entities. Entities must start with capitalized characters!
 
     Args:
-        cond_words (List[str]): words of condition(s) on rule's actions
+        cond_words (List[str]): words of condition(s) in a rule
         facts (List[str]): known facts in sentences
         labels (Dict[str, str]): labels of entities (?X -> entity)
 
     Returns:
-        List[Dict[str, str]]: found labels
+        List[Dict[str, str]]: found labels of entities for whole condition
     """
 
     if cond_words[0] == "<>":  # labels must be different
@@ -334,7 +333,7 @@ def expand(
 
             if next_condition:
                 next_cond_words = cond_words[i + 1 :]
-                found_labels += expand(
+                found_labels += _expand(
                     next_cond_words, facts, {**labels, **tmp_label}
                 )
 
@@ -345,8 +344,11 @@ def expand(
     return found_labels
 
 
-def save_facts(facts: List[str], fname_save_facts: str) -> None:
+def _save_facts(facts: List[str], fname_save_facts: str) -> None:
     """Saves all facts into text file.
+
+    Saves facts into /data/knowledge directory. If the directory does not
+    exist, it will create one.
 
     Args:
         facts (List[List[str]]): all (known and found) facts that will be saved
@@ -356,13 +358,14 @@ def save_facts(facts: List[str], fname_save_facts: str) -> None:
     source_dir = Path(__file__).parents[0]
     knowledge_dir = Path(f"{source_dir}/data/knowledge")
     knowledge_dir.mkdir(parents=True, exist_ok=True)
+
     fname_path = Path(f"{knowledge_dir}/{fname_save_facts}.txt")
     with open(fname_path, "w", encoding="utf-8") as file:
         file.write("\n".join(facts))
 
 
-def print_solution(fact_discovery_flow: Dict[str, List[str]]) -> None:
-    """Prints the flow of finding out new facts.
+def _print_solution(fact_discovery_flow: Dict[str, List[str]]) -> None:
+    """Prints the flow of finding out new facts into console.
 
     Args:
         fact_discovery_flow (Dict[str, List[str]]): path of discovering facts
@@ -372,11 +375,14 @@ def print_solution(fact_discovery_flow: Dict[str, List[str]]) -> None:
         print(f"{str(i)}:  {fact} -> " + ", ".join(fact_discovery_flow[fact]))
 
 
-def save_solution(
+def _save_solution(
     fact_discovery_flow: Dict[str, List[str]], fname: str
 ) -> None:
-    """Saves the flow of finding out new facts into json file for gif
-    visualization and viewing.
+    """Saves the flow of finding out new facts into json file.
+
+    Saves the solution into /data/solutions directory. If the directory does
+    not exist, it will create one.
+    It is being used for gif visualization and viewing.
 
     Args:
         fact_discovery_flow (Dict[str, List[str]]): path of discovering facts
@@ -386,6 +392,7 @@ def save_solution(
     source_dir = Path(__file__).parents[0]
     solutions_dir = Path(f"{source_dir}/data/solutions")
     solutions_dir.mkdir(parents=True, exist_ok=True)
+
     fname_path = f"{solutions_dir}/{fname}_rule.json"
     with open(fname_path, "w", encoding="utf-8") as file:
         json.dump(fact_discovery_flow, file, indent=4)
