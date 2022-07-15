@@ -175,8 +175,8 @@ def find_shortest_path(
 
     At first, it finds the shortest distances between all properties. Then it
     finds the shortest visiting path order between all the properties on the
-    map. At the end, it prints the solution into console and saves the solution
-    into pickle file.
+    map. At the end, it prints the solution into console and saves it into
+    pickle file.
 
     Args:
         fname (string): name of the file to load (with no suffix)

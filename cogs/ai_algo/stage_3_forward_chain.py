@@ -3,19 +3,19 @@ Rule Based Production System.
 
 Production system belongs to knowledge systems that use data to create new
 knowledge. In this case, it deduces new facts from facts that are being
-collected in each blue node. Deduction is defined by set of rules that are
-loaded from the text file.
+collected in each visited point (node). Deduction is defined by set of rules
+that are loaded from the text file.
 
 Function hierarchy:
 run_production                  - main function
     init_rules                  - loads rules from file
         _get_4_lines_from_file  - load one rule from 4 lines
     init_facts                  - loads facts from file
-    run_forward_chain           - solution finder
-        find_actions            - finds all possible actions
+    _run_forward_chain          - solution finder
+        _find_actions           - finds all possible actions
             expand              - labelling entities
-        remove_duplicates       - remove duplicate actions
-        apply_actions           - apply actions
+        _remove_duplicates       - remove duplicate actions
+        _apply_actions           - apply actions
     save_facts                  - saves all facts into file
     print_solution              - prints the solution
     save_solution               - save the solution into file
@@ -39,13 +39,17 @@ def run_production(
     randomize_facts_order: bool,
     fname: str,
 ) -> None:
-    """Sets parameters for running rule-based system with forward chaining.
+    """Runs rule based production system with forward chaining.
+
+    Runs forward chain to get new facts given by the rules and already known
+    facts that we read from text files. At the end, it prints the solution into
+    console, saves it into json file and also saves facts into text file.
 
     Args:
         fname_save_facts (str): name of file into which facts will be saved
         fname_load_facts (str): name of file from which we load facts
         fname_load_rules (str): name of file from which we load rules
-        step_by_step (bool): entering one loaded fact by each production run
+        step_by_step (bool): enters one loaded fact by each production run
         facts_amount (int): number of facts we want to load (points)
         randomize_facts_order (bool): option to shuffle loaded facts
         fname (str): name of json file into which the solution will be saved
@@ -57,23 +61,24 @@ def run_production(
     )
 
     if step_by_step:
-        facts = []  # type: List[str]
+        using_facts = []  # type: List[str]
         fact_discovery_flow = {}
 
         for known_fact in known_facts:
-            using_facts = facts + [known_fact]
-            new_facts, facts = run_forward_chain(
+            using_facts += [known_fact]
+            new_facts = _run_forward_chain(
                 using_facts, rules, fname_save_facts
             )
             fact_discovery_flow[known_fact] = new_facts
 
     else:
-        new_facts, facts = run_forward_chain(
-            known_facts, rules, fname_save_facts
+        using_facts = known_facts
+        new_facts = _run_forward_chain(
+            using_facts, rules, fname_save_facts
         )
         fact_discovery_flow = {"All steps at once": new_facts}
 
-    save_facts(facts, fname_save_facts)
+    save_facts(using_facts, fname_save_facts)
     print_solution(fact_discovery_flow)
     save_solution(fact_discovery_flow, fname)
 
@@ -165,12 +170,12 @@ def _get_4_lines_from_file(file: Any) -> Tuple[Any, ...]:
     return rule  # -> Tuple[str, str, str]
 
 
-def run_forward_chain(
-    using_facts: List[str], rules: List[Any], fname_save_facts: str
-) -> Tuple[List[str], List[str]]:
+def _run_forward_chain(
+    known_facts: List[str], rules: List[Any], fname_save_facts: str
+) -> List[str]:
     """Runs forward chaining to discover new facts given the facts and rules.
 
-    Saves new facts along with already known ones into text file.
+    Discovers new facts new facts until there are no more actions to do.
 
     Args:
         using_facts (List[str]): facts that we're using
@@ -181,24 +186,26 @@ def run_forward_chain(
         fname_save_facts (str): name of the file into which facts will be saved
 
     Returns:
-        Tuple[List[str], List[str]]: (applied facts, facts that we used)
+        Tuple[List[str], List[str]]: (
+            applied facts, (found facts)
+        )
     """
 
     new_facts = []
     while True:
-        found_acts = find_actions(rules, using_facts)
-        acts = remove_duplicates(found_acts, using_facts)
+        found_acts = _find_actions(rules, known_facts)
+        acts = _remove_duplicates(found_acts, known_facts)
 
         if not acts:
             break
 
-        newly_found_facts, using_facts = apply_actions(acts, using_facts)
+        newly_found_facts = _apply_actions(acts, known_facts)
         new_facts += newly_found_facts
 
-    return new_facts, using_facts
+    return new_facts
 
 
-def find_actions(rules: List[Any], using_facts: List[str]) -> List[str]:
+def _find_actions(rules: List[Any], using_facts: List[str]) -> List[str]:
     """Finds all actions that could be done given the rules and facts.
 
     Args:
@@ -228,7 +235,7 @@ def find_actions(rules: List[Any], using_facts: List[str]) -> List[str]:
     return found_acts
 
 
-def remove_duplicates(
+def _remove_duplicates(
     found_acts: List[str], using_facts: List[str]
 ) -> List[str]:
     """Removes those actions whose outcomes are already present in the facts.
@@ -252,9 +259,9 @@ def remove_duplicates(
     return applicable_acts
 
 
-def apply_actions(
-    acts: List[str], facts: List[str]
-) -> Tuple[List[str], List[str]]:
+def _apply_actions(
+    acts: List[str], known_facts: List[str]
+) -> List[str]:
     """Applies actions to create newly found facts.
 
     Args:
@@ -262,19 +269,19 @@ def apply_actions(
         facts (List[str]): known facts in sentences
 
     Returns:
-        Tuple[List[str], List[str]]: (newly found facts, updated facts)
+        List[str]: newly found facts
     """
 
     newly_found_facts = []
     for act in acts:
         type_, act = act.split(" ", 1)
         if type_ == "add":
-            facts.append(act)
+            known_facts.append(act)
         elif type_ == "remove":
-            facts.remove(act)
+            known_facts.remove(act)
         newly_found_facts.append(act)
 
-    return newly_found_facts, facts
+    return newly_found_facts
 
 
 def expand(
