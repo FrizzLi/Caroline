@@ -257,9 +257,7 @@ def _remove_duplicates(
     return applicable_acts
 
 
-def _apply_actions(
-    acts: List[str], known_facts: List[str]
-) -> List[str]:
+def _apply_actions(acts: List[str], known_facts: List[str]) -> List[str]:
     """Applies actions to update facts collection.
 
     Args:
