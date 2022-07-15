@@ -88,6 +88,8 @@ class AiAlgo(commands.Cog):
 async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
-# TODO: Final clean
+# TODO: Final clean, 
+# TODO: Check what python techniques were used from the gdoc - mark it into doc
+# TODO: Run the gdoc!)
 # TODO: Clean commits (?)
 # TODO: Update AI repo
