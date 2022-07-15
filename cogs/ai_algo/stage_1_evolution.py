@@ -26,7 +26,7 @@ create_maps                         - main function
         _save_map                   - saving map (walls/terrain/properties)
         load_map                    - loading map (terrain/properties)
         _generate_properties        - generates properties
-            free_position_finder    - finds free position for safe generation
+            _free_position_finder   - finds free position for safe generation
 """
 
 import functools
@@ -316,7 +316,7 @@ def _evolutionize(
         map_2d (List[List[str]]): 2D walled map that will be terrained
         max_runs (int): max number of attempts to find solution with evo. alg.
         print_stats (bool, optional): Turns on debug mode that prints stats
-            and solution. Defaults to True.
+            and solution into console. Defaults to True.
 
     Returns:
         Tuple[List[List[str]], Dict[Tuple[int, int], int], str]: (
@@ -753,6 +753,10 @@ def _fill_map(
 def _save_solution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
     """Saves solution - raking paths into pickle file for gif visualization.
 
+    Saves the solution into /data/solutions directory. If the directory does
+    not exist, it will create one. This function is being used in save_map
+    decorator.
+
     Args:
         rake_paths (Dict[Tuple[int, int], int]): raking paths that will be used
             for gif visualization
@@ -762,6 +766,7 @@ def _save_solution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
     source_dir = Path(__file__).parents[0]
     solutions_dir = Path(f"{source_dir}/data/solutions")
     Path(solutions_dir).mkdir(parents=True, exist_ok=True)
+
     fname_path = Path(f"{solutions_dir}/{fname}_rake")
     with open(fname_path, "wb") as file:
         pickle.dump(rake_paths, file)
@@ -783,7 +788,7 @@ def _generate_properties(
         List[List[str]]: 2D propertied map
     """
 
-    def free_position_finder(
+    def _free_position_finder(
         terrained_map: List[List[str]],
     ) -> Generator[Tuple[int, int], None, None]:
         """Finder of free positions for properties.
@@ -808,7 +813,7 @@ def _generate_properties(
                 reserved.add((i, j))
                 yield (i, j)
 
-    free_pos = free_position_finder(map_2d)  # closure (None, None?)
+    free_pos = _free_position_finder(map_2d)  # closure (None, None?)
 
     i, j = next(free_pos)
     map_2d[i][j] = "[" + map_2d[i][j] + "]"
