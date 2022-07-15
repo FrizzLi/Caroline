@@ -5,10 +5,10 @@ It creates a gif file that shows the outcome of all the AI algorithms.
 
 Function hierarchy:
 create_gif
-    _load_pickle
-    _load_json
-    _save_gif
-    _get_center_circle
+    _load_pickle        - loads solutions (rakes, paths)
+    _load_json          - loads solution (facts)
+    _save_gif           - creates gif from given frames
+    _get_center_circle  - gets the center coordinate of a point
 """
 
 import json
@@ -78,7 +78,7 @@ def _save_gif(fname: str, frames: List[Any]) -> None:
         format="GIF",
         append_images=frames[1:],
         save_all=True,
-        duration=200,
+        duration=250,
         loop=0,
     )
 

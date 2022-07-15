@@ -317,8 +317,7 @@ def _find_shortest_distances(
     from_start_to_home = _a_star(map_, moves, climb, start=start, dest=home)
     from_home_to_all = _dijkstra(map_, moves, climb, start=home)
     from_points_to_all = {
-        point: _dijkstra(map_, moves, climb, start=point)
-        for point in points
+        point: _dijkstra(map_, moves, climb, start=point) for point in points
     }
 
     shortest_distance_nodes_between_properties = {
@@ -516,13 +515,11 @@ def _held_karp(
                     nodes[dest, comb_set] = min(routes)
 
                 else:  # first visit (start -> home)
-                    cost = (
-                        map_[home][dest].dist + map_[start][home].dist
-                    )
+                    cost = map_[home][dest].dist + map_[start][home].dist
                     nodes[dest, frozenset()] = cost, home
 
     # get total cost, ending node and its parent
-    last_nodes_raw = list(nodes.items())[-len(points_set):]
+    last_nodes_raw = list(nodes.items())[-len(points_set) :]
     last_nodes = [(*node[1], node[0][0]) for node in last_nodes_raw]
     last_optimal_node = min(last_nodes)
     cost, parent, end = last_optimal_node
@@ -648,7 +645,7 @@ if __name__ == "__main__":
     MOVEMENT_TYPE = "M"
     CLIMB = False
     ALGORITHM = "HK"
-    VISIT_POINTS_AMOUNT = 4
+    VISIT_POINTS_AMOUNT = 10
 
     path_parameters = dict(
         fname=FNAME,

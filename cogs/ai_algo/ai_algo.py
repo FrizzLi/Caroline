@@ -4,8 +4,8 @@ from discord import File
 from discord.ext import commands
 
 from cogs.ai_algo import stage_1_evolution
-from cogs.ai_algo import stage_2_forward_chain
-from cogs.ai_algo import stage_3_pathfinding
+from cogs.ai_algo import stage_2_pathfinding
+from cogs.ai_algo import stage_3_forward_chain
 from cogs.ai_algo import view
 
 
@@ -78,8 +78,8 @@ class AiAlgo(commands.Cog):
         )
 
         stage_1_evolution.create_maps(**evo_parameters)
-        stage_2_forward_chain.find_shortest_path(**path_parameters)
-        stage_3_pathfinding.run_production(**chain_parameters)
+        stage_2_pathfinding.run_production(**chain_parameters)
+        stage_3_forward_chain.find_shortest_path(**path_parameters)
         view.create_gif(**view_parameters)
 
         self.send_file_message(ctx)
@@ -88,7 +88,7 @@ class AiAlgo(commands.Cog):
 async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
 
-# TODO: Final clean
+
 # TODO: Check what python techniques were used from the gdoc - mark it into doc
 # TODO: Run the gdoc and fix parts that errors the program
-# TODO: Update AI repo
+# TODO: Update AI repo + integrate this into discord!

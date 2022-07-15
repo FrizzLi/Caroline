@@ -344,7 +344,6 @@ def _evolutionize(
         print(f"each generation took {avg}s in average.")
         print(f"Chromosome: {chromo}")
 
-
     found_solution = False
     attempt_number = 0
 
@@ -837,7 +836,7 @@ if __name__ == "__main__":
     QUERY = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"
     FNAME = "queried"
     MAX_RUNS = 3
-    POINTS_AMOUNT = 4
+    POINTS_AMOUNT = 10
 
     evo_parameters = dict(
         begin_from=BEGIN_FROM,
