@@ -1,10 +1,10 @@
 """This module serves to run 2. stage (out of 3) of creating simulation -
-Pathfinding.
+Shortest Pathfinding.
 
 Finds the shortest path to visit all nodes. First node to visit is the home
 node for which A* algorithm is used. Then, we run Dijkstra's algorithm for each
 point node to find the shortest distances to all other point nodes.
-To find the shortest path between all blue nodes we can use either greedy
+To find the shortest path between all point nodes we can use either greedy
 Naive permutation or Held-Karp algorithm which is alot faster.
 
 Function hierarchy:
@@ -17,7 +17,7 @@ find_shortest_path                  - main function
             get_next_dist           - gets next distance (climb/no climb)
     _held_karp                      - optimal way to find shortest combo path
     _naive_permutations             - greedy way to find shortest combo path
-    _get_routes                     - gets the whole path via parent nodes
+    _get_routes                     - gets coordinate path via parent nodes
     _print_solution                 - prints the routes - solution
     _save_solution                  - saves the solution into pickle file
 """
@@ -31,15 +31,19 @@ from sys import maxsize
 from typing import Any, Dict, FrozenSet, List, Tuple
 
 
-class MovementError(Exception):
+class InvalidParameter(Exception):
+    """Parent exception for custom exceptions - parameter errors."""
+
+
+class MovementError(InvalidParameter):
     """Exception for movement type: only "M" and "D" is allowed."""
 
 
-class PointsAmountError(Exception):
+class PointsAmountError(InvalidParameter):
     """Exception for points to visit amount: cannot be a negative number."""
 
 
-class AlgorithmError(Exception):
+class AlgorithmError(InvalidParameter):
     """Exception for algorithm choice: only "NP" and "HK" is allowed."""
 
 
@@ -50,15 +54,15 @@ class Node:
     represent the space of the map.
 
     Attributes:
-        pos (Tuple[int, int]): current position on the map
-        terr (int): terrain of current position
+        pos (Tuple[int, int]): node's position on the map
+        terr (int): terrain (difficulty of traveling through this node)
         parent (Tuple[int, int]): parent position - neighbor position from
-            which we moved to current position
-        dist (int): distance to get to current position
+            which we moved to this node's position
+        dist (int): distance to get to node's position
         g (int): heuristic variable for A* algorithm
             (distance between start and next_node)
         h (int): heuristic variable for A* algorithm
-            (distance between destination and next_node)
+            (distance between next_node and destination)
     """
 
     __slots__ = ("pos", "terr", "parent", "dist", "g", "h")
@@ -66,10 +70,12 @@ class Node:
     def __init__(self, position, terrain):
         self.pos = position  # type: Tuple[int, int]
         self.terr = terrain  # type: int
+
+        # variables to fill with pathfinding algorithm
         self.parent = -1  # type: Tuple[int, int]
         self.dist = maxsize  # type: int
 
-        # A* heuristic variables
+        # helping A* heuristic variables
         self.g = maxsize  # type: int
         self.h = maxsize  # type: int
 
@@ -83,21 +89,21 @@ class Map:
     """Represents 2D map.
 
     This is the main data structure for navigating in the map. Map is composed
-    of nodes that represent the space of the map. They are formed in another
-    class Node. Other attributes represent properties of the map.
+    of nodes attribute that represent the space of the map. They are formed by
+    another class Node. Other attributes represent properties of the map.
 
     Attributes:
         fname (str): name of the file to load
-        height (int): represents height size (amount of x coordinate)
-        width (int): represents width size (amount of y coordinate)
+        height (int): represents height size (amount of x coordinates)
+        width (int): represents width size (amount of y coordinates)
         properties (Dict[str, Any]): represents special positions
             (points to visit, starting point, home)
-        nodes (Dict[Tuple[int, int], Node]): Properties of certain position.
-            Properties are represented with Node.
+        nodes (Dict[Tuple[int, int], Node]): Represent the space of the map
+            with keys being coordinates and values being instance of Node class
 
     Methods:
         load_map(fname: str): loads propertied map from the text file and
-            sets up the attributes
+            sets up all the attributes
     """
 
     __slots__ = ("fname", "width", "height", "properties", "nodes", "h")
@@ -139,7 +145,7 @@ class Map:
                         elif col.startswith("{"):
                             properties["start"] = (i, j)
                         if not col.startswith("-"):
-                            col = col[1:-1]
+                            col = col[1:-1]  # remove brackets if not neg. num
 
                     nodes[i, j] = Node((i, j), int(col))
 
@@ -165,8 +171,12 @@ def find_shortest_path(
     algorithm: str,
     visit_points_amount: int,
 ) -> None:
-    """Finds the shortest visiting path order between all the properties on the
-    map.
+    """Finds shortest visiting path order between all the properties on map.
+
+    At first, it finds the shortest distances between all properties. Then it
+    finds the shortest visiting path order between all the properties on the
+    map. At the end, it prints the solution into console and saves the solution
+    into pickle file.
 
     Args:
         fname (string): name of the file to load (with no suffix)
@@ -191,9 +201,9 @@ def find_shortest_path(
         map_ = Map(fname)
         moves, visit_points_amount, algorithm = _validate_and_set_input_pars(
             movement_type,
+            algorithm,
             visit_points_amount,
             map_.properties["points"],
-            algorithm,
         )
 
         disted_map = _find_shortest_distances(map_, moves, climb)
@@ -201,22 +211,30 @@ def find_shortest_path(
         routed_paths = _get_routes(disted_map, node_paths)
 
         _print_solution(routed_paths, dist)
-
         _save_solution(routed_paths, fname)
 
-    except FileNotFoundError as err:
-        print(err)
-    except MovementError as err:
-        print(err)
-    except PointsAmountError as err:
-        print(err)
+    except (FileNotFoundError, InvalidParameter) as err:
+        if isinstance(err, AlgorithmError):
+            error = f"{err} (Custom AlgorithmError exception was raised!)"
+        elif isinstance(err, MovementError):
+            error = f"{err} (Custom MovementError exception was raised!)"
+        elif isinstance(err, PointsAmountError):
+            error = f"{err} (Custom PointsAmountError exception was raised!)"
+
+        elif isinstance(err, FileNotFoundError):
+            error = f"{err} (Built-in FileNotFoundError exception was raised!)"
+
+        # by grouping the exceptions and using isintance, we don't have to
+        # repeat the code below for all cases
+        print(error)
+        raise  # raises the catched exception
 
 
 def _validate_and_set_input_pars(
     movement_type: str,
+    algorithm: str,
     visit_points_amount: int,
     map_points: List[Tuple[int, int]],
-    algorithm: str,
 ) -> Tuple[List[Tuple[int, int]], int, str]:
     """Validates and sets parameters from input for pathfinding.
 
@@ -230,12 +248,12 @@ def _validate_and_set_input_pars(
     Args:
         movement_type (str): determines movement options throughout the map
             Options: "M", "D" (Manhattan or Diagonal + Manhattan)
-        visit_points_amount (int): Amount of points to visit.
-            0 means all. Must be at least 1.
-        map_points (List[Tuple[int, int]]): coordinates of points on the map
         algorithm (str): determines what algorithm to use to find the
             shortest path
             Options: "NP", "HK" (Naive Permutations or Held Karp)
+        visit_points_amount (int): Amount of points to visit.
+            0 means all. Must be at least 1.
+        map_points (List[Tuple[int, int]]): coordinates of points on the map
 
     Raises:
         MovementError: movement_type is not "M" or "D"
@@ -244,7 +262,7 @@ def _validate_and_set_input_pars(
 
     Returns:
         Tuple[List[Tuple[int, int]], int, str]: (
-            movement options
+            movement coordinate options
             amount of points to visit
             algorithm that is going to be used
         )
@@ -275,27 +293,28 @@ def _find_shortest_distances(
 ) -> Map:
     """Finds shortest distances between all properties.
 
-    Uses A* algorithm from start, from all the others _Dijkstra is used.
+    Uses A* algorithm from start, from all the other points Dijkstra is used.
+    It basically fills up the nodes attribute's (parent, distance) in the map.
 
     Args:
         map_ (Map): contains information about the map
-        moves (List[Tuple[int, int]]): movement options
+        moves (List[Tuple[int, int]]): movement coordinate options
         climb (bool): determines distance calculcation approach. If True,
             distance is measured as abs(current terrain number - next terrain
-            number)
+            number), otherwise it is just (next terrain number)
 
     Returns:
         Map: Map that contains information about the shortest distances between
-            all properties in nodes attribute.
+            all properties in nodes' attributes. (parent, distance)
             (Access via Dict[start][destination].dist)
     """
 
     points, home, start = map_.properties.values()
 
-    from_start_to_home = _a_star(map_, moves, climb, start, home)
-    from_home_to_all = _dijkstra(map_, moves, climb, home)
+    from_start_to_home = _a_star(map_, moves, climb, start=start, dest=home)
+    from_home_to_all = _dijkstra(map_, moves, climb, start=home)
     from_points_to_all = {
-        point: _dijkstra(map_, moves, climb, point)
+        point: _dijkstra(map_, moves, climb, start=point)
         for point in points
     }
 
@@ -305,36 +324,35 @@ def _find_shortest_distances(
         **from_points_to_all,
     }
 
-    map_.nodes = shortest_distance_nodes_between_properties  # TODO?
+    map_.nodes = shortest_distance_nodes_between_properties
 
     return map_
 
 
 def _a_star(
-    nodes_map: Map,
+    map_: Map,
     moves: List[Tuple[int, int]],
     climb: bool,
     start: Tuple[int, int],
     dest: Tuple[int, int],
 ) -> Dict[Tuple[int, int], Node]:
-    """Finds the shortest path from start to destination and saves it into the
-    map.
+    """Finds the shortest path from start to destination and saves it into map.
 
     Args:
-        nodes_map (Map): contains information about the map
-        moves (List[Tuple[int, int]]): movement options
+        map_ (Map): contains information about the map
+        moves (List[Tuple[int, int]]): movement coordinate options
         climb (bool): determines distance calculcation approach. If True,
             distance is measured as abs(current terrain number - next terrain
-            number)
+            number), otherwise it is just (next terrain number)
         start (Tuple[int, int]): starting position
         dest (Tuple[int, int]): ending position
 
     Returns:
-        Dict[Tuple[int, int], Node]: contains path and distance from start to
-            destination
+        Dict[Tuple[int, int], Node]: contains path (via parent attribute) and
+            distance from start to destination
     """
 
-    nodes = deepcopy(nodes_map.nodes)
+    nodes = deepcopy(map_.nodes)
     nodes[start].g = 0
     open_list = []  # type: List[Node]
     close_list = []
@@ -348,10 +366,10 @@ def _a_star(
         close_list.append(node.pos)
         for move in moves:
             next_pos = node.pos[0] + move[0], node.pos[1] + move[1]
-            if _passable(next_pos, nodes_map) and next_pos not in close_list:
+            if _passable(next_pos, map_) and next_pos not in close_list:
                 next_node = nodes[next_pos]
 
-                # heuristic - distance between destination and next_node
+                # heuristic - distance between next_node and destination
                 x_diff = abs(next_node.pos[0] - dest[0])
                 y_diff = abs(next_node.pos[1] - dest[1])
                 h = x_diff + y_diff
@@ -373,28 +391,27 @@ def _a_star(
 
 
 def _dijkstra(
-    nodes_map: Map,
+    map_: Map,
     moves: List[Tuple[int, int]],
     climb: bool,
     start: Tuple[int, int],
 ) -> Dict[Tuple[int, int], Node]:
-    """Finds the shortest path from start to all destinations and saves it into
-    the map.
+    """Finds all the shortest paths from start and saves them into map.
 
     Args:
-        nodes_map (Map): contains information about the map
-        moves (List[Tuple[int, int]]): movement options
+        map_ (Map): contains information about the map
+        moves (List[Tuple[int, int]]): movement coordinate options
         climb (bool): determines distance calculcation approach. If True,
             distance is measured as abs(current terrain number - next terrain
-            number)
+            number), otherwise it is just (next terrain number)
         start (Tuple[int, int]): starting position
 
     Returns:
-        Dict[Tuple[int, int], Node]: contains path and distance from start to
-            all destinations
+        Dict[Tuple[int, int], Node]: contains path (via parent attribute) and
+            distance from start to all points
     """
 
-    nodes = deepcopy(nodes_map.nodes)
+    nodes = deepcopy(map_.nodes)
     nodes[start].dist = 0
     heap = []  # type: List[Node]
     heapq.heappush(heap, nodes[start])
@@ -403,7 +420,7 @@ def _dijkstra(
         node = heapq.heappop(heap)
         for move in moves:
             next_pos = node.pos[0] + move[0], node.pos[1] + move[1]
-            if _passable(next_pos, nodes_map):
+            if _passable(next_pos, map_):
                 next_node = nodes[next_pos]
                 step_dist = get_next_dist(node.terr, next_node.terr, climb)
                 next_node_dist = node.dist + step_dist
@@ -416,18 +433,18 @@ def _dijkstra(
     return nodes
 
 
-def _passable(next_pos: Tuple[int, int], nodes_map: Map):
+def _passable(next_pos: Tuple[int, int], map_: Map):
     """Checks whether next_pos position is passable (not walled or out of map).
 
     Args:
         next_pos (Tuple[int, int]): position on which movement was applied
-        nodes_map (Map): contains information about the map
+        map_ (Map): contains information about the map
 
     Returns:
         bool: passability
     """
 
-    valid_pos = nodes_map[next_pos]
+    valid_pos = map_[next_pos]
     if valid_pos:
         valid_pos = not valid_pos.terr < 0
 
@@ -442,7 +459,7 @@ def get_next_dist(prev_terr: int, next_terr: int, climb: bool) -> int:
         next_terr (int): terrain of position to which we move
         climb (bool): determines distance calculcation approach. If True,
             distance is measured as abs(current terrain number - next terrain
-            number)
+            number), otherwise it is just (next terrain number)
 
     Returns:
         int: distance to the next position
@@ -457,18 +474,21 @@ def get_next_dist(prev_terr: int, next_terr: int, climb: bool) -> int:
 def _held_karp(
     map_: Map, visit_points_amount: int
 ) -> Tuple[List[Tuple[int, int]], int]:
-    """Finds the shortest visiting path order between all the properties on the
-    map using Held Karp's algorithm.
+    """Finds the shortest visiting path order between all properties on map.
+
+    For finding the solution, Held Karp algorithm is used.
 
     Args:
         map_ (Map): Map that contains information about the shortest distances
-            between all properties in nodes attribute.
+            between all properties in nodes' attributes.
             (Access via Dict[start][destination].dist)
-        visit_points_amount (int): amount of points to visit (more than 1)
+        visit_points_amount (int): amount of points to visit
 
     Returns:
-        Tuple[List[Tuple[int, int]], int]: (shortest visiting path order of
-            properties, distance of the path)
+        Tuple[List[Tuple[int, int]], int]: (
+            shortest visiting path order of properties,
+            distance of the path
+        )
     """
 
     points, home, start = map_.properties.values()
@@ -506,7 +526,7 @@ def _held_karp(
     points_set -= {end}
     path = [end]
 
-    # backtrack remaining nodes
+    # backtrack remaining nodes via parents
     for _ in range(visit_points_amount - 1):
         path.append(parent)
         points_set -= {parent}
@@ -519,18 +539,21 @@ def _held_karp(
 def _naive_permutations(
     map_: Map, visit_points_amount: int
 ) -> Tuple[List[Tuple[int, int]], int]:
-    """Gets all visiting path orders between all the properties on the map in
-    order to find the shortest path order.
+    """Finds the shortest visiting path order between all properties on map.
+
+    Computes all possible permutations to find the shortest path order.
 
     Args:
         map_ (Map): Map that contains information about the shortest distances
-            between all properties in nodes attribute.
+            between all properties in nodes' attributes.
             (Access via Dict[start][destination].dist)
-        visit_points_amount (int): amount of points to visit (more than 1)
+        visit_points_amount (int): amount of points to visit
 
     Returns:
-        Tuple[List[Tuple[int, int]], int]: (shortest visiting path order of
-            properties, distance of the path)
+        Tuple[List[Tuple[int, int]], int]: (
+            shortest visiting path order of properties,
+            distance of the path
+        )
     """
 
     points, home, start = map_.properties.values()
@@ -541,7 +564,8 @@ def _naive_permutations(
         for begin, finish in zip((home,) + permutation, permutation):
             distance += map_[begin][finish].dist
         if distance < total_cost:
-            total_cost, permutation_path = distance, permutation
+            total_cost = distance
+            permutation_path = permutation
 
     return list((start, home) + permutation_path), total_cost
 
@@ -549,18 +573,17 @@ def _naive_permutations(
 def _get_routes(
     map_: Map, node_paths: List[Tuple[int, int]]
 ) -> List[List[Tuple[int, int]]]:
-    """Gets step by step coordinate routes from the shortest visiting path
-    order of properties via parent attribute.
+    """Gets step by step coordinate routes from node paths via parent.
 
     Args:
         map_ (Map): Map that contains information about the shortest distances
             between all properties in nodes attribute.
             (Access via Dict[start][destination].dist)
-        node_paths (List[Tuple[int, int]]): shortest visiting path order
-            of properties
+        node_paths (List[Tuple[int, int]]): shortest visiting path order of
+            properties
 
     Returns:
-        List[List[Tuple[int, int]]]: routed paths
+        List[List[Tuple[int, int]]]: coordinate routed paths
     """
 
     paths = []
@@ -578,7 +601,7 @@ def _get_routes(
 def _print_solution(
     routed_paths: List[List[Tuple[int, int]]], dist: int
 ) -> None:
-    """Prints the routed paths.
+    """Prints the routed paths into the console.
 
     Each line starts with order number followed by order of tuple coordinates
     that represent the movement progression from start to destination.
@@ -597,8 +620,10 @@ def _print_solution(
 def _save_solution(
     routed_paths: List[List[Tuple[int, int]]], fname: str
 ) -> None:
-    """Saves the solution (routed paths) into pickle file for gif
-    visualization.
+    """Saves the routed paths into pickle file for gif visualization.
+
+    Saves the solution into /data/solutions directory. If the directory does
+    not exist, it will create one.
 
     Args:
         routed_paths (List[List[Tuple[int, int]]]): routed paths (solution)

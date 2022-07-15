@@ -331,7 +331,7 @@ def _evolutionize(
         print(f"Generation: {i+1},", end="\t")
         print(f"Raked: {fit_max} (out of {to_rake_amount})", end="\t")
         print(f"Mutation rate: {round(mut_rate, 2)}")
-    
+
     def print_final_stats():
         """Prints final stats, solution and map"""
 
