@@ -345,10 +345,9 @@ def _evolutionize(
         print(f"Chromosome: {chromo}")
 
     found_solution = False
-    attempt_number = 0
+    attempt_number = 1
 
     while not found_solution and attempt_number <= max_runs:
-        attempt_number += 1
         print(f"\nAttempt number {attempt_number}.\n{'-' * 60}")
 
         # simplify 2D map into 1D dict (it is faster in raking)
@@ -425,6 +424,7 @@ def _evolutionize(
 
         if print_stats:
             print_final_stats()
+        attempt_number += 1
 
     map_2d_filled = _fill_map(map_2d, fit_max_map)
 

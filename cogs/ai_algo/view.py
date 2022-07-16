@@ -19,8 +19,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-import stage_1_evolution as evo
-import stage_2_pathfinding as path
+from cogs.ai_algo import stage_1_evolution
+from cogs.ai_algo import stage_2_pathfinding
 
 
 def _load_pickle(fname: str, suffix: str) -> Any:
@@ -122,8 +122,8 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
     """
 
     try:
-        map_props = path.Map(fname)
-        terrained_map = evo.load_map(fname, "_ter")
+        map_props = stage_2_pathfinding.Map(fname)
+        terrained_map = stage_1_evolution.load_map(fname, "_ter")
         rake_solved = _load_pickle(fname, "_rake")
         paths_solved = _load_pickle(fname, "_path")
         rule_solved = _load_json(fname, "_rule")
@@ -257,7 +257,9 @@ def create_gif(fname: str, skip_rake: bool, climb: bool) -> None:
             # need parameter climb to draw distance because we are using
             # get_next_dist function that is in the path module. It would be a
             # hassle to compute the distances and putting them to results
-            next_dist = path.get_next_dist(prev_terr, next_terr, climb)
+            next_dist = stage_2_pathfinding.get_next_dist(
+                prev_terr, next_terr, climb
+            )
             point_dist += next_dist
             total_dist += next_dist
             text_w = width + 25

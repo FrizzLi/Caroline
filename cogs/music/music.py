@@ -157,7 +157,7 @@ class Music(commands.Cog):
 
         # save to gsheets
         credentials_dict_string = os.environ.get("GOOGLE_CREDENTIALS")
-        credentials_dict = json.loads(credentials_dict_string)  # TODO?
+        credentials_dict = json.loads(credentials_dict_string)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
         g_sheet = g_credentials.open("Discord Music Log")
 

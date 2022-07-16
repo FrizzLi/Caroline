@@ -402,7 +402,7 @@ if __name__ == "__main__":
     FNAME_LOAD_FACTS = "facts_init"
     FNAME_LOAD_RULES = "rules"
     STEP_BY_STEP = True
-    FACTS_AMOUNT = 11
+    FACTS_AMOUNT = 10
     RANDOMIZE_FACTS_ORDER = False
     FNAME = "queried"
 
@@ -411,7 +411,7 @@ if __name__ == "__main__":
         fname_load_facts=FNAME_LOAD_FACTS,
         fname_load_rules=FNAME_LOAD_RULES,
         step_by_step=STEP_BY_STEP,
-        facts_amount=FACTS_AMOUNT,
+        facts_amount=FACTS_AMOUNT + 1,
         randomize_facts_order=RANDOMIZE_FACTS_ORDER,
         fname=FNAME,
     )  # type: Dict[str, Any]
