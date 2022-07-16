@@ -85,6 +85,3 @@ class AiAlgo(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
-
-
-# TODO: Update AI repo + integrate this into discord!
