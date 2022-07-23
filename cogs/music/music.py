@@ -2,12 +2,14 @@ import json
 import os
 import random
 import re
+from pathlib import Path
 
 import discord
 import gspread
 import pandas as pd
 import pytz
 import youtube_dl
+from pytube import Playlist
 from discord import app_commands
 from discord.ext import commands
 
@@ -170,6 +172,23 @@ class Music(commands.Cog):
         )
 
         await ctx.send("___Messages saved up to this point.___")
+
+    @commands.command(aliases=['dl'])
+    async def download(self, ctx, link):
+        p = Playlist(link)
+        source_dir = Path(__file__).parents[0]
+        playlist_dir = Path(f"{source_dir}/downloaded/{p.title}")
+
+        for video in p.videos:
+            print(video.title)
+            audio = video.streams.get_audio_only()
+            audio.download(playlist_dir)
+                #audio1 = video.streams.filter(only_audio=True)
+                #audio2 = video.streams.get_highest_resolution()
+                #video.streams.first().download()
+        
+        await ctx.send(f"'{p.title}' playlist has been downloaded!")
+
 
     @commands.command()
     async def create_stats(self, ctx):
