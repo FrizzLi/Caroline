@@ -64,7 +64,7 @@ class AiAlgo(commands.Cog):
             fname_load_facts=self.chain_fname_load_facts,
             fname_load_rules=self.chain_fname_load_rules,
             step_by_step=self.chain_step_by_step,
-            facts_amount=self.shared_points_amount + 1,
+            facts_amount=self.shared_points_amount,
             randomize_facts_order=self.chain_randomize_facts_order,
             fname=self.shared_fname,
         )
