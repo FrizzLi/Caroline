@@ -416,4 +416,6 @@ class Language(commands.Cog):
 async def setup(bot):
     await bot.add_cog(Language(bot))
 
-# TODO: Guessing, Slash commands, Bigger buttons
+# TODO: Guessing, Slash commands, Bigger buttons, Mix lessons
+# TODO: FIX MMPEG to play
+# TODO: Improve vocab explanation (text files)
