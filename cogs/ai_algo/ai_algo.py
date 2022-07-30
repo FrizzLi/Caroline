@@ -16,24 +16,24 @@ class AiAlgo(commands.Cog):
     # properties:  fname, points_amount
     # view:        fname,                climb
     shared_fname = "queried"
-    shared_points_amount = 10
-    shared_climb = False
+    shared_points_amount = 10  # TODO: DC
+    shared_climb = False  # TODO: DC
 
     # harder variant: "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,7)"
-    evo_query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"  #
+    evo_query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9) (6,9)"  # TODO: DC
     evo_begin_create = "walls"
     evo_max_runs = 3
 
-    path_movement_type = "M"  # TODO: include DC parametrization
+    path_movement_type = "M"  # TODO: DC
     path_algorithm = "HK"
 
     chain_fname_save_facts = "facts"
     chain_fname_load_facts = "facts_init"
     chain_fname_load_rules = "rules"
     chain_step_by_step = True
-    chain_randomize_facts_order = False  # TODO: include DC parametrization
+    chain_randomize_facts_order = False  # TODO: DC
 
-    view_skip_rake = False  # TODO: include DC parametrization
+    view_skip_rake = False  # TODO: DC
 
     async def send_file_message(self, ctx):
         source_dir = Path(__file__).parents[0]
