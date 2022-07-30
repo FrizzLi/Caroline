@@ -1,3 +1,4 @@
+import functools
 import glob
 import json
 import os
@@ -6,31 +7,48 @@ from collections import defaultdict
 from pathlib import Path
 
 import discord
-from cogs.korean.edu.create_vocab import createVocab as crVocab
 from discord.ext import commands
 from discord.utils import get
+
+from cogs.korean.create_vocab import dl_vocab
 
 
 class Language(commands.Cog):
     def __init__(self, bot):
-        
-        kor_dir = os.path.dirname(os.path.abspath(__file__))
-        path = f"{kor_dir}\\kor_config.json"
-        if os.path.exists(path):
-            with open(path, "r") as cf:
-                config = json.load(cf)
-        else:
-            config = {"level": "1", "lesson": "1", "review": "default"}
-            with open(path, "w") as cf:
-                json.dump(config, cf)
-
         self.bot = bot
-        self.config = config
+        self.config = self.load_config()
 
     # These parameters doesn't need to be in config, they're not so usable
     personalization = True  # NotImplemented
-    unfounded_save = 0
-    show_eng_word = 1
+    unfounded_save = 0  # ? What is this
+    show_eng_word = 1  # works for writing exercise
+
+    def load_config(self):
+        source_dir = Path(__file__).parents[0]
+        config_file_path = Path(f"{source_dir}/config.json")
+        if os.path.exists(config_file_path):
+            with open(config_file_path, "r") as file:
+                config = json.load(file)
+        else:
+            config = {"level": "1", "lesson": "1", "review": "default"}
+            with open(config_file_path, "w", encoding="utf-8") as file:
+                json.dump(config, file)
+
+        return config
+
+    def save_config(self):
+        def decorator(function):
+            @functools.wraps(function)
+            def wrapper(*args, **kwargs):
+                function(*args, **kwargs)
+
+                source_dir = Path(__file__).parents[0]
+                config_file_path = Path(f"{source_dir}/config.json")
+                with open(config_file_path, "w", encoding="utf-8") as file:
+                    json.dump(self.config, file)
+
+            return wrapper
+        return decorator
 
     @property
     def level(self):
@@ -44,25 +62,22 @@ class Language(commands.Cog):
     def review(self):
         return f'review_{self.config["review"]}'
 
-    def saveJsonConfig(self):
-        kor_dir = os.path.dirname(os.path.abspath(__file__))
-        with open(f"{kor_dir}\\kor_config.json", "w") as cf:
-            json.dump(self.config, cf)
-
     @level.setter
+    @save_config
     def level(self, number):
         self.config["level"] = number
-        self.saveJsonConfig()
 
     @lesson.setter
+    @save_config
     def lesson(self, number):
         self.config["lesson"] = number
-        self.saveJsonConfig()
 
     @review.setter
+    @save_config
     def review(self, fname):
         self.config["review"] = fname
-        self.saveJsonConfig()
+
+
 
     @commands.command()
     async def setLevel(self, ctx, number):
@@ -93,18 +108,18 @@ class Language(commands.Cog):
 
     @commands.command(brief="adds a lesson to review file (par. by settings)")
     async def addLesson(self, ctx):
-        dir_path = os.path.dirname(os.path.abspath(__file__)) + "\\edu"
-
-        path_to_author = f"{dir_path}\\{ctx.author}"
-        Path(path_to_author).mkdir(parents=True, exist_ok=True)
-        path_to_review = f"{path_to_author}\\{self.review}.json"
+        source_dir = Path(__file__).parents[0]
+        data_path = Path(f"{source_dir}/data")
+        data_user_path = Path(f"{data_path}/{ctx.author}")
+        Path(data_user_path).mkdir(parents=True, exist_ok=True)
+        path_to_review = Path(f"{data_user_path}/{self.review}.json")
         if os.path.exists(path_to_review):
             with open(path_to_review, "r", encoding="utf-8") as f:
                 review_vocab = json.load(f)
         else:
             review_vocab = {}
 
-        path_to_lesson = f"{dir_path}\\{self.level}.json"
+        path_to_lesson = Path(f"{data_path}/{self.level}.json")
         with open(path_to_lesson, "r", encoding="utf-8") as cf:
             level_vocab = json.load(cf)
 
@@ -117,9 +132,9 @@ class Language(commands.Cog):
         )
 
     @commands.command(brief="creates vocab from text file [lesson_only]")
-    async def createVocab(self, ctx, lesson_only=1, text_only=1):
+    async def create_vocab(self, ctx, lesson_only=1, text_only=1):
         lesson = self.lesson if lesson_only else False
-        crVocab(self.level, lesson, text_only, self.unfounded_save)
+        dl_vocab(self.level, lesson, text_only, self.unfounded_save)
         await ctx.send("Vocab has been created!")
 
     @commands.command(brief="start listening vocab exercise++", aliases=["el"])
@@ -138,7 +153,7 @@ class Language(commands.Cog):
         await self.bot.change_presence(activity=discord.Game(name="Korean"))
 
         # get vocab
-        dir_path = os.path.dirname(os.path.abspath(__file__)) + "\\edu"
+        dir_path = os.path.dirname(os.path.abspath(__file__)) + "\\data"
         if review:
             full_path = f"{dir_path}\\{ctx.author}\\{self.review}.json"
             if os.path.exists(full_path):
@@ -146,7 +161,9 @@ class Language(commands.Cog):
                     all_vocab = json.load(f)
             else:
                 await ctx.send("Review vocab file does not exist.")
-                raise commands.CommandError("Review vocab file does not exist.")
+                raise commands.CommandError(
+                    "Review vocab file does not exist."
+                )
             all_vocab = [(k, v) for k, v in all_vocab.items()]
         else:
             full_path = f"{dir_path}\\{self.level}.json"
@@ -286,7 +303,7 @@ class Language(commands.Cog):
     @commands.command(brief="start vocab exercise", aliases=["e"])
     async def exercise(self, ctx):
 
-        with open(f"cogs/edu/{self.level}.json", "r", encoding="utf-8") as f:
+        with open(f"cogs/data/{self.level}.json", "r", encoding="utf-8") as f:
             all_vocab = json.load(f)
 
             await ctx.send(
@@ -309,9 +326,9 @@ class Language(commands.Cog):
         if self.personalization:
             stats = defaultdict(list)
             nick = response.author.nick
-            if os.path.exists(f"cogs/edu/{nick}-{lesson}.json"):
+            if os.path.exists(f"cogs/data/{nick}-{lesson}.json"):
                 with open(
-                    f"cogs/edu/{nick}-{lesson}.json", "r", encoding="utf-8"
+                    f"cogs/data/{nick}-{lesson}.json", "r", encoding="utf-8"
                 ) as f:
                     stats = defaultdict(list, json.load(f))  # optimize maybe
         attempts = 0
@@ -326,7 +343,7 @@ class Language(commands.Cog):
         elif not voice:
             await user_voice.channel.connect()
         voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
-        audio_paths = glob.glob(f"cogs/edu/{self.level}/{lesson}/*")
+        audio_paths = glob.glob(f"cogs/data/{self.level}/{lesson}/*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
             word = audio_path.split("\\")[-1][:-4]
@@ -390,11 +407,12 @@ class Language(commands.Cog):
 
         # print and save stats
         accuracy = corrects / attempts * 100
-        msg = f"{corrects} answers were right out of {attempts}! ({accuracy:.2f}%)"
+        msg = f"{corrects} answers were right out of {attempts}! \
+            ({accuracy:.2f}%)"
         await ctx.send(msg)
         if self.personalization:
             with open(
-                f"cogs/edu/{nick}-{lesson}.json", "w", encoding="utf-8"
+                f"cogs/data/{nick}-{lesson}.json", "w", encoding="utf-8"
             ) as f:
                 json.dump(stats, f, sort_keys=True, ensure_ascii=False)
             await ctx.send("Score has been saved.")
@@ -403,4 +421,3 @@ class Language(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Language(bot))
-
