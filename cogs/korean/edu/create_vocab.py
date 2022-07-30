@@ -9,8 +9,8 @@ import time
 from pathlib import Path
 
 
-def createVocab(level, lesson, text_only, unfounded_save=0):
-    def searchWords(koreanWords):
+def dl_vocab(level, lesson, text_only, unfounded_save=0):
+    def search_words(koreanWords):
         url = ('https://ko.dict.naver.com/api3/koko/search?' + urllib.parse.urlencode({'query': koreanWords}) + '&range=word&page=1')
         response = urllib.request.urlopen(url)
         reader = codecs.getreader("utf-8")
@@ -46,23 +46,23 @@ def createVocab(level, lesson, text_only, unfounded_save=0):
 
                                 time.sleep(.3)
 
-    def parseWords(listOfWords):
+    def parse_words(listOfWords):
         for x in range(0, math.floor(len(listOfWords)/10)):
             tempWords = []
             for y in range(0, 10):
                 tempWords.append(listOfWords[x*10+y])
 
             print("Searching: " + str(x+1) + "/" + str(math.ceil(len(listOfWords)/10)))
-            searchWords(tempWords)
+            search_words(tempWords)
 
         tempWords = []
         for y in range(math.floor(len(listOfWords)/10)*10+1, len(listOfWords)):
             tempWords.append(listOfWords[y])
         print("Searching: " + str((math.ceil(len(listOfWords)/10))) + "/" + str(math.ceil(len(listOfWords)/10)))
-        searchWords(tempWords)
+        search_words(tempWords)
 
     # select vocabulary text files
-    def getLessonNames(paths):
+    def get_lesson_names(paths):
         return paths.split("\\")[-1][:-4]
 
     curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -73,7 +73,7 @@ def createVocab(level, lesson, text_only, unfounded_save=0):
         path = f"{level_dir}\\lesson_*.txt"
 
     lesson_paths = glob.glob(path, recursive=True)
-    name_paths = list(map(getLessonNames, lesson_paths))
+    name_paths = list(map(get_lesson_names, lesson_paths))
 
     # create lesson directories
     for lesson_name in name_paths:
@@ -123,7 +123,7 @@ def createVocab(level, lesson, text_only, unfounded_save=0):
         mp3Links = []
         wordInputs = unchangedWordList = korean_lesson_words
         timesDownloaded = [0] * len(unchangedWordList)
-        parseWords(wordInputs)
+        parse_words(wordInputs)
 
         for z in range(0, len(timesDownloaded)):
             if timesDownloaded[z] == 0:
@@ -137,7 +137,7 @@ def createVocab(level, lesson, text_only, unfounded_save=0):
             unfoundWords = []
             for x in range(0, len(oldUnfoundWords)):
                 print("Searching: " + str(x + 1) + "/" + str(len(oldUnfoundWords)))
-                searchWords(oldUnfoundWords[x])
+                search_words(oldUnfoundWords[x])
 
             for z in range(0, len(timesDownloaded)):
                 if timesDownloaded[z] == 0:

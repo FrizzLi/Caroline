@@ -7,4 +7,5 @@ cogs/ai_algo/data/maps
 cogs/ai_algo/data/solutions
 cogs/korean/kor_config.json
 cogs/music/downloaded
+cogs/korean/config.json
 .env
