@@ -1,10 +1,11 @@
 venv
+.env
 *.pyc
 *.vscode
 *.gif
 cogs/ai_algo/data/knowledge/*facts.txt
 cogs/ai_algo/data/maps
 cogs/ai_algo/data/solutions
-cogs/music/downloaded
 cogs/korean/config.json
-.env
+cogs/korean/data/*#*
+cogs/music/downloaded
