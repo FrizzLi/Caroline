@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 
-def dl_vocab(level, lesson, text_only, unfounded_save=0):
+def dl_vocab(level, lesson, text_only):
     def search_words(koreanWords):
         url = ('https://ko.dict.naver.com/api3/koko/search?' + urllib.parse.urlencode({'query': koreanWords}) + '&range=word&page=1')
         response = urllib.request.urlopen(url)
@@ -65,8 +65,8 @@ def dl_vocab(level, lesson, text_only, unfounded_save=0):
     def get_lesson_names(paths):
         return paths.split("\\")[-1][:-4]
 
-    curr_dir = os.path.dirname(os.path.abspath(__file__))
-    level_dir = f"{curr_dir}\\{level}"
+    source_dir = Path(__file__).parents[0]
+    level_dir = Path(f"{source_dir}/data/{level}")
     if lesson:
         path = f"{level_dir}\\{lesson}.txt"
     else:
@@ -144,12 +144,12 @@ def dl_vocab(level, lesson, text_only, unfounded_save=0):
                     unfoundWords.append(unchangedWordList[z])
 
             # saving unfounded words into text files
-            if unfoundWords and unfounded_save:
+            if unfoundWords:
                 unfoundWords_str = ", ".join(str(x) for x in unfoundWords)
-                n = lesson_name[-1] if lesson_name[-2] == "_" else lesson_name[-2:]
-                path = f"{level_dir}\\{n}unfoundWords.txt"
-                with open(path, "w", encoding="utf-8") as f:
-                    f.write(unfoundWords_str)
+                # n = lesson_name[-1] if lesson_name[-2] == "_" else lesson_name[-2:]
+                # path = f"{level_dir}\\{n}unfoundWords.txt"
+                # with open(path, "w", encoding="utf-8") as f:
+                #     f.write(unfoundWords_str)
                 print(unfoundWords_str + " could not be found.")
 
 # https://www.reddit.com/r/Korean/comments/a0wkq7/tip_mass_download_audio_files_from_naver/
