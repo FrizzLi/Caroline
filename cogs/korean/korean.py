@@ -419,3 +419,5 @@ async def setup(bot):
 # TODO: Guessing, Slash commands, Bigger buttons, Mix lessons
 # TODO: FIX MMPEG to play
 # TODO: Improve vocab explanation (text files)
+
+# TODO: remove keep_alive (repl.it)
