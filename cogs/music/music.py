@@ -186,7 +186,7 @@ class Music(commands.Cog):
                 #audio1 = video.streams.filter(only_audio=True)
                 #audio2 = video.streams.get_highest_resolution()
                 #video.streams.first().download()
-        
+
         await ctx.send(f"'{p.title}' playlist has been downloaded!")
 
 
