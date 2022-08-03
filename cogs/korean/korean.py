@@ -104,18 +104,18 @@ class Language(commands.Cog):
 
         source_dir = Path(__file__).parents[0]
         data_path = Path(f"{source_dir}/data")
-        data_user_path = Path(f"{data_path}/{interaction.user.name}")
+        data_user_path = Path(f"{data_path}/users/{interaction.user.name}")
         Path(data_user_path).mkdir(parents=True, exist_ok=True)
         custom_path = Path(f"{data_user_path}/{self.custom}.json")
 
         if os.path.exists(custom_path):
-            with open(custom_path, "r", encoding="utf-8") as file:
+            with open(custom_path, encoding="utf-8") as file:
                 custom_vocab = json.load(file)
         else:
             custom_vocab = {}
 
         level_path = Path(f"{data_path}/{self.level}.json")
-        with open(level_path, "r", encoding="utf-8") as file:
+        with open(level_path, encoding="utf-8") as file:
             level_vocab = json.load(file)
 
         custom_vocab = {**custom_vocab, **level_vocab[self.lesson]}
@@ -141,81 +141,77 @@ class Language(commands.Cog):
 
         source_dir = Path(__file__).parents[0]
         level_path = Path(f"{source_dir}/data/{self.level}.json")
+        await interaction.response.send_message('Exit by "EXIT"')
+        await self.bot.change_presence(
+            activity=discord.Game(name="Korean vocabulary")
+        )
 
-        with open(level_path, "r", encoding="utf-8") as f:
-            all_vocab = json.load(f)
+        with open(level_path, encoding="utf-8") as file:
 
-            starting_msg = f'Vocabulary practice mode activated! Start by writing lesson \
-                name: {", ".join(all_vocab.keys())}, Exit by typing "EXIT"'
-            await interaction.response.send_message(starting_msg)
-            await self.bot.change_presence(
-                activity=discord.Game(name="Korean vocabulary")
-            )
+            # set vocab
+            level_vocab = json.load(file)
+            lesson_vocab = list(level_vocab[self.lesson].items())
+            random.shuffle(lesson_vocab)
+            if not self.show_eng_word:
+                lesson_vocab = [word[::-1] for word in lesson_vocab]
 
-            # message.author.name?, channel..?
-            response = await self.bot.wait_for(
-                "message",
-                check=lambda message: message.author == interaction.user.name
-                and message.channel == interaction.channel,
-            )
-            lesson = response.content
-
-            sub_vocab = list(all_vocab[lesson].items())
-            random.shuffle(sub_vocab)
-
+        # personalization
         if self.personalization:
             stats = defaultdict(list)
-            nick = response.author.nick
-            if os.path.exists(f"cogs/data/{nick}-{lesson}.json"):
-                with open(
-                    f"cogs/data/{nick}-{lesson}.json", "r", encoding="utf-8"
-                ) as f:
-                    stats = defaultdict(list, json.load(f))  # optimize maybe
-        attempts = 0
-        corrects = 0
-        incorrect_words = set()
 
-        # get audio
+            name = interaction.user.name
+            file_name = f"{name}-{self.level}-{self.lesson}.json"
+            users_dir = Path(f"{source_dir}/data/users")
+            Path(users_dir).mkdir(parents=True, exist_ok=True)
+            file_score_path = Path(f"{users_dir}/{file_name}")
+            if os.path.exists(file_score_path):
+                with open(file_score_path, encoding="utf-8") as file:
+                    json_content = json.load(file)
+                    stats = defaultdict(list, json_content)
+
+        # TODO: get audio
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
-        if not voice and not user_voice:
-            raise commands.CommandError("No bot nor you is connected.")  # slash commands?!
+        if not voice and not user_voice:  # slash commands?!
+            raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
-        audio_paths = glob.glob(f"cogs/data/{self.level}/{lesson}/*")
+        audio_paths = glob.glob(f"cogs/data/{self.level}/{self.lesson}/*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
             word = audio_path.split("\\")[-1][:-4]
             name_to_path_dict[word] = audio_path
 
-        while not response.content.startswith("EXIT"):  # while True:
-            q = sub_vocab[0]
-            guessing, answer = q if self.show_eng_word else q[::-1]
+        # session starts
+        attempts = 0
+        corrects = 0
+        incorrect_words = set()
+        while True:
+            guessing, answer = lesson_vocab[0]
             await interaction.followup.send(guessing)
             response = await self.bot.wait_for(
                 "message",
-                check=lambda message: message.author == interaction.user.name
+                check=lambda message: message.author == interaction.user
                 and message.channel == interaction.channel,
             )
+            if response.content == "EXIT":
+                break
 
             if response.content.lower() == answer.lower():
-                stats[answer].append(True)
                 await interaction.followup.send("Correct!")
+                stats[answer].append(True)
                 corrects += 1
-                sub_vocab.append(sub_vocab.pop(0))
-            elif response.content == "?":
-                break
+                lesson_vocab.append(lesson_vocab.pop(0))
             else:
+                await interaction.followup.send(f"Incorrect! It is {answer}")
                 stats[answer].append(False)
-                await interaction.followup.send(f"Incorrect! The right answer is {answer}")
                 incorrect_words.add(guessing)
-                new_index = len(sub_vocab) // 5
-                # old_index = sub_vocab.index(q)
-                sub_vocab.insert(new_index, sub_vocab.pop(0))
+                new_index = len(lesson_vocab) // 5
+                lesson_vocab.insert(new_index, lesson_vocab.pop(0))
             attempts += 1
 
-            # play sound
+            # TODO: play sound
             if answer in name_to_path_dict:
                 voice.play(
                     discord.FFmpegPCMAudio(
@@ -224,22 +220,23 @@ class Language(commands.Cog):
                     )
                 )
 
-            # set queuer
-            # level, lesson
-            # answer
+            if not all(stats[answer][-1:-3:-1]):
+                continue_ = True
 
-            # requires optimalization
+            # check if last two answers are correct in stats, if not, continue
             continue_ = False
             for word in stats.values():
-                for last_result in word[-1::]:
-                    if not last_result:
-                        continue_ = True
+                if not all(word[-1:-3:-1]):
+                    continue_ = True  # opt possible
+                # for last_result in word[-1::]: (previously)
+                #     if not last_result:
+                #         continue_ = True
 
-            if not continue_ and len(sub_vocab) <= attempts:
+            if not continue_ and len(lesson_vocab) <= attempts:
                 await interaction.followup.send(
                     f"You answered all words correctly twice in a row! \
                     (or once if you only guessed once). \
-                    Incorrect words are: {incorrect_words}"
+                    Incorrect words were: {incorrect_words}"
                 )
                 break
 
@@ -248,13 +245,13 @@ class Language(commands.Cog):
         msg = f"{corrects} answers were right out of {attempts}! \
             ({accuracy:.2f}%)"
         await interaction.followup.send(msg)
+
         if self.personalization:
-            with open(
-                f"cogs/data/{nick}-{lesson}.json", "w", encoding="utf-8"
-            ) as f:
-                json.dump(stats, f, sort_keys=True, ensure_ascii=False)
+            with open(file_score_path, "w", encoding="utf-8") as file:
+                json.dump(stats, file, sort_keys=True, ensure_ascii=False)
             await interaction.followup.send("Score has been saved.")
-        await interaction.followup.send(f"Exiting {lesson} exercise..")
+
+        await interaction.followup.send(f"Exiting {self.lesson} exercise..")
 
     @app_commands.command(name="el")
     async def exercise_listening(self, interaction, custom: int = 0):
@@ -279,7 +276,7 @@ class Language(commands.Cog):
         if custom:
             full_path = f"{dir_path}\\{interaction.user.name}\\{self.custom}.json"
             if os.path.exists(full_path):
-                with open(full_path, "r", encoding="utf-8") as f:
+                with open(full_path, encoding="utf-8") as f:
                     all_vocab = json.load(f)
             else:
                 await interaction.response.send_message("Custom file does not exist.")
@@ -287,7 +284,7 @@ class Language(commands.Cog):
             all_vocab = [(k, v) for k, v in all_vocab.items()]
         else:
             full_path = f"{dir_path}\\{self.level}.json"
-            with open(full_path, "r", encoding="utf-8") as f:
+            with open(full_path, encoding="utf-8") as f:
                 all_vocab = json.load(f)
             all_vocab = [(k, v) for k, v in all_vocab[self.lesson].items()]
             random.shuffle(all_vocab)
@@ -376,7 +373,7 @@ class Language(commands.Cog):
                     path += f"{self.level}_unknown.json"
                     unknown_words = {self.lesson: unknown_words}
                 if os.path.exists(path):
-                    with open(path, "r", encoding="utf-8") as cf:
+                    with open(path, encoding="utf-8") as cf:
                         old_unknown_words = json.load(cf)
                 else:
                     old_unknown_words = {}
@@ -424,8 +421,10 @@ class Language(commands.Cog):
 async def setup(bot):
     await bot.add_cog(Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))])
 
-# TODO: Apply Slash commands, Fix MMPEG to play
-# TODO: Guessing, Bigger buttons, Mix lessons
-# TODO: Improve vocab explanation (text files)
+# TODO: Slash commands, Make exercise usable (no need to polish it yet)
+# TODO: FIX MMPEG to play, make listening exercise usable
+# TODO: Bigger buttons
+# TODO: Mix lessons, Improve vocab explanation (text files)
 
 # TODO: remove keep_alive (repl.it)
+# TODO: downloading audio stopped working

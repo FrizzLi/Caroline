@@ -99,7 +99,7 @@ def dl_vocab(level, lesson, text_only):
 
     if vocabd:
         if os.path.exists(f"{level_dir}.json"):
-            with open(f"{level_dir}.json", "r", encoding="utf-8") as f:
+            with open(f"{level_dir}.json", encoding="utf-8") as f:
                 old_vocabd = json.load(f)
                 vocabd = {**old_vocabd, **vocabd}
         with open(f"{level_dir}.json", "w", encoding="utf-8") as f:
