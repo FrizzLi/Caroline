@@ -1,8 +1,8 @@
-import glob
 import json
 import os
 import random
 from collections import defaultdict
+from glob import glob
 from pathlib import Path
 
 import discord
@@ -143,7 +143,7 @@ class Language(commands.Cog):
         level_path = Path(f"{source_dir}/data/{self.level}.json")
         await interaction.response.send_message('Exit by "EXIT"')
         await self.bot.change_presence(
-            activity=discord.Game(name="Korean vocabulary")
+            activity=discord.Game(name="Vocab typing")
         )
 
         with open(level_path, encoding="utf-8") as file:
@@ -177,10 +177,10 @@ class Language(commands.Cog):
         elif not voice:
             await user_voice.channel.connect()
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
-        audio_paths = glob.glob(f"cogs/data/{self.level}/{self.lesson}/*")
+        audio_paths = glob(f"cogs/data/{self.level}/{self.lesson}/*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
-            word = audio_path.split("\\")[-1][:-4]
+            word = audio_path.split("/")[-1][:-4]
             name_to_path_dict[word] = audio_path
 
         # session starts
@@ -227,10 +227,7 @@ class Language(commands.Cog):
             continue_ = False
             for word in stats.values():
                 if not all(word[-1:-3:-1]):
-                    continue_ = True  # opt possible
-                # for last_result in word[-1::]: (previously)
-                #     if not last_result:
-                #         continue_ = True
+                    continue_ = True
 
             if not continue_ and len(lesson_vocab) <= attempts:
                 await interaction.followup.send(
@@ -258,7 +255,7 @@ class Language(commands.Cog):
         """Start listening vocab exercise.
 
         In the case of customized lesson, audio files will be loaded only
-        from level that is set in the settings.
+        from level that is set in the settings. TODO!!! find that are in custom
         """
 
         voice = get(self.bot.voice_clients, guild=interaction.guild)
@@ -269,56 +266,60 @@ class Language(commands.Cog):
             await user_voice.channel.connect()
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
 
-        await self.bot.change_presence(activity=discord.Game(name="Korean"))
+        await self.bot.change_presence(activity=discord.Game(name="Vocab listening"))
 
         # get vocab
-        dir_path = os.path.dirname(os.path.abspath(__file__)) + "\\data"
+        source_dir = Path(__file__).parents[0]
+        data_path = f"{source_dir}/data"
+
         if custom:
-            full_path = f"{dir_path}\\{interaction.user.name}\\{self.custom}.json"
-            if os.path.exists(full_path):
-                with open(full_path, encoding="utf-8") as f:
-                    all_vocab = json.load(f)
+            custom_file_path = Path(f"{data_path}/users/{self.custom}.json")
+            if os.path.exists(custom_file_path):
+                with open(custom_file_path, encoding="utf-8") as file:
+                    custom_vocab = json.load(file)
             else:
                 await interaction.response.send_message("Custom file does not exist.")
                 raise commands.CommandError("Custom file does not exist.")
-            all_vocab = [(k, v) for k, v in all_vocab.items()]
+            vocab = list(custom_vocab.items())
         else:
-            full_path = f"{dir_path}\\{self.level}.json"
-            with open(full_path, encoding="utf-8") as f:
-                all_vocab = json.load(f)
-            all_vocab = [(k, v) for k, v in all_vocab[self.lesson].items()]
-            random.shuffle(all_vocab)
+            custom_file_path = Path(f"{data_path}/{self.level}.json")
+            with open(custom_file_path, encoding="utf-8") as f:
+                vocab = json.load(f)
+            vocab = list(vocab[self.lesson].items())
+
+        random.shuffle(vocab)
 
         # load audio files
-        audio_paths = f"{dir_path}\\{self.level}\\"
+        level_path = f"{data_path}/{self.level}"
         if custom:  # from whole level
-            audio_paths = glob.glob(f"{audio_paths}\\*\\*")
+            audio_paths = glob(f"{level_path}/*/*")
         else:  # from one lesson
-            audio_paths = glob.glob(f"{audio_paths}\\{self.lesson}\\*")
+            audio_paths = glob(f"{level_path}/{self.lesson}/*")
+
         name_to_path_dict = {}
         for audio_path in audio_paths:
-            word = audio_path.split("\\")[-1][:-4]
+            word = audio_path.split("/")[-1][:-4]
             name_to_path_dict[word] = audio_path
 
         i = 1
-        n = len(all_vocab)
+        n = len(vocab)
         if custom:
             practice = self.custom
         else:
             practice = f"{self.level} - {self.lesson}"
 
-        msg_counter = await interaction.followup.send(f"[{practice}]: {i}. out of {n}.")
-        msg = await interaction.followup.send("Starting...")
-        msg_stats = await interaction.followup.send("Turning on stats...")
-        await msg_stats.add_reaction("✅")  # next: know well
-        await msg_stats.add_reaction("⏭️")  # next: know okayish
-        await msg_stats.add_reaction("❌")  # next: don't know
-        await msg_stats.add_reaction("🔁")  # repeat
-        await msg_stats.add_reaction("🔚")  # end
+        await interaction.response.send_message(f"[{practice}]")
+        counter = f"{i}. word out of {n}."
+        msg = await interaction.followup.send(counter)
+        await msg.add_reaction("✅")  # next: know well
+        await msg.add_reaction("⏭️")  # next: know okayish
+        await msg.add_reaction("❌")  # next: don't know
+        await msg.add_reaction("🔁")  # repeat
+        await msg.add_reaction("🔚")  # end
 
         # nobody except the command sender can interact with the "menu"
         def check(reaction, user):
-            return user == interaction.user.name and reaction.emoji in [
+            return user.name == interaction.user.name and reaction.emoji in [
                 "🔚",
                 "⏭️",
                 "🔁",
@@ -338,11 +339,12 @@ class Language(commands.Cog):
         good = g = 0
         ok = o = 0
         bad = b = 0
+        stats = ""
 
         # edit last message with spoiled word
         run = True
         while run:
-            eng, kor = all_vocab[-1]
+            eng, kor = vocab[-1]
 
             # handling word that has no audio
             if kor in name_to_path_dict:
@@ -355,7 +357,8 @@ class Language(commands.Cog):
             else:
                 msg_display = f"{kor} = ||{eng}||"
 
-            await msg.edit(content=msg_display)
+            content = f"{counter}\n{msg_display}\n{stats}"
+            await msg.edit(content=content)
             reaction, user = await self.bot.wait_for(
                 "reaction_add", check=check
             )
@@ -366,7 +369,7 @@ class Language(commands.Cog):
 
                 # save unknown words to file for future
                 unknown_words = {k: v for k, v in unknown_words}
-                path = f"{dir_path}\\{interaction.user.name}\\"
+                path = f"{data_path}\\{interaction.user.name}\\"
                 if custom:
                     path += f"{self.custom}_unknown.json"
                 else:
@@ -383,26 +386,26 @@ class Language(commands.Cog):
 
                 # save vocab queue to file
                 if custom:
-                    dict_vocab = {k: v for k, v in all_vocab}
-                    with open(full_path, "w", encoding="utf-8") as f:
+                    dict_vocab = dict(vocab)
+                    with open(custom_file_path, "w", encoding="utf-8") as f:
                         json.dump(dict_vocab, f, indent=4, ensure_ascii=False)
 
             elif reaction.emoji != "🔁":
-                word_to_move = all_vocab.pop()
+                word_to_move = vocab.pop()
                 if reaction.emoji == "✅":
-                    all_vocab.insert(0, word_to_move)
+                    vocab.insert(0, word_to_move)
                     good += 1
                 elif reaction.emoji == "⏭️":
-                    all_vocab.insert(len(all_vocab) // 2, word_to_move)
+                    vocab.insert(len(vocab) // 2, word_to_move)
                     ok += 1
                     n += 1
                 elif reaction.emoji == "❌":
                     unknown_words.append(word_to_move)
                     if custom:
-                        all_vocab.insert(-10, word_to_move)
+                        vocab.insert(-10, word_to_move)
                     else:
-                        new_index = len(all_vocab) // 5
-                        all_vocab.insert(-new_index, word_to_move)
+                        new_index = len(vocab) // 5
+                        vocab.insert(-new_index, word_to_move)
                     bad += 1
                     n += 1
 
@@ -410,18 +413,16 @@ class Language(commands.Cog):
                 g, o, b = compute_percentages(good, ok, bad)
 
             stats = f"{g}%,   {o}%,   {b}%"
-            counter = f"[{practice}]: {i}. out of {n}"
+            counter = f"{i}. word out of {n}"
 
-            await msg_stats.remove_reaction(reaction, user)
-            await msg_stats.edit(content=stats)
-            await msg_counter.edit(content=counter)
-            await msg.edit(content=msg_display)
+            await msg.remove_reaction(reaction, user)
+            content = f"{counter}\n{msg_display}\n{stats}"
+            await msg.edit(content=content)
 
 
 async def setup(bot):
     await bot.add_cog(Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))])
 
-# TODO: Slash commands, Make exercise usable (no need to polish it yet)
 # TODO: FIX MMPEG to play, make listening exercise usable
 # TODO: Bigger buttons
 # TODO: Mix lessons, Improve vocab explanation (text files)

@@ -1,4 +1,4 @@
-import glob
+from glob import glob
 import os
 import json
 import urllib.request
@@ -72,7 +72,7 @@ def dl_vocab(level, lesson, text_only):
     else:
         path = f"{level_dir}\\lesson_*.txt"
 
-    lesson_paths = glob.glob(path, recursive=True)
+    lesson_paths = glob(path, recursive=True)
     name_paths = list(map(get_lesson_names, lesson_paths))
 
     # create lesson directories

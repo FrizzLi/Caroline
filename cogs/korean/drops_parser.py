@@ -1,6 +1,6 @@
-import glob
+from glob import glob
 
-paths = glob.glob("vocab5/*/*")
+paths = glob("vocab5/*/*")
 titles = [full_path for full_path in paths]
 
 for title in titles:
