@@ -5,7 +5,7 @@ from discord.ui import Button, Select, View
 
 
 def get_readable_duration(duration):
-    """Get duration in hs, minutes and sonds."""
+    """Get duration in hours, minutes and seconds."""
 
     m, s = divmod(int(duration), 60)
     h, m = divmod(m, 60)
@@ -64,16 +64,19 @@ class PlayerView(View):
 
         tracks, remains, volume, loop_q, loop_t = self._get_page_info()
         end = timer()
-        duration_left = self.source.duration - (end - self.start)
-        duration = get_readable_duration(duration_left)
-        duration = "0:00:00" if duration.startswith("-") else duration
+        duration_total = self.source.duration
+        duration_total = get_readable_duration(duration_total)
+        duration_total = "0:00:00" if duration_total.startswith("-") else duration_total
+        duration_curr = end - self.start
+        duration_curr = get_readable_duration(duration_curr)
+        duration_curr = "0:00:00" if duration_curr.startswith("-") else duration_curr
 
         remains = f"{remains} remaining track(s)"
         vol = f"Volume: {volume}"
         loop_q = f"(🔁) Loop Queue: {loop_q}"
         loop_t = f"(🔂) Loop Track: {loop_t}"
         req = f"Requester: '{self.source.requester}'"
-        dur = f"Duration: {duration} (refreshable)"
+        dur = f"Duration: {duration_curr} (refreshable) / {duration_total}"
         views = f"Views: {self.source.view_count:,}"
 
         msg = (
