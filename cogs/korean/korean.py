@@ -11,6 +11,7 @@ from discord.ext import commands
 from discord.utils import get
 
 from cogs.korean.create_vocab import dl_vocab
+from cogs.korean.session_view import SessionView
 
 
 class Language(commands.Cog):
@@ -192,8 +193,8 @@ class Language(commands.Cog):
             await interaction.followup.send(guessing)
             response = await self.bot.wait_for(
                 "message",
-                check=lambda message: message.author == interaction.user
-                and message.channel == interaction.channel,
+                check=lambda msg: msg.author == interaction.user
+                and msg.channel == interaction.channel,
             )
             if response.content == "EXIT":
                 break
@@ -311,29 +312,6 @@ class Language(commands.Cog):
         await interaction.response.send_message(f"[{practice}]")
         counter = f"{i}. word out of {n}."
         msg = await interaction.followup.send(counter)
-        await msg.add_reaction("✅")  # next: know well
-        await msg.add_reaction("⏭️")  # next: know okayish
-        await msg.add_reaction("❌")  # next: don't know
-        await msg.add_reaction("🔁")  # repeat
-        await msg.add_reaction("🔚")  # end
-
-        # nobody except the command sender can interact with the "menu"
-        def check(reaction, user):
-            return user.name == interaction.user.name and reaction.emoji in [
-                "🔚",
-                "⏭️",
-                "🔁",
-                "❌",
-                "✅",
-            ]
-
-        def compute_percentages(good, ok, bad):
-            total = good + ok + bad
-            return (
-                round(good * 100 / total, 1),
-                round(ok * 100 / total, 1),
-                round(bad * 100 / total, 1),
-            )
 
         unknown_words = []
         good = g = 0
@@ -343,6 +321,8 @@ class Language(commands.Cog):
 
         # edit last message with spoiled word
         run = True
+        view = SessionView()
+
         while run:
             eng, kor = vocab[-1]
 
@@ -357,12 +337,15 @@ class Language(commands.Cog):
                 msg_display = f"{kor} = ||{eng}||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
-            await msg.edit(content=content)
-            reaction, user = await self.bot.wait_for(
-                "reaction_add", check=check
-            )
+            await msg.edit(content=content, view=view)
 
-            if reaction.emoji == "🔚":
+            interaction = await self.bot.wait_for(
+                "interaction",
+                check=lambda inter: "custom_id" in inter.data.keys()
+                and inter.user.name == interaction.user.name,
+            )
+            button_id = interaction.data['custom_id']
+            if button_id == "end":
                 msg_display = "Ending listening session."
                 run = False
 
@@ -389,16 +372,19 @@ class Language(commands.Cog):
                     with open(custom_file_path, "w", encoding="utf-8") as f:
                         json.dump(dict_vocab, f, indent=4, ensure_ascii=False)
 
-            elif reaction.emoji != "🔁":
+                content = f"{counter}\n{msg_display}\n{stats}"
+                await msg.edit(content=content, view=view)
+
+            elif button_id != "repeat":
                 word_to_move = vocab.pop()
-                if reaction.emoji == "✅":
+                if button_id == "easy":
                     vocab.insert(0, word_to_move)
                     good += 1
-                elif reaction.emoji == "⏭️":
+                elif button_id == "medium":
                     vocab.insert(len(vocab) // 2, word_to_move)
                     ok += 1
                     n += 1
-                elif reaction.emoji == "❌":
+                elif button_id == "hard":
                     unknown_words.append(word_to_move)
                     if custom:
                         vocab.insert(-10, word_to_move)
@@ -414,13 +400,8 @@ class Language(commands.Cog):
             stats = f"{g}%,   {o}%,   {b}%"
             counter = f"{i}. word out of {n}"
 
-            await msg.remove_reaction(reaction, user)
-            content = f"{counter}\n{msg_display}\n{stats}"
-            await msg.edit(content=content)
-
 
 async def setup(bot):
     await bot.add_cog(Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))])
 
-# TODO: Bigger buttons
 # TODO: Mix lessons, Improve vocab explanation (text files)
