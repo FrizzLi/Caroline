@@ -211,12 +211,12 @@ class Language(commands.Cog):
                 lesson_vocab.insert(new_index, lesson_vocab.pop(0))
             attempts += 1
 
-            # TODO: play sound
+            # play sound
             if answer in name_to_path_dict:
                 voice.play(
                     discord.FFmpegPCMAudio(
                         name_to_path_dict[answer],
-                        executable="C:/ffmpeg/ffmpeg.exe",
+                        executable="C:/ffmpeg/bin/ffmpeg.exe",
                     )
                 )
 
@@ -298,7 +298,7 @@ class Language(commands.Cog):
 
         name_to_path_dict = {}
         for audio_path in audio_paths:
-            word = audio_path.split("/")[-1][:-4]
+            word = audio_path.split("\\")[-1][:-4]
             name_to_path_dict[word] = audio_path
 
         i = 1
@@ -350,8 +350,7 @@ class Language(commands.Cog):
             if kor in name_to_path_dict:
                 msg_display = f"||{kor} = {eng}||"
                 try:
-                    p, e = name_to_path_dict[kor], "C:/ffmpeg/ffmpeg.exe"
-                    voice.play(discord.FFmpegPCMAudio(p, executable=e))
+                    voice.play(discord.FFmpegPCMAudio(name_to_path_dict[kor], executable="C:/ffmpeg/bin/ffmpeg.exe"))
                 except Exception:
                     await interaction.followup.send("Wait, press 🔁 to play unplayed audio.")
             else:
@@ -368,21 +367,21 @@ class Language(commands.Cog):
                 run = False
 
                 # save unknown words to file for future
-                unknown_words = {k: v for k, v in unknown_words}
-                path = f"{data_path}\\{interaction.user.name}\\"
+                unknown_words = dict(unknown_words)
+                path_str = f"{data_path}/{interaction.user.name}"
                 if custom:
-                    path += f"{self.custom}_unknown.json"
+                    path = Path(f"{path_str}/{self.custom}_unknown.json")
                 else:
-                    path += f"{self.level}_unknown.json"
+                    path = Path(f"{path_str}/{self.level}_unknown.json")
                     unknown_words = {self.lesson: unknown_words}
                 if os.path.exists(path):
-                    with open(path, encoding="utf-8") as cf:
-                        old_unknown_words = json.load(cf)
+                    with open(path, encoding="utf-8") as file:
+                        old_unknown_words = json.load(file)
                 else:
                     old_unknown_words = {}
                 unknown_words = {**unknown_words, **old_unknown_words}
-                with open(f"{path}", "w", encoding="utf-8") as cf:
-                    json.dump(unknown_words, cf, indent=4, ensure_ascii=False)
+                with open(path, "w", encoding="utf-8") as file:
+                    json.dump(unknown_words, file, indent=4, ensure_ascii=False)
 
                 # save vocab queue to file
                 if custom:
