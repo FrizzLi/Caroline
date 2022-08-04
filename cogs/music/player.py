@@ -111,12 +111,6 @@ class MusicPlayer:
 
             await self.next.wait()
 
-            # Make sure the FFmpeg process is cleaned up.
-            try:  # host in replit cannot process cleanup...
-                source.cleanup()
-            except ValueError as err:
-                print(err)
-
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
 
