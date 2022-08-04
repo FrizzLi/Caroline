@@ -99,14 +99,14 @@ class MusicPlayer:
             view = PlayerView(self, source)
             if not self.np_msg:
                 self.np_msg = await self.interaction.channel.send(
-                    view.msg, view=view
+                    content=view.msg, view=view
                 )
             elif self.np_msg.channel.last_message_id == self.np_msg.id:
-                self.np_msg = await self.np_msg.edit(view.msg, view=view)
+                self.np_msg = await self.np_msg.edit(content=view.msg, view=view)
             else:
                 await self.np_msg.delete()
                 self.np_msg = await self.interaction.channel.send(
-                    view.msg, view=view
+                    content=view.msg, view=view
                 )
 
             await self.next.wait()

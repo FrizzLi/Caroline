@@ -422,7 +422,6 @@ class Language(commands.Cog):
 async def setup(bot):
     await bot.add_cog(Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))])
 
-# TODO: FIX MMPEG to play, make listening exercise usable
 # TODO: Bigger buttons
 # TODO: Mix lessons, Improve vocab explanation (text files)
 
