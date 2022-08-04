@@ -65,4 +65,4 @@ bot.run(TOKEN)
 
 # TODO: Logs and Tests
 
-# TODO: remove keep_alive, setup.py, pytest from requirements
+# TODO: setup.py, pytest from requirements

@@ -424,6 +424,3 @@ async def setup(bot):
 
 # TODO: Bigger buttons
 # TODO: Mix lessons, Improve vocab explanation (text files)
-
-# TODO: remove keep_alive (repl.it)
-# TODO: downloading audio stopped working
