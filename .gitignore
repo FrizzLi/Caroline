@@ -7,5 +7,5 @@ cogs/ai_algo/data/knowledge/*facts.txt
 cogs/ai_algo/data/maps
 cogs/ai_algo/data/solutions
 cogs/korean/config.json
-cogs/korean/data/*#*
+cogs/korean/data/users
 cogs/music/downloaded
