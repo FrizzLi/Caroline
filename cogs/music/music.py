@@ -173,7 +173,7 @@ class Music(commands.Cog):
 
         await ctx.send("___Messages saved up to this point.___")
 
-    @commands.command(aliases=['dl'])
+    @commands.command(aliases=["dl"])
     async def download(self, ctx, link):
         plist = Playlist(link)
         source_dir = Path(__file__).parents[0]
@@ -183,12 +183,11 @@ class Music(commands.Cog):
             print(video.title)
             audio = video.streams.get_audio_only()
             audio.download(playlist_dir)
-                #audio1 = video.streams.filter(only_audio=True)
-                #audio2 = video.streams.get_highest_resolution()
-                #video.streams.first().download()
+            # audio1 = video.streams.filter(only_audio=True)
+            # audio2 = video.streams.get_highest_resolution()
+            # video.streams.first().download()
 
         await ctx.send(f"'{plist.title}' playlist has been downloaded!")
-
 
     @commands.command()
     async def create_stats(self, ctx):

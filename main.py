@@ -26,8 +26,8 @@ class MyBot(commands.Bot):
 
     async def setup_hook(self):
         py_files = {
-            os.path.basename(os.path.splitext(path)[0]):
-            path for path in glob("cogs/*/*.py")
+            os.path.basename(os.path.splitext(path)[0]): path
+            for path in glob("cogs/*/*.py")
         }
         for dir_name in os.listdir("cogs"):
             if dir_name in py_files:
@@ -57,7 +57,7 @@ class MyBot(commands.Bot):
 
 TOKEN = os.environ.get("CAROLINE_TOKEN")
 APP_ID = os.environ.get("CAROLINE_ID")
-BLACK_LIST = ("surveillance")  # "music",
+BLACK_LIST = ("surveillance",)  # "music",
 PREFIX = "."
 
 bot = MyBot()
