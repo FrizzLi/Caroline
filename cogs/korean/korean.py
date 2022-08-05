@@ -45,6 +45,7 @@ class Language(commands.Cog):
     @property
     def level(self):
         return f'level_{self.config["level"]}'
+
     @level.setter
     def level(self, number):
         self.config["level"] = number
@@ -53,6 +54,7 @@ class Language(commands.Cog):
     @property
     def lesson(self):
         return f'lesson_{self.config["lesson"]}'
+
     @lesson.setter
     def lesson(self, number):
         self.config["lesson"] = number
@@ -61,11 +63,11 @@ class Language(commands.Cog):
     @property
     def custom(self):
         return f'custom_{self.config["custom"]}'
+
     @custom.setter
     def custom(self, fname):
         self.config["custom"] = fname
         self.save_config()
-
 
     @app_commands.command()
     async def korean_settings(self, interaction):
@@ -127,12 +129,14 @@ class Language(commands.Cog):
         await interaction.response.send_message(msg)
 
     @app_commands.command()
-    async def create_vocab(self, interaction, lesson_only: int = 1, text_only: int = 1):
+    async def create_vocab(
+        self, interaction, lesson_only: int = 1, text_only: int = 1
+    ):
         """Creates audio and json files from the text files."""
 
         lesson = self.lesson if lesson_only else False
-
-        await interaction.response.send_message("Downloading and creating vocab...")
+        msg = "Downloading and creating vocab..."
+        await interaction.response.send_message(msg)
         dl_vocab(self.level, lesson, text_only)
         await interaction.followup.send("Vocab has been created!")
 
@@ -177,7 +181,9 @@ class Language(commands.Cog):
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
-        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
+        voice = discord.utils.get(
+            self.bot.voice_clients, guild=interaction.guild
+        )
         audio_paths = glob(f"cogs/data/{self.level}/{self.lesson}/*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
@@ -265,9 +271,13 @@ class Language(commands.Cog):
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
-        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
+        voice = discord.utils.get(
+            self.bot.voice_clients, guild=interaction.guild
+        )
 
-        await self.bot.change_presence(activity=discord.Game(name="Vocab listening"))
+        await self.bot.change_presence(
+            activity=discord.Game(name="Vocab listening")
+        )
 
         # get vocab
         source_dir = Path(__file__).parents[0]
@@ -279,7 +289,8 @@ class Language(commands.Cog):
                 with open(custom_file_path, encoding="utf-8") as file:
                     custom_vocab = json.load(file)
             else:
-                await interaction.response.send_message("Custom file does not exist.")
+                msg = "Custom file does not exist."
+                await interaction.response.send_message(msg)
                 raise commands.CommandError("Custom file does not exist.")
             vocab = list(custom_vocab.items())
         else:
@@ -303,20 +314,28 @@ class Language(commands.Cog):
             name_to_path_dict[word] = audio_path
 
         i = 1
-        n = len(vocab)
+        count_n = len(vocab)
         if custom:
             practice = self.custom
         else:
             practice = f"{self.level} - {self.lesson}"
 
         await interaction.response.send_message(f"[{practice}]")
-        counter = f"{i}. word out of {n}."
+        counter = f"{i}. word out of {count_n}."
         msg = await interaction.followup.send(counter)
 
+        def compute_percentages(easy, medium, hard):
+            total = easy + medium + hard
+            return (
+                round(easy * 100 / total, 1),
+                round(medium * 100 / total, 1),
+                round(hard * 100 / total, 1),
+            )
+
         unknown_words = []
-        good = g = 0
-        ok = o = 0
-        bad = b = 0
+        easy = easy_p = 0
+        medium = medium_p = 0
+        hard = hard_p = 0
         stats = ""
 
         # edit last message with spoiled word
@@ -330,9 +349,14 @@ class Language(commands.Cog):
             if kor in name_to_path_dict:
                 msg_display = f"||{kor} = {eng}||"
                 try:
-                    voice.play(discord.FFmpegPCMAudio(name_to_path_dict[kor], executable="C:/ffmpeg/bin/ffmpeg.exe"))
+                    voice.play(
+                        discord.FFmpegPCMAudio(
+                            name_to_path_dict[kor],
+                            executable="C:/ffmpeg/bin/ffmpeg.exe",
+                        )
+                    )
                 except Exception:
-                    await interaction.followup.send("Wait, press 🔁 to play unplayed audio.")
+                    print("Wait, press 🔁 to play unplayed audio!!!")
             else:
                 msg_display = f"{kor} = ||{eng}||"
 
@@ -344,7 +368,7 @@ class Language(commands.Cog):
                 check=lambda inter: "custom_id" in inter.data.keys()
                 and inter.user.name == interaction.user.name,
             )
-            button_id = interaction.data['custom_id']
+            button_id = interaction.data["custom_id"]
             if button_id == "end":
                 msg_display = "Ending listening session."
                 run = False
@@ -364,13 +388,17 @@ class Language(commands.Cog):
                     old_unknown_words = {}
                 unknown_words = {**unknown_words, **old_unknown_words}
                 with open(path, "w", encoding="utf-8") as file:
-                    json.dump(unknown_words, file, indent=4, ensure_ascii=False)
+                    json.dump(
+                        unknown_words, file, indent=4, ensure_ascii=False
+                    )
 
                 # save vocab queue to file
                 if custom:
                     dict_vocab = dict(vocab)
-                    with open(custom_file_path, "w", encoding="utf-8") as f:
-                        json.dump(dict_vocab, f, indent=4, ensure_ascii=False)
+                    with open(custom_file_path, "w", encoding="utf-8") as file:
+                        json.dump(
+                            dict_vocab, file, indent=4, ensure_ascii=False
+                        )
 
                 content = f"{counter}\n{msg_display}\n{stats}"
                 await msg.edit(content=content, view=view)
@@ -379,11 +407,11 @@ class Language(commands.Cog):
                 word_to_move = vocab.pop()
                 if button_id == "easy":
                     vocab.insert(0, word_to_move)
-                    good += 1
+                    easy += 1
                 elif button_id == "medium":
                     vocab.insert(len(vocab) // 2, word_to_move)
-                    ok += 1
-                    n += 1
+                    medium += 1
+                    count_n += 1
                 elif button_id == "hard":
                     unknown_words.append(word_to_move)
                     if custom:
@@ -391,17 +419,21 @@ class Language(commands.Cog):
                     else:
                         new_index = len(vocab) // 5
                         vocab.insert(-new_index, word_to_move)
-                    bad += 1
-                    n += 1
+                    hard += 1
+                    count_n += 1
 
                 i += 1
-                g, o, b = compute_percentages(good, ok, bad)
+                easy_p, medium_p, hard_p = compute_percentages(
+                    easy, medium, hard
+                )
 
-            stats = f"{g}%,   {o}%,   {b}%"
-            counter = f"{i}. word out of {n}"
+            stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
+            counter = f"{i}. word out of {count_n}"
 
 
 async def setup(bot):
-    await bot.add_cog(Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))])
+    await bot.add_cog(
+        Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))]
+    )
 
-# TODO: Mix lessons, Improve vocab explanation (text files)
+# TODO: Mix lessons, Improve vocab explanation (text files, passively)
