@@ -63,6 +63,5 @@ PREFIX = "."
 bot = MyBot()
 bot.run(TOKEN)
 
-# TODO: Logs and Tests
-
-# TODO: setup.py, pytest from requirements
+# TODO: Polish and Document ALL Discord module files
+# TODO: Logs and Tests (setup.py, pytest from reqs)
