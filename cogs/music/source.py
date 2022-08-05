@@ -69,7 +69,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         return data["entries"]
 
-
     @classmethod
     async def search_source(cls, search: str, *, loop):
         loop = loop or asyncio.get_event_loop()
@@ -97,14 +96,19 @@ class YTDLSource(discord.PCMVolumeTransformer):
         # set timestamp for last 5 seconds if set too high
         if data["duration"] < timestamp + 5:
             timestamp = data["duration"] - 5
+        reconnect_streamed = "-reconnect 1 -reconnect_streamed 1"
+        reconnect_delay = "-reconnect_delay_max 5"
         ffmpeg_opts = {
             "options": f"-vn -ss {timestamp}",
-            "before_options":
-                "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+            "before_options": f"{reconnect_streamed} {reconnect_delay}",
         }
 
         return cls(
-            discord.FFmpegPCMAudio(data["url"], **ffmpeg_opts, executable="C:/ffmpeg/bin/ffmpeg.exe"),
+            discord.FFmpegPCMAudio(
+                data["url"],
+                **ffmpeg_opts,
+                executable="C:/ffmpeg/bin/ffmpeg.exe",
+            ),
             data=data,
             requester=requester,
         )

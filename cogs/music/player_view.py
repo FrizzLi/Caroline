@@ -64,19 +64,19 @@ class PlayerView(View):
 
         tracks, remains, volume, loop_q, loop_t = self._get_page_info()
         end = timer()
-        duration_total = self.source.duration
-        duration_total = get_readable_duration(duration_total)
-        duration_total = "0:00:00" if duration_total.startswith("-") else duration_total
-        duration_curr = end - self.start
-        duration_curr = get_readable_duration(duration_curr)
-        duration_curr = "0:00:00" if duration_curr.startswith("-") else duration_curr
+        dur_total = self.source.duration
+        dur_total = get_readable_duration(dur_total)
+        dur_total = "0:00:00" if dur_total.startswith("-") else dur_total
+        dur_curr = end - self.start
+        dur_curr = get_readable_duration(dur_curr)
+        dur_curr = "0:00:00" if dur_curr.startswith("-") else dur_curr
 
         remains = f"{remains} remaining track(s)"
         vol = f"Volume: {volume}"
         loop_q = f"(🔁) Loop Queue: {loop_q}"
         loop_t = f"(🔂) Loop Track: {loop_t}"
         req = f"Requester: '{self.source.requester}'"
-        dur = f"Duration: {duration_curr} (refreshable) / {duration_total}"
+        dur = f"Duration: {dur_curr} (refreshable) / {dur_total}"
         views = f"Views: {self.source.view_count:,}"
 
         msg = (
