@@ -57,7 +57,7 @@ class MyBot(commands.Bot):
 
 TOKEN = os.environ.get("CAROLINE_TOKEN")
 APP_ID = os.environ.get("CAROLINE_ID")
-BLACK_LIST = ("surveillance",)  # "music",
+BLACK_LIST = ("surveillance",)
 PREFIX = "."
 
 bot = MyBot()
