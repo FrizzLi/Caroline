@@ -437,3 +437,4 @@ async def setup(bot):
     )
 
 # TODO: Mix lessons, Improve vocab explanation (text files, passively)
+# TODO: Competitive mode, remake, lint
