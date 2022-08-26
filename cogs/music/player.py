@@ -102,6 +102,7 @@ class MusicPlayer:
                     content=view.msg, view=view
                 )
             elif self.np_msg.channel.last_message_id == self.np_msg.id:
+                # TODO: make edit work.. this is just workaround
                 # self.np_msg = await self.np_msg.edit(
                 #     content=view.msg, view=view
                 # )
