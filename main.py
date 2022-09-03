@@ -4,6 +4,11 @@ from glob import glob
 import discord
 from discord.ext import commands
 
+import ctypes
+import ctypes.util
+
+find_opus = ctypes.util.find_library('opus')
+discord.opus.load_opus(find_opus)
 
 class MyBot(commands.Bot):
     def __init__(self):
@@ -57,7 +62,7 @@ PREFIX = "?"
 
 # TOKEN = os.environ.get("CAROLINE_TOKEN")
 # APP_ID = os.environ.get("CAROLINE_ID")
-# BLACK_LIST = ("surveillance",)
+# BLACK_LIST = ("surveillance", "music")
 # PREFIX = "."
 
 bot = MyBot()
