@@ -144,3 +144,5 @@ class Surveillance(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Surveillance(bot))
+
+# TODO: Online/Voice stats graphs
