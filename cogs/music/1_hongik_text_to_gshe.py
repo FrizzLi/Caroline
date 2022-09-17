@@ -80,6 +80,12 @@ for row in arranged_vocab_df.itertuples():
 print("Created vocab from arranged vocab, last duplicated word:", row.Korean)
 
 # freq + topi
+# columns = [
+#     "Korean", "Rank", "Romanization", "Type", "Freq_English", 
+#     "Example_KR", "Example_EN", "Frequency", "Dispersion",
+#     "TOPIK", "Topik_English"
+# ]
+# df = pd.DataFrame(columns=columns)
 for row in freq:
     row_dict = {
         "Korean": row,
@@ -96,17 +102,18 @@ for row in freq:
         row_dict["TOPIK"] = "I"
         row_dict["Topik_English"] = topi.pop(row)
 
-    lvl_1_2_df.append(row_dict, ignore_index=True)
+    # lvl_1_2_df.append(row_dict, ignore_index=True)
 
 print("Created vocab from freq book vocab, last freq word:", row)
 
 # topi
 for row in topi:
-    lvl_1_2_df.append({
+    topi_dict = {
         "Korean": row,
         "TOPIK": "I",
         "Topik_English": topi[row],
-    }, ignore_index=True)
+    }
+    # lvl_1_2_df.append(topi_dict, ignore_index=True)
 
 print("Created vocab from topi, last topi word:", row)
 
