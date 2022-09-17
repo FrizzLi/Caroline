@@ -40,17 +40,6 @@ arranged_vocab_g_work_sheet.update(
 )  # value_input_option='USER_ENTERED' / 'RAW'
 
 print("Created arranged vocab")
-# check if sheet exist, if not, create one
-# cr: g_sheet.add_worksheet("Commands Log", df.shape[0], df.shape[1])
-# df = pd.DataFrame(table_data, index=None)
-
-
-
-
-
-
-
-
 
 # create Level 1-2
 source_dir = Path(__file__).parents[0]
@@ -91,7 +80,6 @@ for row in arranged_vocab_df.itertuples():
 print("Created vocab from arranged vocab, last duplicated word:", row.Korean)
 
 # freq + topi
-# df = pd.DataFrame(columns=["Rank", "Korean"])
 for row in freq:
     row_dict = {
         "Korean": row,
@@ -122,70 +110,10 @@ for row in topi:
 
 print("Created vocab from topi, last topi word:", row)
 
-
-
-# # adding words from the freq. book
-# new_words1 = []
-# for word in fre:
-#     if word in WORDS:  # if word in freq book is in WORDS in the spreadsheet we loaded
-#         lvl_1_2_df.at[WORDS[word], "Rank"] = fre[word]["rank"]
-#         lvl_1_2_df.at[WORDS[word], "Romanization"] = fre[word]["romanization"]
-#         lvl_1_2_df.at[WORDS[word], "Type"] = fre[word]["type"]
-#         lvl_1_2_df.at[WORDS[word], "Freq_English"] = fre[word]["content"]
-#         lvl_1_2_df.at[WORDS[word], "Example_KR"] = fre[word]["example_kr"]
-#         lvl_1_2_df.at[WORDS[word], "Example_EN"] = fre[word]["example_en"]
-#         lvl_1_2_df.at[WORDS[word], "Frequency"] = fre[word]["frequency"]
-#         lvl_1_2_df.at[WORDS[word], "Dispersion"] = fre[word]["disp"]
-#     else:
-#         new_words1.append({
-#             "Rank": fre[word]["rank"],
-#             "Korean": word,
-#             "Romanization": fre[word]["romanization"],
-#             "Type": fre[word]["type"],
-#             "Freq_English": fre[word]["content"],
-#             "Example_KR": fre[word]["example_kr"],
-#             "Example_EN": fre[word]["example_en"],
-#             "Frequency": fre[word]["frequency"],
-#             "Dispersion": fre[word]["disp"]
-#         })
-
-# # adding words from topik vocab
-# new_words2 = []
-# for word in top:
-#     if word in WORDS:
-#         lvl_1_2_df.at[WORDS[word], "TOPIK"] = "I"
-#         lvl_1_2_df.at[WORDS[word], "Topik_English"] = top[word]
-#     else:
-#         new_words2.append({
-#             "Korean": word,
-#             "TOPIK": "I",
-#             "Topik_English": top[word],
-#         })
-
-
 # save to gsheets
 lvl_1_2_df = lvl_1_2_df.fillna("")
 listed_table_result = [lvl_1_2_df.columns.values.tolist()]  # header
 listed_table_result += lvl_1_2_df.values.tolist()
 lvl_1_2_g_work_sheet.update(
     listed_table_result, value_input_option="USER_ENTERED"
-)  # value_input_option='USER_ENTERED' / 'RAW'
-
-
-# new_words_df1 = pd.DataFrame.from_records(new_words1)
-# new_words_df2 = pd.DataFrame.from_records(new_words2)
-
-# g_work_sheeta = g_sheet.worksheet("Freq added words")
-# g_work_sheetb = g_sheet.worksheet("Topi added words")
-
-# listed_table_result1 = [new_words_df1.columns.values.tolist()]  # header
-# listed_table_result1 += new_words_df1.values.tolist()
-# g_work_sheeta.update(
-#     listed_table_result1, value_input_option="USER_ENTERED"
-# )  # value_input_option='USER_ENTERED' / 'RAW'
-
-# listed_table_result2 = [new_words_df2.columns.values.tolist()]  # header
-# listed_table_result2 += new_words_df2.values.tolist()
-# g_work_sheetb.update(
-#     listed_table_result2, value_input_option="USER_ENTERED"
-# )  # value_input_option='USER_ENTERED' / 'RAW'
+)
