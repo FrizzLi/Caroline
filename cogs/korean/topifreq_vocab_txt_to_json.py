@@ -3,8 +3,8 @@ from pathlib import Path
 
 # freq book
 source_dir = Path(__file__).parents[0]
-map_txt = Path(f"{source_dir}/freq_dict_kor.txt")
-map_json = Path(f"{source_dir}/freq_dict_kor.json")
+map_txt = Path(f"{source_dir}/data/freq_dict_kor.txt")
+map_json = Path(f"{source_dir}/data/freq_dict_kor.json")
 
 NUM = 0
 CON = 1
@@ -65,8 +65,8 @@ with open(map_json, encoding="utf-8") as file:
 
 # topik
 source_dir = Path(__file__).parents[0]
-map_txt = Path(f"{source_dir}/topik_vocab.txt")
-map_json = Path(f"{source_dir}/topik_vocab.json")
+map_txt = Path(f"{source_dir}/data/topik_vocab.txt")
+map_json = Path(f"{source_dir}/data/topik_vocab.json")
 
 vocab = {}
 with open(map_txt, encoding="utf-8") as file:

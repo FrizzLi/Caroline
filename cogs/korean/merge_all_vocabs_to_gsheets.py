@@ -44,12 +44,11 @@ print("Created arranged vocab")
 
 # create Level 1-2
 source_dir = Path(__file__).parents[0]
-fre_json = Path(f"{source_dir}/freq_dict_kor.json")
-top_json = Path(f"{source_dir}/topik_vocab.json")
+fre_json = Path(f"{source_dir}/data/freq_dict_kor.json")
+top_json = Path(f"{source_dir}/data/topik_vocab.json")
 
 with open(fre_json, encoding="utf-8") as fre:
     freq = json.load(fre)
-
 with open(top_json, encoding="utf-8") as top:
     topi = json.load(top)
 
