@@ -1,10 +1,11 @@
 import json
 import os
-import gspread
-import pandas as pd
 from pathlib import Path
 
-# create arranged vocab
+import gspread
+import pandas as pd
+
+# create arranged vocab from raw vocab
 credentials_dict_str = os.environ.get("GOOGLE_CREDENTIALS")
 credentials_dict = json.loads(credentials_dict_str)
 g_credentials = gspread.service_account_from_dict(credentials_dict)
@@ -46,8 +47,10 @@ source_dir = Path(__file__).parents[0]
 fre_json = Path(f"{source_dir}/freq_dict_kor.json")
 top_json = Path(f"{source_dir}/topik_vocab.json")
 
-with open(fre_json, encoding="utf-8") as fre, open(top_json, encoding="utf-8") as top:
+with open(fre_json, encoding="utf-8") as fre:
     freq = json.load(fre)
+
+with open(top_json, encoding="utf-8") as top:
     topi = json.load(top)
 
 arranged_vocab_g_work_sheet = g_sheet.worksheet("arranged vocab")
@@ -77,15 +80,9 @@ for row in arranged_vocab_df.itertuples():
         lvl_1_2_df.at[row.Index, "TOPIK"] = "I"
         lvl_1_2_df.at[row.Index, "Topik_English"] = word
 
-print("Created vocab from arranged vocab, last duplicated word:", row.Korean)
+print("Created vocab from arranged vocab, last copied word:", row.Korean)
 
 # freq + topi
-# columns = [
-#     "Korean", "Rank", "Romanization", "Type", "Freq_English", 
-#     "Example_KR", "Example_EN", "Frequency", "Dispersion",
-#     "TOPIK", "Topik_English"
-# ]
-# df = pd.DataFrame(columns=columns)
 for row in freq:
     row_dict = {
         "Korean": row,
@@ -103,24 +100,28 @@ for row in freq:
         row_dict["Topik_English"] = topi.pop(row)
 
     # lvl_1_2_df.append(row_dict, ignore_index=True)
+    df = pd.DataFrame(row_dict, columns=lvl_1_2_df.columns, index=[0])
+    lvl_1_2_df = pd.concat([lvl_1_2_df, df])  # ignore_index
 
 print("Created vocab from freq book vocab, last freq word:", row)
 
 # topi
 for row in topi:
-    topi_dict = {
+    row_dict = {
         "Korean": row,
         "TOPIK": "I",
         "Topik_English": topi[row],
     }
-    # lvl_1_2_df.append(topi_dict, ignore_index=True)
+    # lvl_1_2_df.append(row_dict, ignore_index=True)
+    df = pd.DataFrame(row_dict, columns=lvl_1_2_df.columns, index=[0])
+    lvl_1_2_df = pd.concat([lvl_1_2_df, df])  # ignore_index
 
 print("Created vocab from topi, last topi word:", row)
 
 # save to gsheets
 lvl_1_2_df = lvl_1_2_df.fillna("")
-listed_table_result = [lvl_1_2_df.columns.values.tolist()]  # header
-listed_table_result += lvl_1_2_df.values.tolist()
+lvl_1_2_list = [lvl_1_2_df.columns.values.tolist()]  # header
+lvl_1_2_list += lvl_1_2_df.values.tolist()
 lvl_1_2_g_work_sheet.update(
-    listed_table_result, value_input_option="USER_ENTERED"
+    lvl_1_2_list, value_input_option="USER_ENTERED"
 )
