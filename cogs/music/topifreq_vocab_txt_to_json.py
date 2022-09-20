@@ -1,6 +1,5 @@
-
-from pathlib import Path
 import json
+from pathlib import Path
 
 # freq book
 source_dir = Path(__file__).parents[0]
@@ -28,7 +27,7 @@ with open(map_txt, encoding="utf-8") as file:
                 if len(content) > 3:
                     kr, ro, type_ = content[0], content[1], content[2]
                     en = content[3:]
-                    en = ' '.join(en)
+                    en = " ".join(en)
 
                     line_num = EXA
                     content.clear()
@@ -56,12 +55,11 @@ with open(map_txt, encoding="utf-8") as file:
                     "example_kr": ex_kr,
                     "example_en": ex_en,
                     "frequency": freq,
-                    "disp": disp
+                    "disp": disp,
                 }
 
 with open(map_json, "w", encoding="utf-8") as file:
     json.dump(vocab, file, indent=4, ensure_ascii=False)
-
 with open(map_json, encoding="utf-8") as file:
     config = json.load(file)
 
@@ -76,6 +74,7 @@ with open(map_txt, encoding="utf-8") as file:
         worded = line.split(maxsplit=2)
         kr = worded[1]
         en = worded[2].strip()
+
         print(kr, en)
         vocab[kr] = en
 

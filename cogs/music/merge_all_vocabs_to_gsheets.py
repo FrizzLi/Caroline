@@ -122,6 +122,4 @@ print("Created vocab from topi, last topi word:", row)
 lvl_1_2_df = lvl_1_2_df.fillna("")
 lvl_1_2_list = [lvl_1_2_df.columns.values.tolist()]  # header
 lvl_1_2_list += lvl_1_2_df.values.tolist()
-lvl_1_2_g_work_sheet.update(
-    lvl_1_2_list, value_input_option="USER_ENTERED"
-)
+lvl_1_2_g_work_sheet.update(lvl_1_2_list, value_input_option="USER_ENTERED")
