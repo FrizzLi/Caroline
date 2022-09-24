@@ -3,8 +3,8 @@ from pathlib import Path
 
 # freq book
 source_dir = Path(__file__).parents[0]
-map_txt = Path(f"{source_dir}/data/freq_dict_kor.txt")
-map_json = Path(f"{source_dir}/data/freq_dict_kor.json")
+map_txt = Path(f"{source_dir}/data/spreadsheet_data/freq_dict_kor.txt")
+map_json = Path(f"{source_dir}/data/spreadsheet_data/freq_dict_kor.json")
 
 NUM = 0
 CON = 1
