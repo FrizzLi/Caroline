@@ -9,13 +9,13 @@ import pandas as pd
 credentials_dict_str = os.environ.get("GOOGLE_CREDENTIALS")
 credentials_dict = json.loads(credentials_dict_str)
 g_credentials = gspread.service_account_from_dict(credentials_dict)
-g_sheet = g_credentials.open("Korea - Vocabulary")
+g_sheet_main = g_credentials.open("Korea - Vocabulary")
+g_sheet_raw = g_credentials.open("Korean vocab raw, arranged")
 
-
-raw_vocab_g_work_sheet = g_sheet.worksheet("raw vocab")
+raw_vocab_g_work_sheet = g_sheet_raw.worksheet("raw")
 raw_vocab_df = pd.DataFrame(raw_vocab_g_work_sheet.get_all_records())
 
-arranged_vocab_g_work_sheet = g_sheet.worksheet("arranged vocab")
+arranged_vocab_g_work_sheet = g_sheet_raw.worksheet("arranged")
 arranged_vocab_df = pd.DataFrame(arranged_vocab_g_work_sheet.get_all_records())
 
 lesson = ""
@@ -44,18 +44,18 @@ print("Created arranged vocab")
 
 # create Level 1-2
 source_dir = Path(__file__).parents[0]
-fre_json = Path(f"{source_dir}/data/freq_dict_kor.json")
-top_json = Path(f"{source_dir}/data/topik_vocab.json")
+fre_json = Path(f"{source_dir}/data/spreadsheet_data/freq_dict_kor.json")
+top_json = Path(f"{source_dir}/data/spreadsheet_data/topik_vocab.json")
 
 with open(fre_json, encoding="utf-8") as fre:
     freq = json.load(fre)
 with open(top_json, encoding="utf-8") as top:
     topi = json.load(top)
 
-arranged_vocab_g_work_sheet = g_sheet.worksheet("arranged vocab")
+arranged_vocab_g_work_sheet = g_sheet_raw.worksheet("arranged")
 arranged_vocab_df = pd.DataFrame(arranged_vocab_g_work_sheet.get_all_records())
 
-lvl_1_2_g_work_sheet = g_sheet.worksheet("Level 1-2")
+lvl_1_2_g_work_sheet = g_sheet_main.worksheet("Level 1-2")
 lvl_1_2_df = pd.DataFrame(lvl_1_2_g_work_sheet.get_all_records())
 
 # copy + freq + topi
