@@ -306,7 +306,7 @@ class Language(commands.Cog):
         if custom:  # from whole level
             audio_paths = glob(f"{level_path}/*/*")
         else:  # from one lesson
-            audio_paths = glob(f"{level_path}/{self.lesson}/*")
+            audio_paths = glob(f"{level_path}/{self.lesson}/vocabulary_audio/*")
 
         name_to_path_dict = {}
         for audio_path in audio_paths:
@@ -438,3 +438,5 @@ async def setup(bot):
 
 # TODO: Mix lessons, Improve vocab explanation (text files, passively)
 # TODO: Competitive mode, remake, lint
+# TODO: GDocs and GSpreadsheet instead of gspread and local txt files
+# vocab_lesson_x.json remake (customized files though!)

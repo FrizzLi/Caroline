@@ -38,7 +38,7 @@ def dl_vocab(level, lesson, text_only):
                                     print("Skipping one word")
                                     continue
                                 # os.path.abspath(os.getcwd())
-                                paath = f"{level_dir}\\{lesson_name}\\{searchData[z]['handleEntry']}.mp3"
+                                paath = f"{level_dir}\\{lesson_name}\\vocabulary_audio\\{searchData[z]['handleEntry']}.mp3"
                                 try:
                                     urllib.request.urlretrieve(mp3Link, paath)
                                 except Exception:
