@@ -44,7 +44,7 @@ class Language(commands.Cog):
 
     @property
     def level(self):
-        return f'level_{self.config["level"]}'
+        return f'vocab_level_{self.config["level"]}'
 
     @level.setter
     def level(self, number):
