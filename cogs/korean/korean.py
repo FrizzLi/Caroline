@@ -10,7 +10,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.utils import get
 
-from cogs.korean.create_vocab import dl_vocab
+from cogs.korean.search_and_create_vocab import dl_vocab
 from cogs.korean.session_view import SessionView
 
 
