@@ -175,7 +175,7 @@ class Music(commands.Cog):
 
     @commands.command(aliases=["dl"])
     async def download(self, ctx, link):
-        plist = Playlist(link)
+        plist = Playlist(ctx.current_argument)
         source_dir = Path(__file__).parents[0]
         playlist_dir = Path(f"{source_dir}/downloaded/{plist.title}")
 
