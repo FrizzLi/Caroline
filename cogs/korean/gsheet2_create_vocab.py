@@ -1,20 +1,23 @@
-# in "Korea - Vocabulary" Google Spreadsheet:
-# fills up arranged vocab tab with the content from raw vocab
-# fills up Level 1-2 tab with arranged vocab, adds freq and topi vocabulary
-# from json file in data/spreadsheet_data folder
+# "Korea - Vocabulary (raw)" Google Spreadsheet:
+# fills up "arranged" tab that is easier to read using "raw" tab 
 
+# "Korea - Vocabulary" Google Spreadsheet:
+# fills up "Level 1-2" tab with "arranged"
+# adds freq and topi vocab from json files in data/gsheet folder
+
+import json
 import os
 from pathlib import Path
 
 import gspread
 import pandas as pd
 
-# create arranged vocab by raw
+# create arranged vocab with raw
 credentials_dict_str = os.environ.get("GOOGLE_CREDENTIALS")
 credentials_dict = json.loads(credentials_dict_str)
 g_credentials = gspread.service_account_from_dict(credentials_dict)
 g_sheet_main = g_credentials.open("Korea - Vocabulary")
-g_sheet_raw = g_credentials.open("Korean vocab raw, arranged")
+g_sheet_raw = g_credentials.open("Korea - Vocabulary (raw)")
 
 raw_vocab_g_work_sheet = g_sheet_raw.worksheet("raw")
 raw_vocab_df = pd.DataFrame(raw_vocab_g_work_sheet.get_all_records())
@@ -48,8 +51,8 @@ print("Created arranged vocab")
 
 # create Level 1-2
 source_dir = Path(__file__).parents[0]
-fre_json = Path(f"{source_dir}/data/spreadsheet_data/freq_dict_kor.json")
-top_json = Path(f"{source_dir}/data/spreadsheet_data/topik_vocab.json")
+fre_json = Path(f"{source_dir}/data/gsheet/freq_dict_kor.json")
+top_json = Path(f"{source_dir}/data/gsheet/topik_vocab.json")
 
 with open(fre_json, encoding="utf-8") as fre:
     freq = json.load(fre)
@@ -62,7 +65,7 @@ arranged_vocab_df = pd.DataFrame(arranged_vocab_g_work_sheet.get_all_records())
 lvl_1_2_g_work_sheet = g_sheet_main.worksheet("Level 1-2")
 lvl_1_2_df = pd.DataFrame(lvl_1_2_g_work_sheet.get_all_records())
 
-# copy arranged + add freq + add topi
+# add arranged + freq + topi
 for row in arranged_vocab_df.itertuples():
     lvl_1_2_df.at[row.Index, "Korean"] = row.Korean
     lvl_1_2_df.at[row.Index, "Book_English"] = row.Book_English
@@ -85,7 +88,7 @@ for row in arranged_vocab_df.itertuples():
 
 print("Created vocab from arranged vocab, last copied word:", row.Korean)
 
-# freq + topi
+# add freq + topi (not present in arranged)
 for row in freq:
     row_dict = {
         "Korean": row,
@@ -108,7 +111,7 @@ for row in freq:
 
 print("Created vocab from freq book vocab, last freq word:", row)
 
-# topi
+# topi (not present in arranged/freq)
 for row in topi:
     row_dict = {
         "Korean": row,

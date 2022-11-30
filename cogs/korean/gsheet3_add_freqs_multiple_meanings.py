@@ -1,8 +1,7 @@
-# in "Korea - Vocabulary" Google Spreadsheet:
-# add freq words with numbers (words with more meanings) 
-# below the base word in Level 1-2 (Modified)
+# "Korea - Vocabulary" Google Spreadsheet
+# add numbered freq words (more meanings) below base word in "Level 1-2" tab
 
-# was also used to transition topic words into freq. vocab
+# (this was also used to transition topic words into freq. vocab)
 
 import json
 import os
@@ -38,12 +37,12 @@ g_sheet_main = g_credentials.open("Korea - Vocabulary")
 
 
 source_dir = Path(__file__).parents[0]
-fre_json = Path(f"{source_dir}/data/spreadsheet_data/freq_dict_kor.json")
+fre_json = Path(f"{source_dir}/data/gsheet/freq_dict_kor.json")
 
 with open(fre_json, encoding="utf-8") as fre:
     freq = json.load(fre)
 
-lvl_1_2_g_work_sheet = g_sheet_main.worksheet("Level 1-2 (Modified)")
+lvl_1_2_g_work_sheet = g_sheet_main.worksheet("Level 1-2")
 lvl_1_2_df = pd.DataFrame(lvl_1_2_g_work_sheet.get_all_records())
 
 added_num = 0
