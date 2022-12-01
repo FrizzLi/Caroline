@@ -1,3 +1,6 @@
+# updates a row - fills up Listening_used column
+# adds a row - occurences for each word in a lesson
+
 import json
 import os
 from collections import defaultdict
