@@ -265,6 +265,9 @@ class Language(commands.Cog):
         from level that is set in the settings. TODO!!! find that are in custom
         """
 
+        await interaction.response.send_message(
+            "...Setting up vocab..."
+        )
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:
@@ -280,33 +283,51 @@ class Language(commands.Cog):
         )
 
         # get vocab
-        source_dir = Path(__file__).parents[0]
-        data_path = f"{source_dir}/data"
+        
 
-        if custom:
-            custom_file_path = Path(f"{data_path}/users/{self.custom}.json")
-            if os.path.exists(custom_file_path):
-                with open(custom_file_path, encoding="utf-8") as file:
-                    custom_vocab = json.load(file)
-            else:
-                msg = "Custom file does not exist."
-                await interaction.response.send_message(msg)
-                raise commands.CommandError("Custom file does not exist.")
-            vocab = list(custom_vocab.items())
-        else:
-            custom_file_path = Path(f"{data_path}/{self.level}.json")
-            with open(custom_file_path, encoding="utf-8") as f:
-                vocab = json.load(f)
-            vocab = list(vocab[self.lesson].items())
+        # Checking if the user has entered a custom name for the file. If they have, it will use that
+        # name. If not, it will use the default name.
+        # if custom:
+        #     custom_file_path = Path(f"{data_path}/users/{self.custom}.json")
+        #     if os.path.exists(custom_file_path):
+        #         with open(custom_file_path, encoding="utf-8") as file:
+        #             custom_vocab = json.load(file)
+        #     else:
+        #         msg = "Custom file does not exist."
+        #         await interaction.response.send_message(msg)
+        #         raise commands.CommandError("Custom file does not exist.")
+        #     vocab = list(custom_vocab.items())
+        # else:
+
+        # new code
+        import gspread
+        import pandas as pd
+        credentials_dict_str = os.environ.get("GOOGLE_CREDENTIALS")
+        credentials_dict = json.loads(credentials_dict_str)
+        g_credentials = gspread.service_account_from_dict(credentials_dict)
+        g_sheet = g_credentials.open("Korea - Vocabulary")
+        worksheet = g_sheet.worksheet("Level 1-2 beta")
+        df = pd.DataFrame(worksheet.get_all_records())
+
+        vocab = []
+        for row in df.itertuples():
+            if not row.Book_Level or not row.Book_Lesson:
+                continue
+            if row.Book_Level > self.config["level"] or row.Book_Lesson > self.config["lesson"]:
+                break
+            if row.Book_Level == self.config["level"] and row.Book_Lesson == self.config["lesson"]:
+                vocab.append((row.Book_English, row.Korean))
 
         random.shuffle(vocab)
 
         # load audio files
-        level_path = f"{data_path}/{self.level}"
-        if custom:  # from whole level
-            audio_paths = glob(f"{level_path}/*/*")
-        else:  # from one lesson
-            audio_paths = glob(f"{level_path}/{self.lesson}/vocabulary_audio/*")
+        source_dir = Path(__file__).parents[0]
+        data_path = f"{source_dir}/data/level_{self.config['level']}/lesson_{self.config['lesson']}"
+        #level_path = f"{data_path}/{self.level}"
+        # if custom:  # from whole level
+        #     audio_paths = glob(f"{level_path}/*/*")
+        # else:  # from one lesson
+        audio_paths = glob(f"{data_path}/vocabulary_audio/*")
 
         name_to_path_dict = {}
         for audio_path in audio_paths:
@@ -320,7 +341,7 @@ class Language(commands.Cog):
         else:
             practice = f"{self.level} - {self.lesson}"
 
-        await interaction.response.send_message(f"[{practice}]")
+        await interaction.followup.send(f"[{practice}]")
         counter = f"{i}. word out of {count_n}."
         msg = await interaction.followup.send(counter)
 
@@ -375,30 +396,43 @@ class Language(commands.Cog):
 
                 # save unknown words to file for future
                 unknown_words = dict(unknown_words)
-                path_str = f"{data_path}/{interaction.user.name}"
-                if custom:
-                    path = Path(f"{path_str}/{self.custom}_unknown.json")
-                else:
-                    path = Path(f"{path_str}/{self.level}_unknown.json")
-                    unknown_words = {self.lesson: unknown_words}
+                #
+                # sss = f"{source_dir}/data"
+                # full_path = f"{level_dir}\\{lesson_name}"
+                # Path(full_path).mkdir(parents=True, exist_ok=True)
+                #
+                ########
+                data_path = Path(f"{source_dir}/data")
+                data_user_path = Path(f"{data_path}/users/{interaction.user.name}")
+                Path(data_user_path).mkdir(parents=True, exist_ok=True)
+                #custom_path = Path(f"{data_user_path}/{self.custom}.json")
+                ####
+                #path_str = f"{data_path}/{interaction.user.name}"
+                # if custom:
+                #     path = Path(f"{path_str}/{self.custom}_unknown.json")
+                # else:
+                path = Path(f"{data_user_path}/{self.level}_unknown.json")
                 if os.path.exists(path):
                     with open(path, encoding="utf-8") as file:
                         old_unknown_words = json.load(file)
                 else:
-                    old_unknown_words = {}
-                unknown_words = {**unknown_words, **old_unknown_words}
+                    old_unknown_words = {self.lesson: {}}
+
+                old_unknown_words = old_unknown_words[self.lesson]
+                unknown_words = {**old_unknown_words, **unknown_words}
+                unknown_words = {self.lesson: unknown_words}
                 with open(path, "w", encoding="utf-8") as file:
                     json.dump(
                         unknown_words, file, indent=4, ensure_ascii=False
                     )
 
                 # save vocab queue to file
-                if custom:
-                    dict_vocab = dict(vocab)
-                    with open(custom_file_path, "w", encoding="utf-8") as file:
-                        json.dump(
-                            dict_vocab, file, indent=4, ensure_ascii=False
-                        )
+                # if custom:
+                #     dict_vocab = dict(vocab)
+                #     with open(custom_file_path, "w", encoding="utf-8") as file:
+                #         json.dump(
+                #             dict_vocab, file, indent=4, ensure_ascii=False
+                #         )
 
                 content = f"{counter}\n{msg_display}\n{stats}"
                 await msg.edit(content=content, view=view)
