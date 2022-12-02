@@ -1,4 +1,5 @@
 import discord
+import asyncio
 
 
 class SessionView(discord.ui.View):
@@ -7,20 +8,20 @@ class SessionView(discord.ui.View):
 
     @discord.ui.button(emoji="✅", custom_id="easy")
     async def easy_callback(self, interaction, button):
-        await interaction.response.edit_message(view=self)
+        await interaction.response.defer()
 
     @discord.ui.button(emoji="⏭️", custom_id="medium")
     async def medium_callback(self, interaction, button):
-        await interaction.response.edit_message(view=self)
+        await interaction.response.defer()
 
     @discord.ui.button(emoji="❌", custom_id="hard")
     async def hard_callback(self, interaction, button):
-        await interaction.response.edit_message(view=self)
+        await interaction.response.defer()
 
     @discord.ui.button(emoji="🔁", custom_id="repeat")
     async def repeat_callback(self, interaction, button):
-        await interaction.response.edit_message(view=self)
+        await interaction.response.defer()
 
     @discord.ui.button(emoji="🔚", custom_id="end")
     async def end_callback(self, interaction, button):
-        await interaction.response.edit_message(view=self)
+        await interaction.response.defer()
