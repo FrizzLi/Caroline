@@ -266,7 +266,7 @@ class Language(commands.Cog):
         """
 
         await interaction.response.send_message(
-            "...Setting up vocab..."
+            "...Setting up listening session..."
         )
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
@@ -282,24 +282,7 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocab listening")
         )
 
-        # get vocab
-        
-
-        # Checking if the user has entered a custom name for the file. If they have, it will use that
-        # name. If not, it will use the default name.
-        # if custom:
-        #     custom_file_path = Path(f"{data_path}/users/{self.custom}.json")
-        #     if os.path.exists(custom_file_path):
-        #         with open(custom_file_path, encoding="utf-8") as file:
-        #             custom_vocab = json.load(file)
-        #     else:
-        #         msg = "Custom file does not exist."
-        #         await interaction.response.send_message(msg)
-        #         raise commands.CommandError("Custom file does not exist.")
-        #     vocab = list(custom_vocab.items())
-        # else:
-
-        # new code
+        # get vocab words
         import gspread
         import pandas as pd
         credentials_dict_str = os.environ.get("GOOGLE_CREDENTIALS")
@@ -307,8 +290,8 @@ class Language(commands.Cog):
         g_credentials = gspread.service_account_from_dict(credentials_dict)
         g_sheet = g_credentials.open("Korea - Vocabulary")
         worksheet = g_sheet.worksheet("Level 1-2 beta")
-        df = pd.DataFrame(worksheet.get_all_records())
 
+        df = pd.DataFrame(worksheet.get_all_records())
         vocab = []
         for row in df.itertuples():
             if not row.Book_Level or not row.Book_Lesson:
@@ -323,17 +306,13 @@ class Language(commands.Cog):
         # load audio files
         source_dir = Path(__file__).parents[0]
         data_path = f"{source_dir}/data/level_{self.config['level']}/lesson_{self.config['lesson']}"
-        #level_path = f"{data_path}/{self.level}"
-        # if custom:  # from whole level
-        #     audio_paths = glob(f"{level_path}/*/*")
-        # else:  # from one lesson
         audio_paths = glob(f"{data_path}/vocabulary_audio/*")
-
         name_to_path_dict = {}
         for audio_path in audio_paths:
             word = audio_path.split("\\")[-1][:-4]
             name_to_path_dict[word] = audio_path
 
+        # prepping msgs for the loop session
         i = 1
         count_n = len(vocab)
         if custom:
@@ -358,12 +337,9 @@ class Language(commands.Cog):
         medium = medium_p = 0
         hard = hard_p = 0
         stats = ""
-
-        # edit last message with spoiled word
-        run = True
         view = SessionView()
 
-        while run:
+        while True:
             eng, kor = vocab[-1]
 
             # handling word that has no audio
@@ -384,33 +360,61 @@ class Language(commands.Cog):
             content = f"{counter}\n{msg_display}\n{stats}"
             await msg.edit(content=content, view=view)
 
+            # wait for interaction
             interaction = await self.bot.wait_for(
                 "interaction",
                 check=lambda inter: "custom_id" in inter.data.keys()
                 and inter.user.name == interaction.user.name,
             )
+
+            # button interactions
             button_id = interaction.data["custom_id"]
-            if button_id == "end":
+            if button_id == "easy":
+                word_to_move = vocab.pop()
+
+                vocab.insert(0, word_to_move)
+                easy += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = compute_percentages(
+                    easy, medium, hard
+                )
+            elif button_id == "medium":
+                word_to_move = vocab.pop()
+
+                vocab.insert(len(vocab) // 2, word_to_move)
+                medium += 1
+                count_n += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = compute_percentages(
+                    easy, medium, hard
+                )
+            elif button_id == "hard":
+                word_to_move = vocab.pop()
+
+                unknown_words.append(word_to_move)
+                if custom:
+                    vocab.insert(-10, word_to_move)
+                else:
+                    new_index = len(vocab) // 5
+                    vocab.insert(-new_index, word_to_move)
+                hard += 1
+                count_n += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = compute_percentages(
+                    easy, medium, hard
+                )
+
+            elif button_id == "end":
                 msg_display = "Ending listening session."
-                run = False
 
                 # save unknown words to file for future
                 unknown_words = dict(unknown_words)
-                #
-                # sss = f"{source_dir}/data"
-                # full_path = f"{level_dir}\\{lesson_name}"
-                # Path(full_path).mkdir(parents=True, exist_ok=True)
-                #
-                ########
                 data_path = Path(f"{source_dir}/data")
                 data_user_path = Path(f"{data_path}/users/{interaction.user.name}")
                 Path(data_user_path).mkdir(parents=True, exist_ok=True)
-                #custom_path = Path(f"{data_user_path}/{self.custom}.json")
-                ####
-                #path_str = f"{data_path}/{interaction.user.name}"
-                # if custom:
-                #     path = Path(f"{path_str}/{self.custom}_unknown.json")
-                # else:
                 path = Path(f"{data_user_path}/{self.level}_unknown.json")
                 if os.path.exists(path):
                     with open(path, encoding="utf-8") as file:
@@ -426,40 +430,10 @@ class Language(commands.Cog):
                         unknown_words, file, indent=4, ensure_ascii=False
                     )
 
-                # save vocab queue to file
-                # if custom:
-                #     dict_vocab = dict(vocab)
-                #     with open(custom_file_path, "w", encoding="utf-8") as file:
-                #         json.dump(
-                #             dict_vocab, file, indent=4, ensure_ascii=False
-                #         )
-
+                # ending message
                 content = f"{counter}\n{msg_display}\n{stats}"
                 await msg.edit(content=content, view=view)
-
-            elif button_id != "repeat":
-                word_to_move = vocab.pop()
-                if button_id == "easy":
-                    vocab.insert(0, word_to_move)
-                    easy += 1
-                elif button_id == "medium":
-                    vocab.insert(len(vocab) // 2, word_to_move)
-                    medium += 1
-                    count_n += 1
-                elif button_id == "hard":
-                    unknown_words.append(word_to_move)
-                    if custom:
-                        vocab.insert(-10, word_to_move)
-                    else:
-                        new_index = len(vocab) // 5
-                        vocab.insert(-new_index, word_to_move)
-                    hard += 1
-                    count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = compute_percentages(
-                    easy, medium, hard
-                )
+                break
 
             stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
             counter = f"{i}. word out of {count_n}"
