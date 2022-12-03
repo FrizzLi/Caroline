@@ -77,18 +77,22 @@ def create_df(vocab_g_ws, occurs_g_ws):
         w = row.Korean
         vocab_base_word = w[:-1] if w[-1].isdigit() else w
         if vocab_base_word in occurs:
-            if row.Lesson != lesson:
+            if not row.Lesson or row.Lesson > int(lesson):
                 missing_vocab_set.add(w)
-                write_line_msg("lesson", w, occurs, word_types, vocab_base_word)
+                write_line_msg("lesson (in next)", w, occurs, word_types, vocab_base_word)
+                continue
+            elif row.Lesson < int(lesson):
+                missing_vocab_set.add(w)
+                write_line_msg("lesson (in previous)", w, occurs, word_types, vocab_base_word)
                 continue
 
             # update vocab
             if not row.Listening_Used:
-                vocab_df.at[row.Index, "Listening_Used"] = level * 100 + lesson
+                vocab_df.at[row.Index, "Listening_Used"] = lesson
             
             # update occurances
             count = occurs.pop(vocab_base_word)
-            row_dict = {"Word": w, f"Listen_{lesson}": count}
+            row_dict = {"Word": w, f"Listen_{str(int(lesson[-2:]))}": count}
             df = pd.DataFrame(row_dict, columns=occurs_df.columns, index=[0])
             occurs_df = pd.concat([occurs_df, df])
 
@@ -114,10 +118,10 @@ def update_worksheet(dataframe, worksheet):
     df_list += dataframe.values.tolist()
     worksheet.update(df_list, value_input_option="USER_ENTERED")
 
-lesson = input("Enter: <Lesson> (3 digits)")
+lesson = input("Enter lesson in 3 digits: ")
 
 source_dir = Path(__file__).parents[0]
-lesson_dir = f"{source_dir}/data/level_{level[0]}/lesson_{lesson[-2:]}/"
+lesson_dir = f"{source_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}/"
 listen_path_str = f"{lesson_dir}listening_text.txt"
 listen_explo_path_str = f"{lesson_dir}explo.txt"
 f_listen = Path(listen_path_str)
@@ -133,7 +137,7 @@ occurs, word_types = group_by_count(tokenized_text)
 # updating google sheets
 print("Updating google sheets... ", end="")
 
-vocab_g_ws = get_worksheet("Level 1-2 (Modified)")
+vocab_g_ws = get_worksheet("Level 1-2 (modified)")
 occurs_g_ws = get_worksheet("Book occurences")
 
 vocab_df, occurs_df = create_df(vocab_g_ws, occurs_g_ws)
