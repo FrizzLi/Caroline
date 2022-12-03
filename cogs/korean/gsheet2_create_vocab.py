@@ -33,8 +33,7 @@ for row in raw_vocab_df.itertuples():
     if len(kr_en) > 1:
         arranged_vocab_df.at[row.Index - index_add, "Korean"] = kr_en[0]
         arranged_vocab_df.at[row.Index - index_add, "Book_English"] = kr_en[1]
-        arranged_vocab_df.at[row.Index - index_add, "Book_Level"] = level
-        arranged_vocab_df.at[row.Index - index_add, "Book_Lesson"] = lesson
+        arranged_vocab_df.at[row.Index - index_add, "Lesson"] = level + lesson.zfill(2)
     else:
         index_add += 1
     if 2 < len(row.Frequency) < 5:
@@ -62,29 +61,28 @@ with open(top_json, encoding="utf-8") as top:
 arranged_vocab_g_work_sheet = g_sheet_raw.worksheet("arranged")
 arranged_vocab_df = pd.DataFrame(arranged_vocab_g_work_sheet.get_all_records())
 
-lvl_1_2_g_work_sheet = g_sheet_main.worksheet("Level 1-2")
+lvl_1_2_g_work_sheet = g_sheet_main.worksheet("Level 1-2 (raw)")
 lvl_1_2_df = pd.DataFrame(lvl_1_2_g_work_sheet.get_all_records())
 
 # add arranged + freq + topi
 for row in arranged_vocab_df.itertuples():
+    lvl_1_2_df.at[row.Index, "Lesson"] = row.Lesson
     lvl_1_2_df.at[row.Index, "Korean"] = row.Korean
     lvl_1_2_df.at[row.Index, "Book_English"] = row.Book_English
-    lvl_1_2_df.at[row.Index, "Book_Level"] = row.Book_Level
-    lvl_1_2_df.at[row.Index, "Book_Lesson"] = row.Book_Lesson
     if row.Korean in freq:
         word = freq.pop(row.Korean)
-        lvl_1_2_df.at[row.Index, "Rank"] = word["rank"]
-        lvl_1_2_df.at[row.Index, "Romanization"] = word["romanization"]
-        lvl_1_2_df.at[row.Index, "Type"] = word["type"]
         lvl_1_2_df.at[row.Index, "Freq_English"] = word["content"]
+        lvl_1_2_df.at[row.Index, "Rank"] = word["rank"]
         lvl_1_2_df.at[row.Index, "Example_KR"] = word["example_kr"]
         lvl_1_2_df.at[row.Index, "Example_EN"] = word["example_en"]
+        lvl_1_2_df.at[row.Index, "Romanization"] = word["romanization"]
+        lvl_1_2_df.at[row.Index, "Type"] = word["type"]
         lvl_1_2_df.at[row.Index, "Frequency"] = word["frequency"]
         lvl_1_2_df.at[row.Index, "Dispersion"] = word["disp"]
     if row.Korean in topi:
         word = topi.pop(row.Korean)
-        lvl_1_2_df.at[row.Index, "TOPIK"] = "I"
         lvl_1_2_df.at[row.Index, "Topik_English"] = word
+        lvl_1_2_df.at[row.Index, "TOPIK"] = "I"
 
 print("Created vocab from arranged vocab, last copied word:", row.Korean)
 

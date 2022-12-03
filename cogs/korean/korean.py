@@ -294,11 +294,11 @@ class Language(commands.Cog):
         df = pd.DataFrame(worksheet.get_all_records())
         vocab = []
         for row in df.itertuples():
-            if not row.Book_Level or not row.Book_Lesson:
+            if not row.Lesson:
                 continue
-            if row.Book_Level > self.config["level"] or row.Book_Lesson > self.config["lesson"]:
+            if row.Lesson // 100 > self.config["level"] or row.Lesson % 100 > self.config["lesson"]:
                 break
-            if row.Book_Level == self.config["level"] and row.Book_Lesson == self.config["lesson"]:
+            if row.Lesson // 100 == self.config["level"] and row.Lesson % 100 == self.config["lesson"]:
                 vocab.append((row.Book_English, row.Korean))
 
         random.shuffle(vocab)

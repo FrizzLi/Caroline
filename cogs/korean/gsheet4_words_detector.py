@@ -1,4 +1,4 @@
-# updates a row - fills up Listening_used column
+# updates a row - fills up Listening_Used column
 # adds a row - occurences for each word in a lesson
 
 import json
@@ -13,11 +13,15 @@ from konlpy.tag import Okt
 def tokenize_text(file):
     print("Tokenizing Korean text... ", end="")
     okt = Okt()
-    with open(f_listen, encoding="utf-8") as file:
-        korean_text = file.read()
-        tokenized_text = okt.pos(korean_text, norm=True, stem=True)
-        print("Done!")
-    
+    try:
+        with open(f_listen, encoding="utf-8") as file:
+            korean_text = file.read()
+            tokenized_text = okt.pos(korean_text, norm=True, stem=True)
+            print("Done!")
+    except FileNotFoundError as err:
+        print(err)
+        exit()
+
     return tokenized_text
 
 def group_by_count(tokenized_text):
@@ -73,19 +77,14 @@ def create_df(vocab_g_ws, occurs_g_ws):
         w = row.Korean
         vocab_base_word = w[:-1] if w[-1].isdigit() else w
         if vocab_base_word in occurs:
-            if row.Book_Level == level:
-                if row.Book_Lesson != lesson:
-                    missing_vocab_set.add(w)
-                    write_line_msg("lesson", w, occurs, word_types, vocab_base_word)
-                    continue
-            else:
+            if row.Lesson != lesson:
                 missing_vocab_set.add(w)
-                write_line_msg("level", w, occurs, word_types, vocab_base_word)
+                write_line_msg("lesson", w, occurs, word_types, vocab_base_word)
                 continue
 
             # update vocab
-            if not row.Listening_used:
-                vocab_df.at[row.Index, "Listening_used"] = level * 100 + level
+            if not row.Listening_Used:
+                vocab_df.at[row.Index, "Listening_Used"] = level * 100 + lesson
             
             # update occurances
             count = occurs.pop(vocab_base_word)
@@ -115,11 +114,10 @@ def update_worksheet(dataframe, worksheet):
     df_list += dataframe.values.tolist()
     worksheet.update(df_list, value_input_option="USER_ENTERED")
 
-level = 1
-lesson = 2
+lesson = input("Enter: <Lesson> (3 digits)")
 
 source_dir = Path(__file__).parents[0]
-lesson_dir = f"{source_dir}/data/level_{level}/lesson_{lesson}/"
+lesson_dir = f"{source_dir}/data/level_{level[0]}/lesson_{lesson[-2:]}/"
 listen_path_str = f"{lesson_dir}listening_text.txt"
 listen_explo_path_str = f"{lesson_dir}explo.txt"
 f_listen = Path(listen_path_str)
@@ -135,7 +133,7 @@ occurs, word_types = group_by_count(tokenized_text)
 # updating google sheets
 print("Updating google sheets... ", end="")
 
-vocab_g_ws = get_worksheet("Level 1-2 beta")
+vocab_g_ws = get_worksheet("Level 1-2 (Modified)")
 occurs_g_ws = get_worksheet("Book occurences")
 
 vocab_df, occurs_df = create_df(vocab_g_ws, occurs_g_ws)
