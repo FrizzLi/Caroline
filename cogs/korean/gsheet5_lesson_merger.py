@@ -41,3 +41,5 @@ def update_worksheet(dataframe, worksheet):
 vocab_g_ws = get_worksheet("Level 1-2 (backup)")
 vocab_df = create_df(vocab_g_ws)
 update_worksheet(vocab_df, vocab_g_ws)
+
+# TODO: polish gsheet files
