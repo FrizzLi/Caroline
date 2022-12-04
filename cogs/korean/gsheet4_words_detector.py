@@ -50,11 +50,11 @@ def group_by_count(tokenized_text):
         words.append(i[0])
     dup_words = [w for w in words if words.count(w) > 1]
     uniq_dup = set(dup_words)
-    if uniq_dup:
-        print("Found duplicates! There are two different types of word", uniq_dup)
-        exit()
-    else:
-        print("Done!")
+    log_file.write(f"\nDuplicates: {uniq_dup}\n")
+    for dup in uniq_dup:
+        for occur in occurs_check:
+            if occur[0] == dup:
+                log_file.write(f"{occur}: {occurs_check[occur]}\n")
     
     return occurs, word_types
 
@@ -78,17 +78,21 @@ def create_df(vocab_g_ws, occurs_g_ws):
         vocab_base_word = w[:-1] if w[-1].isdigit() else w
         if vocab_base_word in occurs:
             if not row.Lesson or row.Lesson > int(lesson):
-                missing_vocab_set.add(w)
+                missing_vocab_set.add(vocab_base_word)
                 write_line_msg("lesson (in next)", w, occurs, word_types, vocab_base_word)
-                continue
             elif row.Lesson < int(lesson):
-                missing_vocab_set.add(w)
-                write_line_msg("lesson (in previous)", w, occurs, word_types, vocab_base_word)
-                continue
+                if row.Listening_Used:
+                    missing_vocab_set.add(vocab_base_word)
+                    write_line_msg("lesson (in previous)", w, occurs, word_types, vocab_base_word)
+                else:
+                    log_file.write(f"Going to fill {row.Korean} from {row.Lesson} Lesson!\n")
+                    vocab_df.at[row.Index, "Listening_Used"] = lesson
+            else:
+                vocab_df.at[row.Index, "Listening_Used"] = lesson
 
             # update vocab
-            if not row.Listening_Used:
-                vocab_df.at[row.Index, "Listening_Used"] = lesson
+            # if not row.Listening_Used:
+            #     vocab_df.at[row.Index, "Listening_Used"] = lesson
             
             # update occurances
             count = occurs.pop(vocab_base_word)
@@ -98,6 +102,9 @@ def create_df(vocab_g_ws, occurs_g_ws):
 
     log_file.write("\n")
     for leftover in occurs:
+        leftover = leftover[:-1] if leftover[-1].isdigit() else leftover
+        if not leftover or leftover.isdigit(): # some kind of bug?
+            continue
         if leftover not in missing_vocab_set:
             write_line_msg("vocab", leftover, occurs, word_types, leftover)
     
@@ -119,6 +126,7 @@ def update_worksheet(dataframe, worksheet):
     worksheet.update(df_list, value_input_option="USER_ENTERED")
 
 lesson = input("Enter lesson in 3 digits: ")
+final = input("Press ENTER if you don't want to update sheets.")
 
 source_dir = Path(__file__).parents[0]
 lesson_dir = f"{source_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}/"
@@ -133,6 +141,7 @@ tokenized_text = tokenize_text(f_listen)
 # count grouping word occurences and finding duplicates
 log_file = open(f_listen_explo, "w", encoding="utf-8")
 occurs, word_types = group_by_count(tokenized_text)
+# TODO: acts as global var.. fix it!
 
 # updating google sheets
 print("Updating google sheets... ", end="")
@@ -143,7 +152,8 @@ occurs_g_ws = get_worksheet("Book occurences")
 vocab_df, occurs_df = create_df(vocab_g_ws, occurs_g_ws)
 log_file.close()
 
-update_worksheet(vocab_df, vocab_g_ws)
-update_worksheet(occurs_df, occurs_g_ws)
+if final:
+    update_worksheet(vocab_df, vocab_g_ws)
+    update_worksheet(occurs_df, occurs_g_ws)
 
 print("Done!")
