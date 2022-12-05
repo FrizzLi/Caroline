@@ -42,7 +42,7 @@ fre_json = Path(f"{source_dir}/data/gsheet/freq_dict_kor.json")
 with open(fre_json, encoding="utf-8") as fre:
     freq = json.load(fre)
 
-lvl_1_2_g_work_sheet = g_sheet_main.worksheet("Level 1-2")
+lvl_1_2_g_work_sheet = g_sheet_main.worksheet("Level 1-2 (modified)")
 lvl_1_2_df = pd.DataFrame(lvl_1_2_g_work_sheet.get_all_records())
 
 added_num = 0
@@ -50,24 +50,33 @@ added_num = 0
 # copy + freq + topi
 for row in lvl_1_2_df.itertuples():
     for num in range(1, 6):
-        numered_word = f"{row.Korean}{num}"
+        if not row.Korean:
+            continue
+        if row.Korean[-1].isdigit():
+            continue
+            # row_korean = row.Korean[:-1]
+        else:
+            row_korean = row.Korean
+        numered_word = f"{row_korean}{num}"
         if numered_word in freq:
             added_num += 1
             word = freq.pop(numered_word)
             row_value = [
-                word["rank"],
+                "",
                 numered_word,
                 "",
                 word["content"],
                 "",
                 word["example_en"],
                 word["example_kr"],
-                "",
-                "",
+                word["rank"],
                 word["type"],
                 word["romanization"],
                 word["frequency"],
                 word["disp"],
+                "",
+                "",
+                "",
                 ""
             ]
             lvl_1_2_df = Insert_row_(row.Index + added_num, lvl_1_2_df, row_value)
@@ -79,3 +88,5 @@ lvl_1_2_df = lvl_1_2_df.fillna("")
 lvl_1_2_list = [lvl_1_2_df.columns.values.tolist()]  # header
 lvl_1_2_list += lvl_1_2_df.values.tolist()
 lvl_1_2_g_work_sheet.update(lvl_1_2_list, value_input_option="USER_ENTERED")
+
+# TODO: script that togethers the same words with different meaning
