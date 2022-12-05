@@ -1,0 +1,511 @@
+Detailed tokenization cuz of grouping chaos.
+Skipping garbage... (('{', 'Punctuation')
+1 Number
+Skipping garbage... (('}', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+1 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+01 Number
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+1 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+안녕하다 Adjective
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+안녕하다 Adjective
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+2 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+처음 Noun
+뵙다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+반갑다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+3 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+죄송하다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+괜찮다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+4 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+감사하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n\n', 'Foreign')
+2 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+02 Number
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+1 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+어느 Adverb
+나라 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+저 Noun
+는 Josa
+한국 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+2 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+어느 Adverb
+나라 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+저 Noun
+는 Josa
+중국 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+3 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+필리핀 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+네 Noun
+Skipping garbage... ((',', 'Punctuation')
+저 Noun
+는 Josa
+필리핀 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+4 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+영국 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+프랑스 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n\n', 'Foreign')
+3 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+03 Number
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+1 Number
+Skipping garbage... ((')', 'Punctuation')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+에바 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+회사원 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+에바 Noun
+Skipping garbage... ((':', 'Punctuation')
+네 Noun
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+회사원 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+2 Number
+Skipping garbage... ((')', 'Punctuation')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+장 Noun
+웨이 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+미용사 Noun
+예요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+장 Noun
+웨이 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+디자이너 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+3 Number
+Skipping garbage... ((')', 'Punctuation')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+제임스 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+영어 Noun
+선생님 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+제임스 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... ((',', 'Punctuation')
+저 Noun
+는 Josa
+요리사 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+4 Number
+Skipping garbage... ((')', 'Punctuation')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+로이 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+한국어 Noun
+선생님 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+로이 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... ((',', 'Punctuation')
+저 Noun
+는 Josa
+영어 Noun
+선생님 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n\n', 'Foreign')
+Skipping garbage... (('{', 'Punctuation')
+2 Number
+Skipping garbage... (('}', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+1 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+04 Number
+Skipping garbage... (('\n', 'Foreign')
+제임스 Noun
+Skipping garbage... ((':', 'Punctuation')
+처음 Noun
+뵙다 Verb
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+제임스 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+안녕하다 Adjective
+Skipping garbage... (('?', 'Punctuation')
+저 Noun
+는 Josa
+리나 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+제임스 Noun
+Skipping garbage... ((':', 'Punctuation')
+어느 Adverb
+나라 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+저 Noun
+는 Josa
+일본 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+간호사 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+제임스 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+프랑스 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+제임스 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+미국 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+회사원 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+제임스 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... ((',', 'Punctuation')
+저 Noun
+는 Josa
+영어 Noun
+선생님 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n\n', 'Foreign')
+2 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+05 Number
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+1 Number
+Skipping garbage... ((':', 'Punctuation')
+처음 Noun
+뵙다 Verb
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+왕 Noun
+타오 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+반갑다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+칼비 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+2 Number
+Skipping garbage... ((':', 'Punctuation')
+안녕하다 Adjective
+Skipping garbage... (('?', 'Punctuation')
+저 Noun
+는 Josa
+황남 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+1 Number
+Skipping garbage... ((':', 'Punctuation')
+칼비 Noun
+씨 Noun
+Skipping garbage... (('.', 'Punctuation')
+어느 Adverb
+나라 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+저 Noun
+는 Josa
+필리핀 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+황남 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+중국 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+2 Number
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+베트남 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+왕 Noun
+타오 Noun
+씨 Noun
+Skipping garbage... (('.', 'Punctuation')
+중국 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+1 Number
+Skipping garbage... ((':', 'Punctuation')
+네 Noun
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+중국 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+2 Number
+Skipping garbage... ((':', 'Punctuation')
+학생 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+1 Number
+Skipping garbage... ((':', 'Punctuation')
+네 Noun
+Skipping garbage... ((',', 'Punctuation')
+저 Noun
+는 Josa
+유학생 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+칼비 Noun
+씨 Noun
+Skipping garbage... (('.', 'Punctuation')
+가수 Noun
+예요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... ((',', 'Punctuation')
+저 Noun
+는 Josa
+주부 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+황남 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+요리사 Noun
+예요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+2 Number
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+은행원 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+
+Duplicates: set()
+
+Going to fill 선생님 from 101 Lesson!
+Going to fill 괜찮다 from 101 Lesson!
+Going to fill 감사하다 from 101 Lesson!
+Going to fill 반갑다 from 101 Lesson!
+Going to fill 안녕하다 from 101 Lesson!
+Going to fill 죄송하다 from 101 Lesson!
+Going to fill 뵙다 from 101 Lesson!
+Out of lesson (in next): 장 2 Noun~~
+Out of lesson (in next): 왕 4 Noun~~
+
+Out of vocab: Track 5 Alpha
+Out of vocab: 남 16 Noun
+Out of vocab: 여 11 Noun
+Out of vocab: 아니다 10 Adjective
+Out of vocab: 이에요 29 Josa
+Out of vocab: 는 22 Josa
+Out of vocab: 타오 4 Noun
+Out of vocab: 에바 2 Noun
+Out of vocab: 웨이 2 Noun
+Out of vocab: 예요 11 Josa
+Out of vocab: 리나 6 Noun
+Out of vocab: 제임스 8 Noun
+Out of vocab: 로이 2 Noun
+Out of vocab: 칼비 3 Noun
+Out of vocab: 황남 3 Noun

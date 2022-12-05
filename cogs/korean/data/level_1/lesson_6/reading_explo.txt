@@ -1,0 +1,162 @@
+Detailed tokenization cuz of grouping chaos.
+안녕하다 Adjective
+Skipping garbage... (('?', 'Punctuation')
+저 Noun
+는 Josa
+왕 Noun
+타오 Noun
+예요 Josa
+중국 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+홍익대학교 Noun
+에서 Josa
+한국어 Noun
+를 Josa
+배우다 Verb
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+영화 Noun
+를 Josa
+좋아하다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+영화관 Noun
+에 Josa
+자주 Noun
+가요 Noun
+Skipping garbage... (('.', 'Punctuation')
+영화관 Noun
+은 Josa
+학교 Noun
+앞 Noun
+에 Josa
+있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+영화관 Noun
+옆 Noun
+에 Josa
+커피숍 Noun
+이 Josa
+있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+커피숍 Noun
+에서 Josa
+친구 Noun
+를 Josa
+만나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+거기 Noun
+에서 Josa
+숙제 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+저 Noun
+는 Josa
+리나 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+일본 Noun
+사람 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+책 Noun
+을 Josa
+좋아하다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+매일 Noun
+도서관 Noun
+에 Josa
+가요 Noun
+Skipping garbage... (('.', 'Punctuation')
+도서관 Noun
+은 Josa
+집 Noun
+옆 Noun
+에 Josa
+있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+도서관 Noun
+에서 Josa
+책 Noun
+을 Josa
+읽다 Verb
+Skipping garbage... (('.', 'Punctuation')
+도서관 Noun
+뒤 Noun
+에 Josa
+홍익 Noun
+백화점 Noun
+이 Josa
+있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+백화점 Noun
+3 Number
+층 Noun
+에 Josa
+서점 Noun
+이 Josa
+있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+거기 Noun
+에서 Josa
+책 Noun
+을 Josa
+사 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+
+Duplicates: set()
+
+Going to fill 안녕하다 from 101 Lesson!
+Out of lesson (in previous): 사람 2 Noun
+Going to fill 저1 from 102 Lesson!
+Going to fill 일본 from 102 Lesson!
+Going to fill 중국 from 102 Lesson!
+Going to fill 한국어 from 102 Lesson!
+Out of lesson (in previous): 이1 3 Josa~~
+Out of lesson (in previous): 책 3 Noun
+Out of lesson (in previous): 읽다 1 Verb
+Going to fill 영화 from 104 Lesson!
+Going to fill 배우다 from 104 Lesson!
+Out of lesson (in previous): 좋아하다 2 Adjective
+Going to fill 도서관 from 104 Lesson!
+Going to fill 집 from 105 Lesson!
+Going to fill 만나다 from 105 Lesson!
+Going to fill 친구 from 105 Lesson!
+Going to fill 학교 from 105 Lesson!
+Going to fill 백화점 from 105 Lesson!
+Out of lesson (in previous): 숙제 1 Noun
+Going to fill 서점 from 105 Lesson!
+Going to fill 영화관 from 105 Lesson!
+Going to fill 커피숍 from 105 Lesson!
+Going to fill 홍익대학교 from 105 Lesson!
+Out of lesson (in next): 가요 2 Noun--
+Out of lesson (in next): 왕 1 Noun
+Out of lesson (in next): 해 1 Noun
+
+Out of vocab: 는 5 Josa
+Out of vocab: 타오 1 Noun
+Out of vocab: 예요 2 Josa
+Out of vocab: 이에요 2 Josa
+Out of vocab: 에서 5 Josa
+Out of vocab: 를 4 Josa
+Out of vocab: 에 7 Josa
+Out of vocab: 은 2 Josa
+Out of vocab: 있다 5 Adjective
+Out of vocab: 거기 2 Noun
+Out of vocab: 요 2 Josa
+Out of vocab: 리나 1 Noun
+Out of vocab: 을 3 Josa
+Out of vocab: 홍익 1 Noun
+Out of vocab: 사 1 Noun--
+
