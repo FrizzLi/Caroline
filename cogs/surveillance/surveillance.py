@@ -11,7 +11,7 @@ class Surveillance(commands.Cog):
         self.bot = bot
 
     def get_log_channel(self):
-        return self.bot.get_channel(556514691069902870)
+        return self.bot.get_channel(1058633423301902429)
 
     def get_time(self):
         time = datetime.now(pytz.timezone("Europe/Bratislava"))
@@ -30,22 +30,22 @@ class Surveillance(commands.Cog):
         before_no_act = before.activity is None
         after_no_act = after.activity is None
 
-        if before_offline and not after_offline:
-            msg = "has come online."
-        elif not before_offline and after_offline:
-            msg = "has gone offline."
-        elif diff_act and before_no_act:
+        #     # if before_offline and not after_offline:
+        #     #     msg = "has come online."
+        #     # elif not before_offline and after_offline:
+        #     #     msg = "has gone offline."
+        if diff_act and before_no_act:
             msg = f"has started {after.activity.name}."
         elif diff_act and after_no_act:
             msg = f"has stopped {before.activity.name}."
-        elif not before_dnd and after_dnd:
-            msg = "has set DND status."
-        elif before_dnd and not after_dnd:
-            msg = "is no longer DND."
-        elif before_idle and not after_idle:
-            msg = "is no longer idle."
-        elif not before_idle and after_idle:
-            msg = "has gone idle."
+        #     # elif not before_dnd and after_dnd:
+        #     #     msg = "has set DND status."
+        #     # elif before_dnd and not after_dnd:
+        #     #     msg = "is no longer DND."
+        #     # elif before_idle and not after_idle:
+        #     #     msg = "is no longer idle."
+        #     # elif not before_idle and after_idle:
+        #     #     msg = "has gone idle."
         else:
             print(f"{after.name} did something..!")
             return
