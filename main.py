@@ -50,15 +50,15 @@ class MyBot(commands.Bot):
         )
 
 
-# TOKEN = os.environ.get("GLADOS_TOKEN")
-# APP_ID = os.environ.get("GLADOS_ID")
-# BLACK_LIST = ()
-# PREFIX = "?"
+TOKEN = os.environ.get("GLADOS_TOKEN")
+APP_ID = os.environ.get("GLADOS_ID")
+BLACK_LIST = ()
+PREFIX = "?"
 
-TOKEN = os.environ.get("CAROLINE_TOKEN")
-APP_ID = os.environ.get("CAROLINE_ID")
-BLACK_LIST = ("surveillance",)
-PREFIX = "."
+# TOKEN = os.environ.get("CAROLINE_TOKEN")
+# APP_ID = os.environ.get("CAROLINE_ID")
+# BLACK_LIST = () # "surveillance",
+# PREFIX = "."
 
 bot = MyBot()
 bot.run(TOKEN)
