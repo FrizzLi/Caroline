@@ -1,5 +1,8 @@
-# updates a row - fills up Listening_Used column
-# adds a row - occurences for each word in a lesson
+"""
+"Korea - Vocabulary" Google Spreadsheet:
+ - fills up Listening/Reading _Used column for words that are in chosen lesson
+ - adds row in listening/reading occurences tab for each word in chosen lesson
+"""
 
 import json
 import os
@@ -189,7 +192,7 @@ tokenized_text = tokenize_text(f_path)
 # count grouping word occurences and finding duplicates
 log_file = open(f_explo_path, "w", encoding="utf-8")
 occurs, word_types = group_by_count(tokenized_text)
-# TODO: acts as global var.. fix it!
+# TODO: acts as global var.. fix it! Along with linting
 
 # updating google sheets
 print("Updating google sheets... ", end="")

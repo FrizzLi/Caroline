@@ -1,7 +1,7 @@
-# "Korea - Vocabulary" Google Spreadsheet
-# add numbered freq words (more meanings) below base word in "Level 1-2" tab
-
-# (this was also used to transition topic words into freq. vocab)
+"""
+"Korea - Vocabulary" Google Spreadsheet:
+ - adds numbered freq words (more meanings) below base word in "Level 1-2" tab
+"""
 
 import json
 import os
@@ -35,7 +35,6 @@ credentials_dict = json.loads(credentials_dict_str)
 g_credentials = gspread.service_account_from_dict(credentials_dict)
 g_sheet_main = g_credentials.open("Korea - Vocabulary")
 
-
 source_dir = Path(__file__).parents[0]
 fre_json = Path(f"{source_dir}/data/gsheet/freq_dict_kor.json")
 
@@ -47,14 +46,12 @@ lvl_1_2_df = pd.DataFrame(lvl_1_2_g_work_sheet.get_all_records())
 
 added_num = 0
 
-# copy + freq + topi
 for row in lvl_1_2_df.itertuples():
     for num in range(1, 6):
         if not row.Korean:
             continue
         if row.Korean[-1].isdigit():
             continue
-            # row_korean = row.Korean[:-1]
         else:
             row_korean = row.Korean
         numered_word = f"{row_korean}{num}"
@@ -79,14 +76,13 @@ for row in lvl_1_2_df.itertuples():
                 "",
                 ""
             ]
-            lvl_1_2_df = Insert_row_(row.Index + added_num, lvl_1_2_df, row_value)
+            index = row.Index + added_num
+            lvl_1_2_df = Insert_row_(index, lvl_1_2_df, row_value)
 
 df = lvl_1_2_df.sort_index().reset_index(drop=True)
 
 # save to gsheets
 lvl_1_2_df = lvl_1_2_df.fillna("")
-lvl_1_2_list = [lvl_1_2_df.columns.values.tolist()]  # header
+lvl_1_2_list = [lvl_1_2_df.columns.values.tolist()]
 lvl_1_2_list += lvl_1_2_df.values.tolist()
 lvl_1_2_g_work_sheet.update(lvl_1_2_list, value_input_option="USER_ENTERED")
-
-# TODO: script that togethers the same words with different meaning

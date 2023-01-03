@@ -1,9 +1,11 @@
-# "Korea - Vocabulary (raw)" Google Spreadsheet:
-# fills up "arranged" tab that is easier to read using "raw" tab 
+"""
+"Korea - Vocabulary (raw)" Google Spreadsheet:
+ - uses "war" tab to fill up "arranged" tab that is easier to read
 
-# "Korea - Vocabulary" Google Spreadsheet:
-# fills up "Level 1-2" tab with "arranged"
-# adds freq and topi vocab from json files in data/gsheet folder
+"Korea - Vocabulary" Google Spreadsheet:
+ - uses "arranged" tab to fill up "Level 1-2" tab
+ - uses freq and topi json files in data/gsheet to further fill "Level 1-2" tab
+"""
 
 import json
 import os
@@ -31,9 +33,10 @@ index_add = 0
 for row in raw_vocab_df.itertuples():
     kr_en = row.Frequency.split(" - ")
     if len(kr_en) > 1:
-        arranged_vocab_df.at[row.Index - index_add, "Korean"] = kr_en[0]
-        arranged_vocab_df.at[row.Index - index_add, "Book_English"] = kr_en[1]
-        arranged_vocab_df.at[row.Index - index_add, "Lesson"] = level + lesson.zfill(2)
+        index = row.Index - index_add
+        arranged_vocab_df.at[index, "Korean"] = kr_en[0]
+        arranged_vocab_df.at[index, "Book_English"] = kr_en[1]
+        arranged_vocab_df.at[index, "Lesson"] = level + lesson.zfill(2)
     else:
         index_add += 1
     if 2 < len(row.Frequency) < 5:
@@ -116,14 +119,13 @@ for row in topi:
         "TOPIK": "I",
         "Topik_English": topi[row],
     }
-    # lvl_1_2_df.append(row_dict, ignore_index=True)
     df = pd.DataFrame(row_dict, columns=lvl_1_2_df.columns, index=[0])
-    lvl_1_2_df = pd.concat([lvl_1_2_df, df])  # ignore_index
+    lvl_1_2_df = pd.concat([lvl_1_2_df, df])
 
 print("Created vocab from topi, last topi word:", row)
 
 # save to gsheets
 lvl_1_2_df = lvl_1_2_df.fillna("")
-lvl_1_2_list = [lvl_1_2_df.columns.values.tolist()]  # header
+lvl_1_2_list = [lvl_1_2_df.columns.values.tolist()]
 lvl_1_2_list += lvl_1_2_df.values.tolist()
 lvl_1_2_g_work_sheet.update(lvl_1_2_list, value_input_option="USER_ENTERED")

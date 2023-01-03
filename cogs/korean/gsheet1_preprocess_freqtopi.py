@@ -1,4 +1,5 @@
-# creates freq and topi json files from raw text files in data/gsheet folder
+"""Takes raw text content of freq and topi sources and creates comprehensive
+vocabulary represented by json file. Contents are in data/gsheet folder."""
 
 import json
 from pathlib import Path
