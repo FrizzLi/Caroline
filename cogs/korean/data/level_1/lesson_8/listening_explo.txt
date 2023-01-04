@@ -1,0 +1,404 @@
+Detailed tokenization cuz of grouping chaos.
+Skipping garbage... (('{', 'Punctuation')
+1 Number
+Skipping garbage... (('}', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+1 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+24 Number
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+1 Number
+Skipping garbage... ((')', 'Punctuation')
+저 Noun
+는 Josa
+보통 Noun
+7시 Number
+Skipping garbage... (('에', 'Foreign')
+일어나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+2 Number
+Skipping garbage... ((')', 'Punctuation')
+7시 Number
+10분 Number
+Skipping garbage... (('에', 'Foreign')
+아침 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+3 Number
+Skipping garbage... ((')', 'Punctuation')
+7시 Number
+30분 Number
+Skipping garbage... (('에', 'Foreign')
+이르다 Verb
+닦다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+4 Number
+Skipping garbage... ((')', 'Punctuation')
+7시 Number
+50분 Number
+Skipping garbage... (('에', 'Foreign')
+화장 Noun
+을 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+5 Number
+Skipping garbage... ((')', 'Punctuation')
+8시 Number
+20분 Number
+Skipping garbage... (('에', 'Foreign')
+학교 Noun
+에 Josa
+가요 Noun
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n\n', 'Foreign')
+2 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+25 Number
+Skipping garbage... (('\n', 'Foreign')
+오늘 Noun
+은 Josa
+토요일 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+토요일 Noun
+에는 Josa
+한국어 Noun
+수업 Noun
+이 Josa
+없다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+10시 Number
+30분 Number
+Skipping garbage... (('에', 'Foreign')
+일어나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+12시 Number
+Skipping garbage... (('에', 'Foreign')
+점심 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+오후 Noun
+2시 Number
+Skipping garbage... (('에', 'Foreign')
+커피숍 Noun
+에서 Josa
+친구 Noun
+들 Suffix
+을 Josa
+만나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+4시 Number
+Skipping garbage... (('까지', 'Foreign')
+친구 Noun
+들 Suffix
+과 Josa
+같이 Adverb
+숙제 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+커피숍 Noun
+옆 Noun
+에 Josa
+수영장 Noun
+이 Josa
+있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+4시 Number
+Skipping garbage... (('에', 'Foreign')
+수영장 Noun
+에 Josa
+가요 Noun
+Skipping garbage... (('.', 'Punctuation')
+4시 Number
+반 Noun
+부터 Josa
+5시 Number
+반 Noun
+까지 Josa
+수영 Noun
+을 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+저녁 Noun
+6시 Number
+Skipping garbage... (('에', 'Foreign')
+집 Noun
+에 Josa
+가요 Noun
+Skipping garbage... (('.', 'Punctuation')
+6시 Number
+Skipping garbage... (('부터', 'Foreign')
+7시 Number
+Skipping garbage... (('까지', 'Foreign')
+쉬다 Verb
+Skipping garbage... (('.', 'Punctuation')
+7시 Number
+Skipping garbage... (('에', 'Foreign')
+집 Noun
+에서 Josa
+저녁 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+8시 Number
+Skipping garbage... (('부터', 'Foreign')
+8시 Number
+반 Noun
+까지 Josa
+청소 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+9시 Number
+Skipping garbage... (('부터', 'Foreign')
+11시 Number
+Skipping garbage... (('까지', 'Foreign')
+영화 Noun
+를 Josa
+보다 Verb
+Skipping garbage... (('.', 'Punctuation')
+밤 Noun
+12시 Number
+Skipping garbage... (('쯤에', 'Foreign')
+잠 Noun
+을 Josa
+자 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n\n', 'Foreign')
+Skipping garbage... (('{', 'Punctuation')
+2 Number
+Skipping garbage... (('}', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+1 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+26 Number
+Skipping garbage... (('\n', 'Foreign')
+저 Noun
+는 Josa
+보통 Noun
+6시 Number
+반 Noun
+에 Josa
+일어나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+세수 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+그리고 Conjunction
+면도 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+7시 Number
+Skipping garbage... (('쯤에', 'Foreign')
+아침 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+7시 Number
+반 Noun
+부터 Josa
+8시 Number
+Skipping garbage... (('까지', 'Foreign')
+뉴스 Noun
+를 Josa
+보다 Verb
+Skipping garbage... (('.', 'Punctuation')
+8시 Number
+Skipping garbage... (('에', 'Foreign')
+학교 Noun
+에 Josa
+가요 Noun
+Skipping garbage... (('.', 'Punctuation')
+9시 Number
+Skipping garbage... (('에', 'Foreign')
+수업 Noun
+이 Josa
+시작 Noun
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+1시 Number
+Skipping garbage... (('에', 'Foreign')
+수업 Noun
+이 Josa
+끝나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+1시 Number
+Skipping garbage... (('에', 'Foreign')
+친구 Noun
+들 Suffix
+과 Josa
+같이 Adverb
+점심 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+4시 Number
+Skipping garbage... (('까지', 'Foreign')
+커피숍 Noun
+에서 Josa
+숙제 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+5시 Number
+Skipping garbage... (('부터', 'Foreign')
+10시 Number
+Skipping garbage... (('까지', 'Foreign')
+일 Noun
+을 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+식당 Noun
+에서 Josa
+프랑스 Noun
+요리 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+밤 Noun
+에 Josa
+조금 Noun
+피곤하다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+10시 Number
+Skipping garbage... (('에', 'Foreign')
+집 Noun
+에 Josa
+가요 Noun
+Skipping garbage... (('.', 'Punctuation')
+10시 Number
+반 Noun
+에 Josa
+샤워 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+11시 Number
+Skipping garbage... (('부터', 'Foreign')
+하다 Verb
+시간 Noun
+쯤 Suffix
+SNS Alpha
+를 Noun
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+그리고 Conjunction
+잠 Noun
+을 Josa
+자 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+
+Duplicates: {'를'}
+('를', 'Josa'): 9
+('를', 'Noun'): 1
+
+Out of lesson (in previous): 저1 4 Noun
+Going to fill 프랑스 from 102 Lesson!
+Out of lesson (in previous): 한국어 1 Noun
+Out of lesson (in previous): 이1 4 Josa
+Out of lesson (in previous): 보다1 2 Verb
+Going to fill 먹다1 from 104 Lesson!
+Out of lesson (in previous): 영화 1 Noun
+Going to fill 쉬다1 from 104 Lesson!
+Going to fill 일1 from 105 Lesson!
+Out of lesson (in previous): 집 3 Noun
+Going to fill 시간1 from 105 Lesson!
+Out of lesson (in previous): 만나다 1 Verb
+Out of lesson (in previous): 친구 3 Noun
+Out of lesson (in previous): 학교 2 Noun
+Going to fill 잠 from 105 Lesson!
+Going to fill 요리 from 105 Lesson!
+Going to fill 식당 from 105 Lesson!
+Out of lesson (in previous): 숙제 2 Noun
+Out of lesson (in previous): 커피숍 3 Noun
+Out of lesson (in previous): 옆 1 Noun
+Going to fill 수영 from 106 Lesson!
+Going to fill 수영장 from 106 Lesson!
+Out of lesson (in previous): 오늘1 1 Noun
+Going to fill 밤 from 107 Lesson!
+Out of lesson (in previous): 저녁 2 Noun
+Going to fill 아침 from 107 Lesson!
+Out of lesson (in previous): 반 6 Noun
+Out of lesson (in previous): 오후 1 Noun
+Going to fill 점심 from 107 Lesson!
+Out of lesson (in next): 같이 2 Adverb
+Out of lesson (in next): 가요 5 Noun
+Out of lesson (in next): 해 11 Noun
+Out of lesson (in next): SNS 1 Alpha
+Out of lesson (in next): 이르다 1 Verb
+
+Out of vocab: Track 3 Alpha
+Out of vocab: 는 4 Josa
+Out of vocab: 7시 8 Number
+Out of vocab: 10분 1 Number
+Out of vocab: 을 11 Josa
+Out of vocab: 30분 2 Number
+Out of vocab: 50분 1 Number
+Out of vocab: 화장 1 Noun
+Out of vocab: 요 13 Josa
+Out of vocab: 8시 5 Number
+Out of vocab: 20분 1 Number
+Out of vocab: 에 9 Josa
+Out of vocab: 은 1 Josa
+Out of vocab: 토요일 2 Noun
+Out of vocab: 이에요 1 Josa
+Out of vocab: 에는 1 Josa
+Out of vocab: 없다 1 Adjective
+Out of vocab: 10시 4 Number
+Out of vocab: 12시 2 Number
+Out of vocab: 2시 1 Number
+Out of vocab: 에서 4 Josa
+Out of vocab: 들 3 Suffix
+Out of vocab: 4시 4 Number
+Out of vocab: 과 2 Josa
+Out of vocab: 를 10 Noun
+Out of vocab: 있다 1 Adjective
+Out of vocab: 부터 2 Josa
+Out of vocab: 5시 2 Number
+Out of vocab: 까지 2 Josa
+Out of vocab: 6시 3 Number
+Out of vocab: 청소 1 Noun
+Out of vocab: 9시 2 Number
+Out of vocab: 11시 2 Number
+Out of vocab: 자 2 Noun
+Out of vocab: 세수 1 Noun
+Out of vocab: 면도 1 Noun
+Out of vocab: 시작 1 Noun
+Out of vocab: 하다 2 Verb
+Out of vocab: 1시 2 Number
+Out of vocab: 샤워 1 Noun

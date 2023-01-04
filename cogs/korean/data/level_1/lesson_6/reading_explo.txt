@@ -141,8 +141,8 @@ Going to fill 영화관 from 105 Lesson!
 Going to fill 커피숍 from 105 Lesson!
 Going to fill 홍익대학교 from 105 Lesson!
 Out of lesson (in next): 가요 2 Noun--
-Out of lesson (in next): 왕 1 Noun
-Out of lesson (in next): 해 1 Noun
+Out of lesson (in next): 왕 1 Noun~~
+Out of lesson (in next): 해 1 Noun~~
 
 Out of vocab: 는 5 Josa
 Out of vocab: 타오 1 Noun

@@ -366,7 +366,7 @@ Duplicates: {'이'}
 
 Out of lesson (in previous): 사람 5 Noun
 Out of lesson (in previous): 씨1 10 Noun
-Out of lesson (in previous): 저1 2 Noun--
+Out of lesson (in previous): 저1 2 Noun--2
 Out of lesson (in previous): 네1 2 Noun
 Out of lesson (in previous): 미국 2 Noun
 Going to fill 의사1 from 102 Lesson!
