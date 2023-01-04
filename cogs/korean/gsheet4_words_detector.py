@@ -64,7 +64,7 @@ def group_by_count(tokenized_text):
     return occurs, word_types
 
 
-def create_df(vocab_g_ws, occurs_g_ws):
+def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
     def write_line_msg(portion, word, occurs, word_types, vocab_base_word):
         head = f"Out of {portion}:"
         occur = str(occurs[vocab_base_word])
@@ -192,7 +192,6 @@ tokenized_text = tokenize_text(f_path)
 # count grouping word occurences and finding duplicates
 log_file = open(f_explo_path, "w", encoding="utf-8")
 occurs, word_types = group_by_count(tokenized_text)
-# TODO: acts as global var.. fix it! Along with linting
 
 # updating google sheets
 print("Updating google sheets... ", end="")
@@ -200,7 +199,7 @@ print("Updating google sheets... ", end="")
 vocab_g_ws = get_worksheet("Level 1-2 (modified)")
 occurs_g_ws = get_worksheet(f"{text_type} occurences")
 
-vocab_df, occurs_df = create_df(vocab_g_ws, occurs_g_ws)
+vocab_df, occurs_df = create_df(vocab_g_ws, occurs_g_ws, occurs, word_types)
 log_file.close()
 
 if final:
