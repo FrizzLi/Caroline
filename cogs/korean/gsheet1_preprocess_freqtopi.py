@@ -1,4 +1,4 @@
-"""Takes raw text content of freq and topi sources and creates comprehensive
+"""Takes raw text of freq and topi content and creates comprehensive
 vocabulary represented by json file. Contents are in data/gsheet folder."""
 
 import json

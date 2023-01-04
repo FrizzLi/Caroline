@@ -39,7 +39,7 @@ def get_worksheet(ws_name):
 
 def update_worksheet(dataframe, worksheet):
     dataframe = dataframe.fillna("")
-    df_list = [dataframe.columns.values.tolist()]  # header
+    df_list = [dataframe.columns.values.tolist()]
     df_list += dataframe.values.tolist()
     worksheet.update(df_list, value_input_option="USER_ENTERED")
 

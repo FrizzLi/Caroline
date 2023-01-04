@@ -1,6 +1,6 @@
 """
 "Korea - Vocabulary (raw)" Google Spreadsheet:
- - uses "war" tab to fill up "arranged" tab that is easier to read
+ - uses "raw" tab to fill up "arranged" tab that is easier to read
 
 "Korea - Vocabulary" Google Spreadsheet:
  - uses "arranged" tab to fill up "Level 1-2" tab
@@ -43,11 +43,11 @@ for row in raw_vocab_df.itertuples():
         level, lesson = row.Frequency.split(";")
 
 arranged_vocab_df = arranged_vocab_df.fillna("")
-arranged_vocab_list = [arranged_vocab_df.columns.values.tolist()]  # header
+arranged_vocab_list = [arranged_vocab_df.columns.values.tolist()]
 arranged_vocab_list += arranged_vocab_df.values.tolist()
 arranged_vocab_g_work_sheet.update(
     arranged_vocab_list, value_input_option="USER_ENTERED"
-)  # value_input_option='USER_ENTERED' / 'RAW'
+)
 
 print("Created arranged vocab")
 
