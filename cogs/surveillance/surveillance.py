@@ -30,14 +30,19 @@ class Surveillance(commands.Cog):
         before_no_act = before.activity is None
         after_no_act = after.activity is None
 
+        time = self.get_time()
         #     # if before_offline and not after_offline:
         #     #     msg = "has come online."
         #     # elif not before_offline and after_offline:
         #     #     msg = "has gone offline."
         if diff_act and before_no_act:
-            msg = f"has started {after.activity.name}."
+            if after.activity.name:
+                msg = f"has started {after.activity.name}."
+                await self.get_log_channel().send(f"{time}: {after.name} {msg}")
         elif diff_act and after_no_act:
-            msg = f"has stopped {before.activity.name}."
+            if before.activity.name:
+                msg = f"has stopped {before.activity.name}."
+                await self.get_log_channel().send(f"{time}: {after.name} {msg}")
         #     # elif not before_dnd and after_dnd:
         #     #     msg = "has set DND status."
         #     # elif before_dnd and not after_dnd:
@@ -46,12 +51,9 @@ class Surveillance(commands.Cog):
         #     #     msg = "is no longer idle."
         #     # elif not before_idle and after_idle:
         #     #     msg = "has gone idle."
-        else:
-            print(f"{after.name} did something..!")
-            return
-
-        time = self.get_time()
-        await self.get_log_channel().send(f"{time}: {after.name} {msg}")
+        # else:
+            # print(f"{after.name} did something..!")
+            # return
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
