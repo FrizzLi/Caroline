@@ -174,7 +174,7 @@ class Language(commands.Cog):
                     json_content = json.load(file)
                     stats = defaultdict(list, json_content)
 
-        # TODO: get audio
+        # TODO: Get audio
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:  # slash commands?!
@@ -444,7 +444,6 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))]
     )
 
-# TODO: Mix lessons, Improve vocab explanation (text files, passively)
-# TODO: Competitive mode, remake, lint
-# TODO: GDocs and GSpreadsheet instead of gspread and local txt files
-# vocab_lesson_x.json remake (customized files though!)
+# TODO: Transition from vocab_level_x to GSheets (personalization too)
+# TODO: Mix lessons, Improve vocab explanation (using freq/topi/audio content)
+# TODO: Competitive mode
