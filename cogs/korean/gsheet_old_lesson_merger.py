@@ -1,5 +1,5 @@
 """This script served to convert two tabs (Book_Level, Book_Lesson)
-into one (Lesson)"""
+into one (Lesson) in "Korea - Vocabulary" Google Spreadsheet"""
 
 import json
 import os

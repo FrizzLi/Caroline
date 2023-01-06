@@ -30,7 +30,7 @@ class Language(commands.Cog):
             with open(config_path, encoding="utf-8") as file:
                 config = json.load(file)
         else:
-            config = {"level": "1", "lesson": "1", "custom": "default"}
+            config = {"level": 1, "lesson": 1, "custom": "default"}
             with open(config_path, "w", encoding="utf-8") as file:
                 json.dump(config, file)
 
@@ -289,7 +289,7 @@ class Language(commands.Cog):
         credentials_dict = json.loads(credentials_dict_str)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
         g_sheet = g_credentials.open("Korea - Vocabulary")
-        worksheet = g_sheet.worksheet("Level 1-2 beta")
+        worksheet = g_sheet.worksheet("Level 1-2 (modified)")
 
         df = pd.DataFrame(worksheet.get_all_records())
         vocab = []
@@ -352,8 +352,8 @@ class Language(commands.Cog):
                             executable="C:/ffmpeg/bin/ffmpeg.exe",
                         )
                     )
-                except Exception:
-                    print("Wait, press 🔁 to play unplayed audio!!!")
+                except Exception as err:
+                    print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
             else:
                 msg_display = f"{kor} = ||{eng}||"
 
