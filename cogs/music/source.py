@@ -107,7 +107,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             discord.FFmpegPCMAudio(
                 data["url"],
                 **ffmpeg_opts,
-                executable="C:/ffmpeg/ffmpeg.exe",
+                executable="/usr/bin/ffmpeg",
             ),
             data=data,
             requester=requester,
