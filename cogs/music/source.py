@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import os
 
 import discord
 import youtube_dl
@@ -102,12 +103,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
             "options": f"-vn -ss {timestamp}",
             "before_options": f"{reconnect_streamed} {reconnect_delay}",
         }
+        ffmpeg_path = (
+            "C:/ffmpeg/ffmpeg.exe" if os.name == "nt" else "/usr/bin/ffmpeg"
+        )
 
         return cls(
             discord.FFmpegPCMAudio(
                 data["url"],
                 **ffmpeg_opts,
-                executable="C:/ffmpeg/ffmpeg.exe",
+                executable=ffmpeg_path,
             ),
             data=data,
             requester=requester,

@@ -18,6 +18,9 @@ class Language(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = self.load_config()
+        self.ffmpeg_path = (
+            "C:/ffmpeg/ffmpeg.exe" if os.name == "nt" else "/usr/bin/ffmpeg"
+        )
 
     # These parameters doesn't need to be in config, they're not so usable
     personalization = True  # NotImplemented
@@ -223,7 +226,7 @@ class Language(commands.Cog):
                 voice.play(
                     discord.FFmpegPCMAudio(
                         name_to_path_dict[answer],
-                        executable="C:/ffmpeg/ffmpeg.exe",
+                        executable=self.ffmpeg_path,
                     )
                 )
 
@@ -285,6 +288,7 @@ class Language(commands.Cog):
         # get vocab words
         import gspread
         import pandas as pd
+
         credentials_dict_str = os.environ.get("GOOGLE_CREDENTIALS")
         credentials_dict = json.loads(credentials_dict_str)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
@@ -296,9 +300,15 @@ class Language(commands.Cog):
         for row in df.itertuples():
             if not row.Lesson:
                 continue
-            if row.Lesson // 100 > self.config["level"] or row.Lesson % 100 > self.config["lesson"]:
+            if (
+                row.Lesson // 100 > self.config["level"]
+                or row.Lesson % 100 > self.config["lesson"]
+            ):
                 break
-            if row.Lesson // 100 == self.config["level"] and row.Lesson % 100 == self.config["lesson"]:
+            if (
+                row.Lesson // 100 == self.config["level"]
+                and row.Lesson % 100 == self.config["lesson"]
+            ):
                 vocab.append((row.Book_English, row.Korean))
 
         random.shuffle(vocab)
@@ -349,7 +359,7 @@ class Language(commands.Cog):
                     voice.play(
                         discord.FFmpegPCMAudio(
                             name_to_path_dict[kor],
-                            executable="C:/ffmpeg/ffmpeg.exe",
+                            executable=self.ffmpeg_path,
                         )
                     )
                 except Exception as err:
@@ -413,7 +423,9 @@ class Language(commands.Cog):
                 # save unknown words to file for future
                 unknown_words = dict(unknown_words)
                 data_path = Path(f"{source_dir}/data")
-                data_user_path = Path(f"{data_path}/users/{interaction.user.name}")
+                data_user_path = Path(
+                    f"{data_path}/users/{interaction.user.name}"
+                )
                 Path(data_user_path).mkdir(parents=True, exist_ok=True)
                 path = Path(f"{data_user_path}/{self.level}_unknown.json")
                 if os.path.exists(path):
@@ -441,10 +453,12 @@ class Language(commands.Cog):
     # TODO: Create sheet, Add row of: Korean Word, TimeStamp, Label of knowledge
     # TODO: Add sound labels!
 
+
 async def setup(bot):
     await bot.add_cog(
         Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))]
     )
+
 
 # TODO: Mix lessons
 # TODO: Competitive mode

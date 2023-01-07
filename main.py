@@ -49,19 +49,19 @@ class MyBot(commands.Bot):
             guild=discord.Object(id=os.environ.get("SERVER_ID"))
         )
 
-
-TOKEN = os.environ.get("GLADOS_TOKEN")
-APP_ID = os.environ.get("GLADOS_ID")
-BLACK_LIST = ()
-PREFIX = "?"
-
-# TOKEN = os.environ.get("CAROLINE_TOKEN")
-# APP_ID = os.environ.get("CAROLINE_ID")
-# BLACK_LIST = () # "surveillance",
-# PREFIX = "."
+if os.name == "nt":
+    TOKEN = os.environ.get("CAROLINE_TOKEN")
+    APP_ID = os.environ.get("CAROLINE_ID")
+    BLACK_LIST = ("surveillance")
+    PREFIX = "."
+else:
+    TOKEN = os.environ.get("GLADOS_TOKEN")
+    APP_ID = os.environ.get("GLADOS_ID")
+    BLACK_LIST = ()
+    PREFIX = "?"
 
 bot = MyBot()
 bot.run(TOKEN)
 
-# TODO: Polish and Document ALL Discord module files
+# TODO: Polish (pylint) and Document ALL Discord module files
 # TODO: Logs and Tests (setup.py, pytest from reqs)
