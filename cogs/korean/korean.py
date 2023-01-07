@@ -223,7 +223,7 @@ class Language(commands.Cog):
                 voice.play(
                     discord.FFmpegPCMAudio(
                         name_to_path_dict[answer],
-                        executable="C:/ffmpeg/bin/ffmpeg.exe",
+                        executable="C:/ffmpeg/ffmpeg.exe",
                     )
                 )
 
@@ -349,7 +349,7 @@ class Language(commands.Cog):
                     voice.play(
                         discord.FFmpegPCMAudio(
                             name_to_path_dict[kor],
-                            executable="C:/ffmpeg/bin/ffmpeg.exe",
+                            executable="C:/ffmpeg/ffmpeg.exe",
                         )
                     )
                 except Exception as err:
@@ -438,12 +438,14 @@ class Language(commands.Cog):
             stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
             counter = f"{i}. word out of {count_n}"
 
+    # TODO: Create sheet, Add row of: Korean Word, TimeStamp, Label of knowledge
+    # TODO: Add sound labels!
 
 async def setup(bot):
     await bot.add_cog(
         Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))]
     )
 
-# TODO: Transition from vocab_level_x to GSheets (personalization too)
 # TODO: Mix lessons, Improve vocab explanation (using freq/topi/audio content)
 # TODO: Competitive mode
+# TODO: Download sound for all? (current script is in memo bookmark)

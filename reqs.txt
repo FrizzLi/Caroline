@@ -10,4 +10,5 @@ mypy
 black
 pytest
 
+ffmpeg
 pynacl
