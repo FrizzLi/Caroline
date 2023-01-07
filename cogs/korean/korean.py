@@ -446,6 +446,6 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))]
     )
 
-# TODO: Mix lessons, Improve vocab explanation (using freq/topi/audio content)
+# TODO: Mix lessons
 # TODO: Competitive mode
 # TODO: Download sound for all? (current script is in memo bookmark)
