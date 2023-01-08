@@ -15,7 +15,7 @@ import gspread
 import pandas as pd
 
 # create arranged vocab with raw
-credentials_dict_str = os.environ.get("GOOGLE_CREDENTIALS")
+credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
 credentials_dict = json.loads(credentials_dict_str)
 g_credentials = gspread.service_account_from_dict(credentials_dict)
 g_sheet_main = g_credentials.open("Korea - Vocabulary")

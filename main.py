@@ -3,6 +3,7 @@ from glob import glob
 
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
 
 class MyBot(commands.Bot):
@@ -46,17 +47,18 @@ class MyBot(commands.Bot):
                     print(f"{dir_name} module cannot be loaded. [{err}]")
 
         await bot.tree.sync(
-            guild=discord.Object(id=os.environ.get("SERVER_ID"))
+            guild=discord.Object(id=os.environ["SERVER_ID"])
         )
 
+load_dotenv()
 if os.name == "nt":
-    TOKEN = os.environ.get("CAROLINE_TOKEN")
-    APP_ID = os.environ.get("CAROLINE_ID")
+    TOKEN = os.environ["CAROLINE_TOKEN"]
+    APP_ID = os.environ["CAROLINE_ID"]
     BLACK_LIST = ("surveillance")
     PREFIX = "."
 else:
-    TOKEN = os.environ.get("GLADOS_TOKEN")
-    APP_ID = os.environ.get("GLADOS_ID")
+    TOKEN = os.environ["GLADOS_TOKEN"]
+    APP_ID = os.environ["GLADOS_ID"]
     BLACK_LIST = ()
     PREFIX = "?"
 

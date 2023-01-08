@@ -4,6 +4,7 @@ pillow
 pandas  # (pytz, numpy)
 gspread
 pytube
+python-dotenv
 
 pylint
 mypy

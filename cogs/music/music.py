@@ -158,7 +158,7 @@ class Music(commands.Cog):
                 print(f"{i}. (new) downloaded: {rec}")
 
         # save to gsheets
-        credentials_dict_string = os.environ.get("GOOGLE_CREDENTIALS")
+        credentials_dict_string = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_string)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
         g_sheet = g_credentials.open("Discord Music Log")
@@ -194,7 +194,7 @@ class Music(commands.Cog):
         """Saves history of songs into Google Sheets."""
 
         # get pandas format
-        credentials_dict_string = os.environ.get("GOOGLE_CREDENTIALS")
+        credentials_dict_string = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_string)
         g_credendials = gspread.service_account_from_dict(credentials_dict)
         g_sheet = g_credendials.open("Discord Music Log")
@@ -680,5 +680,5 @@ class Music(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(
-        Music(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))]
+        Music(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )

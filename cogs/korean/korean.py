@@ -289,7 +289,7 @@ class Language(commands.Cog):
         import gspread
         import pandas as pd
 
-        credentials_dict_str = os.environ.get("GOOGLE_CREDENTIALS")
+        credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_str)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
         g_sheet = g_credentials.open("Korea - Vocabulary")
@@ -456,7 +456,7 @@ class Language(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(
-        Language(bot), guilds=[discord.Object(id=os.environ.get("SERVER_ID"))]
+        Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
 
