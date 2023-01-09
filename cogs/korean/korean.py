@@ -190,7 +190,7 @@ class Language(commands.Cog):
         audio_paths = glob(f"cogs/data/{self.level}/{self.lesson}/*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
-            word = audio_path.split("/")[-1][:-4]
+            word = Path(audio_path).stem
             name_to_path_dict[word] = audio_path
 
         # session starts
@@ -319,7 +319,7 @@ class Language(commands.Cog):
         audio_paths = glob(f"{data_path}/vocabulary_audio/*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
-            word = audio_path.split("\\")[-1][:-4]
+            word = Path(audio_path).stem
             name_to_path_dict[word] = audio_path
 
         # prepping msgs for the loop session
