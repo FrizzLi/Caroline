@@ -2,10 +2,12 @@ import json
 import os
 import random
 from collections import defaultdict
+from datetime import datetime
 from glob import glob
 from pathlib import Path
 
 import discord
+import pytz
 from discord import app_commands
 from discord.ext import commands
 from discord.utils import get
@@ -292,10 +294,18 @@ class Language(commands.Cog):
         credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_str)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
-        g_sheet = g_credentials.open("Korea - Vocabulary")
-        worksheet = g_sheet.worksheet("Level 1-2 (modified)")
+        gs_vocab = g_credentials.open("Korea - Vocabulary")
+        ws_vocab = gs_vocab.worksheet("Level 1-2 (modified)")
 
-        df = pd.DataFrame(worksheet.get_all_records())
+        gs_stats = g_credentials.open("Korea - Users stats")
+        try:
+            ws_stats = gs_stats.worksheet(interaction.user.name)
+        except gspread.exceptions.WorksheetNotFound:
+            ws_stats = gs_stats.add_worksheet(
+                title=interaction.user.name, rows=10000, cols=3
+            )
+        
+        df = pd.DataFrame(ws_vocab.get_all_records())
         vocab = []
         for row in df.itertuples():
             if not row.Lesson:
@@ -342,6 +352,12 @@ class Language(commands.Cog):
                 round(hard * 100 / total, 1),
             )
 
+        stats_label = {
+            "easy": "✅",
+            "medium": "⏭️",
+            "hard": "❌"
+        }
+        stats_list = []
         unknown_words = []
         easy = easy_p = 0
         medium = medium_p = 0
@@ -421,6 +437,7 @@ class Language(commands.Cog):
                 msg_display = "Ending listening session."
 
                 # save unknown words to file for future
+                # TODO: this can be deleted, gspread is better
                 unknown_words = dict(unknown_words)
                 data_path = Path(f"{source_dir}/data")
                 data_user_path = Path(
@@ -445,12 +462,16 @@ class Language(commands.Cog):
                 # ending message
                 content = f"{counter}\n{msg_display}\n{stats}"
                 await msg.edit(content=content, view=view)
+                ws_stats.append_rows(stats_list)
                 break
 
             stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
             counter = f"{i}. word out of {count_n}"
 
-    # TODO: Create sheet, Add row of: Korean Word, TimeStamp, Label of knowledge
+            time = datetime.now(pytz.timezone("Europe/Bratislava"))
+            time = time.strftime("%Y-%m-%d %H:%M:%S")
+            stats_list.append([time, word_to_move[1], stats_label[button_id]])
+
     # TODO: Add sound labels!
 
 
