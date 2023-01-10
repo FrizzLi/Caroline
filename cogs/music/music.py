@@ -72,7 +72,7 @@ class Music(commands.Cog):
         data["title"] = data["title"].replace('"', "'")
         data["webpage_url"] = data["webpage_url"].replace('"', "'")
 
-        # only windows only uses hashtag # before H
+        # TODO: only windows only uses hashtag # before H - why use this?
         datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")
         author = elem.author.name
         title = data["title"]
@@ -682,3 +682,5 @@ async def setup(bot):
     await bot.add_cog(
         Music(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
+
+# TODO: FIX music bot (edit, skip)

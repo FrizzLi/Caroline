@@ -302,9 +302,15 @@ class Language(commands.Cog):
             ws_stats = gs_stats.worksheet(interaction.user.name)
         except gspread.exceptions.WorksheetNotFound:
             ws_stats = gs_stats.add_worksheet(
-                title=interaction.user.name, rows=10000, cols=3
+                title=interaction.user.name, rows=10000, cols=4
             )
-        
+        session_numbers = ws_stats.col_values(4)
+        if session_numbers:
+            last_session_number = max(map(int, session_numbers))
+            current_session_number = last_session_number + 1
+        else:
+            current_session_number = 1
+
         df = pd.DataFrame(ws_vocab.get_all_records())
         vocab = []
         for row in df.itertuples():
@@ -352,11 +358,7 @@ class Language(commands.Cog):
                 round(hard * 100 / total, 1),
             )
 
-        stats_label = {
-            "easy": "✅",
-            "medium": "⏭️",
-            "hard": "❌"
-        }
+        stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
         stats_list = []
         unknown_words = []
         easy = easy_p = 0
@@ -470,9 +472,14 @@ class Language(commands.Cog):
 
             time = datetime.now(pytz.timezone("Europe/Bratislava"))
             time = time.strftime("%Y-%m-%d %H:%M:%S")
-            stats_list.append([time, word_to_move[1], stats_label[button_id]])
-
-    # TODO: Add sound labels!
+            stats_list.append(
+                [
+                    time,
+                    word_to_move[1],
+                    stats_label[button_id],
+                    current_session_number,
+                ]
+            )
 
 
 async def setup(bot):
@@ -481,6 +488,8 @@ async def setup(bot):
     )
 
 
+# TODO: Maybe no need to use pandas, gspread has operations too!
 # TODO: Mix lessons
+# TODO: Ending session: Stats Graph, sort hardest from easiest words!
 # TODO: Competitive mode
 # TODO: Download sound for all? (current script is in memo bookmark)
