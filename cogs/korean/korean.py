@@ -438,29 +438,6 @@ class Language(commands.Cog):
             elif button_id == "end":
                 msg_display = "Ending listening session."
 
-                # save unknown words to file for future
-                # TODO: this can be deleted, gspread is better
-                unknown_words = dict(unknown_words)
-                data_path = Path(f"{source_dir}/data")
-                data_user_path = Path(
-                    f"{data_path}/users/{interaction.user.name}"
-                )
-                Path(data_user_path).mkdir(parents=True, exist_ok=True)
-                path = Path(f"{data_user_path}/{self.level}_unknown.json")
-                if os.path.exists(path):
-                    with open(path, encoding="utf-8") as file:
-                        old_unknown_words = json.load(file)
-                else:
-                    old_unknown_words = {self.lesson: {}}
-
-                old_unknown_words = old_unknown_words[self.lesson]
-                unknown_words = {**old_unknown_words, **unknown_words}
-                unknown_words = {self.lesson: unknown_words}
-                with open(path, "w", encoding="utf-8") as file:
-                    json.dump(
-                        unknown_words, file, indent=4, ensure_ascii=False
-                    )
-
                 # ending message
                 content = f"{counter}\n{msg_display}\n{stats}"
                 await msg.edit(content=content, view=view)
@@ -488,6 +465,8 @@ async def setup(bot):
     )
 
 
+# TODO: Vocab listening activity (session is over -> return fix)
+# TODO: Not well known words practice (check stats!)
 # TODO: Maybe no need to use pandas, gspread has operations too!
 # TODO: Mix lessons
 # TODO: Ending session: Stats Graph, sort hardest from easiest words!
