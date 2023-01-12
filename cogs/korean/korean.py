@@ -451,6 +451,14 @@ class Language(commands.Cog):
                 ]
             )
 
+        await bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name="/play",
+            ),
+            status=discord.Status.online,
+        )
+
 
 async def setup(bot):
     await bot.add_cog(
