@@ -341,12 +341,8 @@ class Language(commands.Cog):
         # prepping msgs for the loop session
         i = 1
         count_n = len(vocab)
-        if custom:
-            practice = self.custom
-        else:
-            practice = f"{self.level} - {self.lesson}"
 
-        await interaction.followup.send(f"[{practice}]")
+        await interaction.followup.send(f"[Lesson {custom}]")
         counter = f"{i}. word out of {count_n}."
         msg = await interaction.followup.send(counter)
 
@@ -422,11 +418,8 @@ class Language(commands.Cog):
                 word_to_move = vocab.pop()
 
                 unknown_words.append(word_to_move)
-                if custom:
-                    vocab.insert(-10, word_to_move)
-                else:
-                    new_index = len(vocab) // 5
-                    vocab.insert(-new_index, word_to_move)
+                new_index = len(vocab) // 5
+                vocab.insert(-new_index, word_to_move)
                 hard += 1
                 count_n += 1
 
