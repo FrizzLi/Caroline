@@ -263,7 +263,7 @@ class Language(commands.Cog):
         await interaction.followup.send(f"Exiting {self.lesson} exercise..")
 
     @app_commands.command(name="el")
-    async def exercise_listening(self, interaction, custom: int = 0):
+    async def exercise_listening(self, interaction, lesson_number: int = 0):
         """Start listening vocab exercise.
 
         In the case of customized lesson, audio files will be loaded only
@@ -313,25 +313,22 @@ class Language(commands.Cog):
 
         df = pd.DataFrame(ws_vocab.get_all_records())
         vocab = []
+
         for row in df.itertuples():
             if not row.Lesson:
                 continue
-            if (
-                row.Lesson // 100 > self.config["level"]
-                or row.Lesson % 100 > self.config["lesson"]
-            ):
+            if row.Lesson > lesson_number:
                 break
-            if (
-                row.Lesson // 100 == self.config["level"]
-                and row.Lesson % 100 == self.config["lesson"]
-            ):
+            if row.Lesson == lesson_number:
                 vocab.append((row.Book_English, row.Korean))
 
         random.shuffle(vocab)
 
         # load audio files
         source_dir = Path(__file__).parents[0]
-        data_path = f"{source_dir}/data/level_{self.config['level']}/lesson_{self.config['lesson']}"
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        data_path = f"{source_dir}/data/level_{level}/lesson_{lesson}"
         audio_paths = glob(f"{data_path}/vocabulary_audio/*")
         name_to_path_dict = {}
         for audio_path in audio_paths:
@@ -342,7 +339,7 @@ class Language(commands.Cog):
         i = 1
         count_n = len(vocab)
 
-        await interaction.followup.send(f"[Lesson {custom}]")
+        await interaction.followup.send(f"[Lesson {lesson_number}]")
         counter = f"{i}. word out of {count_n}."
         msg = await interaction.followup.send(counter)
 
@@ -451,7 +448,7 @@ class Language(commands.Cog):
                 ]
             )
 
-        await bot.change_presence(
+        await self.bot.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening,
                 name="/play",
