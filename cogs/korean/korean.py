@@ -362,14 +362,15 @@ class Language(commands.Cog):
 
         while True:
             eng, kor = vocab[-1]
+            kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
             # handling word that has no audio
-            if kor in name_to_path_dict:
+            if kor_no_num in name_to_path_dict:
                 msg_display = f"||{kor} = {eng}||"
                 try:
                     voice.play(
                         discord.FFmpegPCMAudio(
-                            name_to_path_dict[kor],
+                            name_to_path_dict[kor_no_num],
                             executable=self.ffmpeg_path,
                         )
                     )
@@ -433,6 +434,8 @@ class Language(commands.Cog):
                 await msg.edit(content=content, view=view)
                 ws_stats.append_rows(stats_list)
                 break
+            elif button_id == "repeat":
+                continue
 
             stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
             counter = f"{i}. word out of {count_n}"
@@ -462,10 +465,10 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-
+# TODO: Listening files implementation
 # TODO: Vocab listening activity (session is over -> return fix)
-# TODO: Not well known words practice (check stats!)
 # TODO: Maybe no need to use pandas, gspread has operations too!
+# TODO: Not well known words practice (check stats!)
 # TODO: Mix lessons
 # TODO: Ending session: Stats Graph, sort hardest from easiest words!
 # TODO: Competitive mode
