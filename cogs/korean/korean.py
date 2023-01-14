@@ -179,7 +179,7 @@ class Language(commands.Cog):
                     json_content = json.load(file)
                     stats = defaultdict(list, json_content)
 
-        # TODO: Get audio
+        # TODO: Get audio (what is this TODO?)
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:  # slash commands?!
@@ -353,7 +353,6 @@ class Language(commands.Cog):
 
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
         stats_list = []
-        unknown_words = []
         easy = easy_p = 0
         medium = medium_p = 0
         hard = hard_p = 0
@@ -415,7 +414,6 @@ class Language(commands.Cog):
             elif button_id == "hard":
                 word_to_move = vocab.pop()
 
-                unknown_words.append(word_to_move)
                 new_index = len(vocab) // 5
                 vocab.insert(-new_index, word_to_move)
                 hard += 1
@@ -466,10 +464,10 @@ async def setup(bot):
     )
 
 # TODO: Listening files implementation
-# TODO: Vocab listening activity (session is over -> return fix)
-# TODO: Maybe no need to use pandas, gspread has operations too!
+# TODO: Maybe no need to use pandas, gspread has operations too! (research it)
 # TODO: Not well known words practice (check stats!)
 # TODO: Mix lessons
 # TODO: Ending session: Stats Graph, sort hardest from easiest words!
+
+# TODO: Download sound for all? (current script is published in memo bookmark)
 # TODO: Competitive mode
-# TODO: Download sound for all? (current script is in memo bookmark)
