@@ -31,7 +31,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.requester = requester
 
         self.title = data.get("title")
-        self.web_url = data.get("webpage_url")
+        self.webpage_url = data.get("webpage_url")
         self.duration = data.get("duration")
         self.view_count = data.get("view_count")
 

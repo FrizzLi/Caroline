@@ -51,12 +51,15 @@ class PlayerView(View):
         super().__init__(timeout=None)
         self.add_item(
             Button(
-                label="Current playing track link", url=source.web_url, row=1
+                label="Current playing track link", url=source["webpage_url"], row=1
             )
         )
         self.player = player
         self.source = source
         self.start = timer()
+        self.update_msg()
+
+    def update_msg(self):
         self.msg = self.generate_message()
 
     def generate_message(self):

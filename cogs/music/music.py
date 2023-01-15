@@ -72,7 +72,7 @@ class Music(commands.Cog):
         data["title"] = data["title"].replace('"', "'")
         data["webpage_url"] = data["webpage_url"].replace('"', "'")
 
-        # TODO: only windows only uses hashtag # before H - why use this?
+        # TODO: [during main.py TODO] only windows uses # before H - why use?
         datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")
         author = elem.author.name
         title = data["title"]
@@ -330,6 +330,11 @@ class Music(commands.Cog):
 
     async def play(self, interaction, search):
 
+        # music = controller
+        # player_view = view in discord
+        # player = controls the flow of songs being played
+        # source = a song
+
         # making sure interaction timeout does not expire
         await interaction.response.send_message(
             "...Looking for song(s)... wait..."
@@ -341,6 +346,7 @@ class Music(commands.Cog):
             channel = interaction.user.voice.channel
             await channel.connect()  # simplified cuz cannot invoke connect f.
 
+        # getting source entries ready to be played
         try:
             entries = await YTDLSource.create_source(
                 interaction, search, loop=self.bot.loop
@@ -349,6 +355,7 @@ class Music(commands.Cog):
             await interaction.followup.send(err)
             return
 
+        # getting the player, if it doesnt play anything, send signal to play
         player = self.get_player(interaction)
         send_signal = (
             True if player.next_pointer >= len(player.queue) else False
@@ -363,6 +370,9 @@ class Music(commands.Cog):
 
         if send_signal:
             player.next.set()
+        elif player.np_msg:
+            player.view.update_msg()
+            await player.update_player_status_message()
 
     @app_commands.command(name="volume")
     async def change_volume(self, interaction, *, volume: int = None):
@@ -652,30 +662,16 @@ class Music(commands.Cog):
         vc.stop()
 
     async def shuffle(self, interaction):
-        """Randomizes the position of tracks in queue."""
-
         player = self.get_player(interaction)
-        if not player.queue:
-            return
-
-        shuffled_remains = player.queue[player.current_pointer + 1 :]
-        random.shuffle(shuffled_remains)
-
-        player.queue = (
-            player.queue[: player.current_pointer + 1] + shuffled_remains
-        )
+        player.shuffle()
 
     async def loop_queue(self, interaction):
-        """Loops the queue of tracks."""
-
         player = self.get_player(interaction)
-        player.loop_queue = not player.loop_queue
+        player.toggle_loop_queue()
 
     async def loop_track(self, interaction):
-        """Loops the currently playing track."""
-
         player = self.get_player(interaction)
-        player.loop_track = not player.loop_track
+        player.toggle_loop_track()
 
 
 async def setup(bot):

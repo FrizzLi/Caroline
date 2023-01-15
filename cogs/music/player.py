@@ -1,4 +1,5 @@
 import asyncio
+import random
 
 from discord.errors import ClientException
 
@@ -25,6 +26,7 @@ class MusicPlayer:
         "loop_queue",
         "loop_track",
         "timestamp",
+        "view"
     )
 
     def __init__(self, interaction, music):
@@ -35,13 +37,15 @@ class MusicPlayer:
         self.next = asyncio.Event()
 
         self.np_msg = None
-        self.volume = 0.2
+        self.volume = 0.05
         self.current_pointer = 0
         self.next_pointer = -1
         self.loop_queue = False
         self.loop_track = False
 
         self.timestamp = 0
+
+        self.view = None
 
         interaction.client.loop.create_task(self.player_loop())
 
@@ -72,6 +76,8 @@ class MusicPlayer:
             if not isinstance(source, YTDLSource):
                 # Source was probably a stream (not downloaded)
                 # So we should regather to prevent stream expiration
+
+                # TODO: need regather at the beginning to see duration,, need to update after sending another song
                 try:
                     source = await YTDLSource.regather_stream(
                         source,
@@ -96,27 +102,54 @@ class MusicPlayer:
                 print(err)
                 return
 
-            view = PlayerView(self, source)
-            if not self.np_msg:
-                self.np_msg = await self.interaction.channel.send(
-                    content=view.msg, view=view
-                )
-            elif self.np_msg.channel.last_message_id == self.np_msg.id:
-                # TODO: make edit work.. this is just workaround
-                # TODO: skipping song bug..
-                # self.np_msg = await self.np_msg.edit(
-                #     content=view.msg, view=view
-                # )
-                self.np_msg = await self.interaction.channel.send(
-                    content=view.msg, view=view
-                )
-            else:
-                await self.np_msg.delete()
-                self.np_msg = await self.interaction.channel.send(
-                    content=view.msg, view=view
-                )
+            self.view = PlayerView(self, source)
+            await self.update_player_status_message()
 
-            await self.next.wait()
+    async def update_player_status_message(self):
+        if not self.np_msg:  # there is no np msg anywhere
+            self.np_msg = await self.interaction.channel.send(
+                content=self.view.msg, view=self.view
+            )
+        elif self.np_msg.channel.last_message_id == self.np_msg.id:  # if np msg is the last one, just update it
+            # TODO: make edit work.. this is just workaround
+            # TODO: skipping song bug..
+            self.np_msg = await self.np_msg.edit(
+                content=self.view.msg, view=self.view
+            )
+            # self.np_msg = await self.interaction.channel.send(
+            #     content=view.msg, view=view
+            # )
+        else:  # if there is np_msg but it is not the last one, remove the old one and create a new one
+            await self.np_msg.delete()
+            self.np_msg = await self.interaction.channel.send(
+                content=self.view.msg, view=self.view
+            )
+
+        await self.next.wait()
+
+
+    def shuffle(self):
+        """Randomizes the position of tracks in queue."""
+
+        if not self.queue:
+            return
+
+        shuffled_remains = self.queue[self.current_pointer + 1 :]
+        random.shuffle(shuffled_remains)
+
+        self.queue = (
+            self.queue[: self.current_pointer + 1] + shuffled_remains
+        )
+
+    def toggle_loop_queue(self):
+        """Loops the queue of tracks."""
+
+        self.loop_queue = not self.loop_queue
+
+    def toggle_loop_track(self):
+        """Loops the currently playing track."""
+
+        self.loop_track = not self.loop_track
 
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
