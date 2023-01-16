@@ -72,8 +72,8 @@ class Music(commands.Cog):
         data["title"] = data["title"].replace('"', "'")
         data["webpage_url"] = data["webpage_url"].replace('"', "'")
 
-        # TODO: [during main.py TODO] only windows uses # before H - why use?
-        datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")
+        # removed # between % and H (outdated windows?)
+        datetime = tz_aware_date.strftime("%Y-%m-%d %H:%M:%S")
         author = elem.author.name
         title = data["title"]
         webpage_url = data["webpage_url"]
