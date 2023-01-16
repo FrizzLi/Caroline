@@ -56,29 +56,41 @@ class MusicPlayer:
 
         while not self.interaction.client.is_closed():
             self.next.clear()
+            print("1 CLEAR")
+            # Log info: Normal flow is going from 1 to 10
+            #   (3 if qloop triggered, or no next song; 5 if closing
+            # What is regather for? How is it different from create source
+            # Cannot we use regather for all so it would be faster?
 
             try:
                 if not self.loop_track:
                     self.next_pointer += 1  # next song
+                    print("2 POINTER++")
                 if self.next_pointer >= len(self.queue):
                     if self.loop_queue:
                         self.next_pointer = 0  # queue loop
+                        print("3 POINTER 0")
                     else:
+                        print("3 INTO WAIT")
                         await self.next.wait()
+                        print("3 FROM WAIT")
                         self.next.clear()
+                        print("3 CLEAR")
 
+                print("4 INTO CURRENT_POINTER UPDATE")
                 self.current_pointer = self.next_pointer
                 source = self.queue[self.current_pointer]
 
             except asyncio.TimeoutError:
+                print("5 DESTROY")
                 return self.destroy(self.interaction.guild)
 
             if not isinstance(source, YTDLSource):
                 # Source was probably a stream (not downloaded)
                 # So we should regather to prevent stream expiration
 
-                # TODO: need regather at the beginning to see duration,, need to update after sending another song
                 try:
+                    print("6 GOING TO REGATHER")
                     source = await YTDLSource.regather_stream(
                         source,
                         loop=self.interaction.client.loop,
@@ -90,9 +102,11 @@ class MusicPlayer:
                     )
                     continue
                 self.timestamp = 0
+                print("7 TIMESTAMP 0")
 
             source.volume = self.volume
             try:
+                print("8 CALL LOOP THREADSAFE")
                 call_next = self.interaction.client.loop.call_soon_threadsafe
                 self.interaction.guild.voice_client.play(
                     source,
@@ -103,7 +117,9 @@ class MusicPlayer:
                 return
 
             self.view = PlayerView(self, source)
+            print("9 INTO UPDATE MSG")
             await self.update_player_status_message()
+            print("10 MSG UPDATED")
 
     async def update_player_status_message(self):
         if not self.np_msg:  # there is no np msg anywhere
@@ -111,14 +127,9 @@ class MusicPlayer:
                 content=self.view.msg, view=self.view
             )
         elif self.np_msg.channel.last_message_id == self.np_msg.id:  # if np msg is the last one, just update it
-            # TODO: make edit work.. this is just workaround
-            # TODO: skipping song bug..
             self.np_msg = await self.np_msg.edit(
                 content=self.view.msg, view=self.view
             )
-            # self.np_msg = await self.interaction.channel.send(
-            #     content=view.msg, view=view
-            # )
         else:  # if there is np_msg but it is not the last one, remove the old one and create a new one
             await self.np_msg.delete()
             self.np_msg = await self.interaction.channel.send(
