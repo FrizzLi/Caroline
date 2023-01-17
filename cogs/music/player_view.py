@@ -87,7 +87,7 @@ class PlayerView(View):
             f"{remains}     currently playing track:\n"
             f"{loop_q}      {req}\n"
             f"{loop_t}      {dur}\n"
-            f"{vol}                {views}```"
+            f"{vol}               {views}```"
         )
 
         return msg

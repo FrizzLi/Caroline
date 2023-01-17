@@ -369,11 +369,14 @@ class Music(commands.Cog):
             player.queue.append(source)
 
         if send_signal:
+            print("SIGNAL FROM MUSIC.PY")
             player.next.set()
+            print("SIGNALED FROM MUSIC.PY")
         elif player.np_msg:
             player.view.update_msg()
             await player.update_player_status_message()
 
+    # TODO: Update view?
     @app_commands.command(name="volume")
     async def change_volume(self, interaction, *, volume: int = None):
         """Change or see the volume of player in percentages.
@@ -398,7 +401,7 @@ class Music(commands.Cog):
         old_volume = player.volume * 100
         player.volume = volume / 100
 
-        descr = "The volume has been set from"
+        descr = "The volume has been set from "
         descr += f"**{int(old_volume)}%** to **{volume}%**"
         embed = discord.Embed(
             description=descr,
@@ -558,6 +561,7 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
+    # duration view does not work according to it!
     @app_commands.command()
     async def seek(self, interaction, second: int = 0):
         """Goes to a specific timestamp of currently played track."""
@@ -604,8 +608,8 @@ class Music(commands.Cog):
         view = SearchView(player, entries)
         await interaction.channel.send(view.msg, view=view)
 
-    @app_commands.command(name="playlist")
-    async def playlist(self, interaction, search: str):
+    @app_commands.command(name="pick_from_playlist")
+    async def pick_from_playlist(self, interaction, search: str):
         """Display all songs from a playlist to pick from."""
 
         # making sure interaction timeout does not expire
