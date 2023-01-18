@@ -59,7 +59,7 @@ if os.name == "nt":
 else:
     TOKEN = os.environ["GLADOS_TOKEN"]
     APP_ID = os.environ["GLADOS_ID"]
-    BLACK_LIST = ()
+    BLACK_LIST = ("ai_algo")
     PREFIX = "?"
 
 bot = MyBot()

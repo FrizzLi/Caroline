@@ -14,6 +14,7 @@ from discord.utils import get
 
 from cogs.korean.search_and_create_vocab import dl_vocab
 from cogs.korean.session_view import SessionView
+from cogs.korean.session_view2 import SessionView2
 
 
 class Language(commands.Cog):
@@ -75,7 +76,7 @@ class Language(commands.Cog):
         self.save_config()
 
     @app_commands.command()
-    async def korean_settings(self, interaction):
+    async def zkorean_settings(self, interaction):
         """Shows level, lesson, custom settings."""
 
         embed = discord.Embed(
@@ -89,25 +90,25 @@ class Language(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command()
-    async def set_level(self, interaction, number: int):
+    async def zset_level(self, interaction, number: int):
         self.level = number
         msg = f"Level number was set to {number}."
         await interaction.response.send_message(msg)
 
     @app_commands.command()
-    async def set_lesson(self, interaction, number: int):
+    async def zset_lesson(self, interaction, number: int):
         self.lesson = number
         msg = f"Lesson number was set to {number}."
         await interaction.response.send_message(msg)
 
     @app_commands.command()
-    async def set_custom_filename(self, interaction, fname: str):
+    async def zset_custom_filename(self, interaction, fname: str):
         self.custom = fname
         msg = f"Custom file name was set to {fname}."
         await interaction.response.send_message(msg)
 
     @app_commands.command()
-    async def add_lesson(self, interaction):
+    async def zadd_lesson(self, interaction):
         """Adds lesson into user's customized lesson file."""
 
         source_dir = Path(__file__).parents[0]
@@ -134,7 +135,7 @@ class Language(commands.Cog):
         await interaction.response.send_message(msg)
 
     @app_commands.command()
-    async def create_vocab(
+    async def zcreate_vocab(
         self, interaction, lesson_only: int = 1, text_only: int = 1
     ):
         """Creates audio and json files from the text files."""
@@ -145,8 +146,8 @@ class Language(commands.Cog):
         dl_vocab(self.level, lesson, text_only)
         await interaction.followup.send("Vocab has been created!")
 
-    @app_commands.command(name="e")
-    async def exercise(self, interaction):
+    @app_commands.command(name="zev")
+    async def zexercise_vocab(self, interaction):
         """Start vocab exercise."""
 
         source_dir = Path(__file__).parents[0]
@@ -179,7 +180,7 @@ class Language(commands.Cog):
                     json_content = json.load(file)
                     stats = defaultdict(list, json_content)
 
-        # TODO: Get audio (what is this TODO?)
+        # TODO: [During polish] Get audio (what is this TODO?)
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:  # slash commands?!
@@ -262,8 +263,8 @@ class Language(commands.Cog):
 
         await interaction.followup.send(f"Exiting {self.lesson} exercise..")
 
-    @app_commands.command(name="el")
-    async def exercise_listening(self, interaction, lesson_number: int = 0):
+    @app_commands.command(name="zevl")
+    async def zexercise_vocab_listening(self, interaction, lesson_number: int = 0):
         """Start listening vocab exercise.
 
         In the case of customized lesson, audio files will be loaded only
@@ -463,11 +464,13 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# TODO: Listening files implementation
-# TODO: Maybe no need to use pandas, gspread has operations too! (research it)
-# TODO: Not well known words practice (check stats!)
-# TODO: Mix lessons
-# TODO: Ending session: Stats Graph, sort hardest from easiest words!
+# TODO: Listening files implementation [buttons track number, backtrack]
 
+# TODO: Not well known words practice (check stats!)
+# TODO: Mix vocab / listening lessons
+
+# TODO: [During polish]
+# TODO: Maybe no need to use pandas, gspread has operations too! (research it)
+# TODO: Ending session: Stats Graph, sort hardest from easiest words!
 # TODO: Download sound for all? (current script is published in memo bookmark)
 # TODO: Competitive mode
