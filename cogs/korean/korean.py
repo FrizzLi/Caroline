@@ -546,7 +546,8 @@ class Language(commands.Cog):
             # button interactions
             button_id = interaction.data["custom_id"]
             if button_id == "pauseplay":
-                # TODO: need to add player, pause NN crucially atm
+                # TODO: this doesn't work
+                # need to add player, pause NN crucially atm
                 button_id2 = None
                 while button_id2 != "pauseplay":
                     interaction = await self.bot.wait_for(
@@ -599,6 +600,37 @@ class Language(commands.Cog):
             return
 
         vc.resume()
+
+
+    @app_commands.command(name="zer")
+    async def zexercise_reading(self, interaction, lesson_number: int = 102):
+        # TODO: add reading (by listening)
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+
+        # load audio files
+        source_dir = Path(__file__).parents[0]
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        data_path = f"{source_dir}/data/level_{level}/lesson_{lesson}"
+        audio_paths = glob(f"{data_path}/*")
+        name_to_path_dict = {}
+
+        for audio_path in audio_paths:
+            word = Path(audio_path).stem
+            name_to_path_dict[word] = audio_path
+
+        if "reading_text" in name_to_path_dict:
+            with open(name_to_path_dict["reading_text"], encoding="utf-8") as f:
+                reading_text = f.read()
+        else:
+            return
+
+        await interaction.followup.send(f"[Lesson {lesson_number}]")
+        # view = SessionView2()
+        await interaction.followup.send(f"```{reading_text}```")
+
 
 async def setup(bot):
     await bot.add_cog(
