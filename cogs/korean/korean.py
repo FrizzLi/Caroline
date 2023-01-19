@@ -637,8 +637,6 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# TODO: Listening files implementation [buttons track number, backtrack]
-
 # TODO: Not well known words practice (check stats!)
 # TODO: Mix vocab / listening lessons
 
