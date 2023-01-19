@@ -459,6 +459,147 @@ class Language(commands.Cog):
         )
 
 
+    @app_commands.command(name="zel")
+    async def zexercise_listening(self, interaction, lesson_number: int = 102):
+        """Start listening vocab exercise.
+
+        In the case of customized lesson, audio files will be loaded only
+        from level that is set in the settings. TODO!!! find that are in custom
+        """
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        user_voice = interaction.user.voice
+        if not voice and not user_voice:
+            raise commands.CommandError("No bot nor you is connected.")
+        elif not voice:
+            await user_voice.channel.connect()
+        voice = discord.utils.get(
+            self.bot.voice_clients, guild=interaction.guild
+        )
+
+        await self.bot.change_presence(
+            activity=discord.Game(name="Listening exercise")
+        )
+
+        # load audio files
+        source_dir = Path(__file__).parents[0]
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        data_path = f"{source_dir}/data/level_{level}/lesson_{lesson}"
+        audio_paths = glob(f"{data_path}/*")
+        name_to_path_dict = {}
+
+        for audio_path in audio_paths:
+            word = Path(audio_path).stem
+            name_to_path_dict[word] = audio_path
+
+        if (
+            "listening_audio" in name_to_path_dict
+            and "listening_text" in name_to_path_dict
+        ):
+            with open(name_to_path_dict["listening_text"], encoding="utf-8") as f:
+                listening_text = f.read()
+            audio_paths2 = glob(f"{data_path}/listening_audio/*")
+
+            name_to_audio_path_dict = {}
+            for audio_path2 in audio_paths2:
+                word = Path(audio_path2).stem
+                name_to_audio_path_dict[word] = audio_path2
+        else:
+            return
+
+        i = 1
+        count_n = len(name_to_audio_path_dict)
+
+        queue = list(name_to_audio_path_dict)
+        await interaction.followup.send(f"[Lesson {lesson_number}]")
+        counter = f"{i}. lesson out of {count_n}."
+        msg = await interaction.followup.send(counter)
+        view = SessionView2()
+
+        while True:
+            # handling word that has no audio
+            try:
+                play_track = queue.pop(0)
+                voice.play(
+                    discord.FFmpegPCMAudio(
+                        name_to_audio_path_dict[play_track],
+                        executable=self.ffmpeg_path,
+                    )
+                )
+            except Exception as err:
+                print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
+
+            content = f"```{counter}\n{listening_text}```"
+            await msg.edit(content=content, view=view)
+
+            # wait for interaction
+            interaction = await self.bot.wait_for(
+                "interaction",
+                check=lambda inter: "custom_id" in inter.data.keys()
+                and inter.user.name == interaction.user.name,
+            )
+
+            # button interactions
+            button_id = interaction.data["custom_id"]
+            if button_id == "pauseplay":
+                # TODO: need to add player, pause NN crucially atm
+                button_id2 = None
+                while button_id2 != "pauseplay":
+                    interaction = await self.bot.wait_for(
+                        "interaction",
+                        check=lambda inter: "custom_id" in inter.data.keys()
+                        and inter.user.name == interaction.user.name,
+                    )
+                    button_id2 = interaction.data["custom_id"]
+            elif button_id == "next":
+                queue.append(play_track)
+            elif button_id == "repeat":
+                queue.insert(0, play_track)
+            elif button_id == "end":
+                listening_text = "Ending listening session."
+
+                # ending message
+                content = f"```{counter}\n{listening_text}```"
+                await msg.edit(content=content, view=view)
+                break
+
+            counter = f"{i}. lesson out of {count_n}"
+
+        await self.bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name="/play",
+            ),
+            status=discord.Status.online,
+        )
+
+    # Button commands
+    async def pause(self, interaction):
+        """Pause the currently playing song."""
+
+        vc = interaction.guild.voice_client
+        if not vc or not vc.is_playing():
+            return
+        elif vc.is_paused():
+            return
+
+        vc.pause()
+
+    async def resume(self, interaction):
+        """Resume the currently paused song."""
+
+        vc = interaction.guild.voice_client
+        if not vc or not vc.is_connected():
+            return
+        elif not vc.is_paused():
+            return
+
+        vc.resume()
+
 async def setup(bot):
     await bot.add_cog(
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
