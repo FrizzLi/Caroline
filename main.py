@@ -65,7 +65,5 @@ else:
 bot = MyBot()
 bot.run(TOKEN)
 
-# TODO: Read all msgs in old surveillance so i can delete it
 # TODO: Polish (pylint) and Document ALL Discord module files, know async
 # TODO: Logs and Tests (setup.py, pytest from reqs)
-# TODO: Data Science - process old surveillance text and find info out of it
