@@ -604,7 +604,7 @@ class Language(commands.Cog):
 
     @app_commands.command(name="zer")
     async def zexercise_reading(self, interaction, lesson_number: int = 102):
-        # TODO: add reading (by listening)
+        # TODO: add reading listening if present
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
@@ -637,10 +637,25 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# TODO: Not well known words practice (check stats!)
-# TODO: Mix vocab / listening lessons
+# TODO: Together! Not well known words practice (check stats!) + Mix vocab / listening lessons
+# MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
+# Refresh scoring after 10 attempts
+# FILL MISSING VALS: all ❌ and one day diff.
+# 1
+# 0.8
+# 0.64
+# 0.512
+# 0.4096
+# 0.32768
+# 0.262144
+# 0.209715
+# 0.167772
+# 0.1342176
 
+# 4.463128600000001 perf score
+# 4.588911 last word not well known
 # TODO: [During polish]
+# TODO: Integrate date difficulty into it (too hard to guess the right scoring)
 # TODO: Maybe no need to use pandas, gspread has operations too! (research it)
 # TODO: Ending session: Stats Graph, sort hardest from easiest words!
 # TODO: Download sound for all? (current script is published in memo bookmark)
