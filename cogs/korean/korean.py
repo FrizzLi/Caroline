@@ -578,6 +578,18 @@ class Language(commands.Cog):
             status=discord.Status.online,
         )
 
+    @app_commands.command(name="zrvl")
+    async def zreview_vocab_listening(self, interaction, lesson_number: int = 0):
+        #"""Start listening vocab exercise.
+
+        #In the case of customized lesson, audio files will be loaded only
+        #from level that is set in the settings. TODO!!! find that are in custom
+        #"""
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+
     # Button commands
     async def pause(self, interaction):
         """Pause the currently playing song."""

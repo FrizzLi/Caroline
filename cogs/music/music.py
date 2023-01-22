@@ -682,3 +682,6 @@ async def setup(bot):
     await bot.add_cog(
         Music(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
+
+# TODO: Track timestamps (how long the songs have been played instead of reqs)
+# TODO: Leaving the voice -> refresh still works.. polish that

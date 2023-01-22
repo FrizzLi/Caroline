@@ -279,7 +279,7 @@ def _apply_actions(acts: List[str], known_facts: List[str]) -> List[str]:
         elif type_ == "remove":
             known_facts.remove(act)
         newly_found_facts.append(act)
-        # TODO: [during main.py TODO] remove might not work
+        # TODO: [During polish] remove might not work
 
     return newly_found_facts
 
