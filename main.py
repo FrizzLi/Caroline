@@ -65,5 +65,5 @@ else:
 bot = MyBot()
 bot.run(TOKEN)
 
-# TODO: Polish (pylint) and Document ALL Discord module files, know async
+# TODO: Polish: Pylint, Document, Optimize code and Learn async
 # TODO: Logs and Tests (setup.py, pytest from reqs)

@@ -677,7 +677,11 @@ class Language(commands.Cog):
         #     else:
         #         msg_display = f"{kor} = ||{eng}||"
 
-
+        # No need to load paths every time... lets store it in pickle. 
+        # Load it just once, when turning on the program for the first time
+        # Add it into ignore
+        # Upon start -> korean.py loaded (means also the cache)
+        # Upon korean.py command -> load it
         # green: go back by 50
         # blue: 20
         # red: 10
@@ -761,8 +765,7 @@ async def setup(bot):
 # 4.463128600000001 perf score
 # 4.588911 last word not well known
 # TODO: [During polish]
-# TODO: Integrate date difficulty into it (too hard to guess the right scoring)
 # TODO: Maybe no need to use pandas, gspread has operations too! (research it)
-# TODO: Ending session: Stats Graph, sort hardest from easiest words!
+# TODO: Ending session stats?: Stats Graph, sort hardest from easiest words!
 # TODO: Download sound for all? (current script is published in memo bookmark)
-# TODO: Competitive mode
+# TODO: Competitive mode?
