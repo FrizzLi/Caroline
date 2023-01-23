@@ -307,7 +307,7 @@ class Language(commands.Cog):
             )
         session_numbers = ws_stats.col_values(4)
         if session_numbers:
-            last_session_number = max(map(int, session_numbers))
+            last_session_number = max(map(int, session_numbers[1:]))
             current_session_number = last_session_number + 1
         else:
             current_session_number = 1
