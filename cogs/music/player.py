@@ -58,9 +58,9 @@ class MusicPlayer:
         await self.interaction.client.wait_until_ready()
 
         while not self.interaction.client.is_closed():
-            print("1 INTO CLEAR")
+            # print("1 INTO CLEAR")
             self.next.clear()
-            print("2 FROM CLEAR")
+            # print("2 FROM CLEAR")
             # Log info: Normal flow is going from 1 to 9
             #   (4 if qloop triggered, or no next song
             # What is regather for? How is it different from create source
@@ -69,18 +69,18 @@ class MusicPlayer:
             try:
                 if not self.loop_track:
                     self.next_pointer += 1  # next song
-                    print("3 POINTER++")
+                    # print("3 POINTER++")
                 if self.next_pointer >= len(self.queue):
                     if self.loop_queue:
                         self.next_pointer = 0  # queue loop
-                        print("3 POINTER 0")
+                        # print("3 POINTER 0")
                     else:
-                        print("3 INTO WAIT")
+                        # print("3 INTO WAIT")
                         await self.next.wait()
-                        print("3 FROM WAIT")
-                        print("3 INTO CLEAR")
+                        # print("3 FROM WAIT")
+                        # print("3 INTO CLEAR")
                         self.next.clear()
-                        print("3 FROM CLEAR")
+                        # print("3 FROM CLEAR")
 
                 # self.old_pointer = self.current_pointer
                 self.current_pointer = self.next_pointer
@@ -97,7 +97,7 @@ class MusicPlayer:
                         # Source was probably a stream (not downloaded)
                         # So we should regather to prevent stream expiration
 
-                        print("4 INTO REGATHER")
+                        # print("4 INTO REGATHER")
                         re_source = await YTDLSource.regather_stream(
                             source,
                             loop=self.interaction.client.loop,
@@ -108,13 +108,13 @@ class MusicPlayer:
                     re_source.volume = self.volume
 
                     # PLAYING, WORKAROUND
-                    print("5 INTO PLAY")  # proste tu preskoci a ide dalej
+                    # print("5 INTO PLAY")  # proste tu preskoci a ide dalej
                     self.workaround = 0
                     self.interaction.guild.voice_client.play(re_source,
                         after=self.play_next_song
                     )
-                    print(f"6 FROM PLAY {self.workaround}")
-                    print("Sleep abit!")
+                    # print(f"6 FROM PLAY {self.workaround}")
+                    # print("Sleep abit!")
                     time.sleep(1)
 
                     # call_next = self.interaction.client.loop.call_soon_threadsafe
@@ -138,20 +138,20 @@ class MusicPlayer:
                 return
 
             self.next.clear()
-            print(f"7 FROM WHILE PLAY {self.workaround}")
+            # print(f"7 FROM WHILE PLAY {self.workaround}")
             self.view = PlayerView(self, re_source)
             await self.update_player_status_message()
 
-            print("8 INTO WAIT")
+            # print("8 INTO WAIT")
             await self.next.wait()
-            print("10 FROM WAIT")
+            # print("10 FROM WAIT")
 
     def play_next_song(self, error=None):
         if error:
-            print(f"halo? {error}")
+            # print(f"halo? {error}")
         self.workaround = 1
 
-        print("9 SET")
+        # print("9 SET")
         self.next.set()
 
     async def update_player_status_message(self):
