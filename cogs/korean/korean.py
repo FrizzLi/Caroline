@@ -5,8 +5,11 @@ from collections import defaultdict
 from datetime import datetime
 from glob import glob
 from pathlib import Path
+from statistics import fmean
 
 import discord
+import gspread
+import pandas as pd
 import pytz
 from discord import app_commands
 from discord.ext import commands
@@ -289,9 +292,6 @@ class Language(commands.Cog):
         )
 
         # get vocab words
-        import gspread
-        import pandas as pd
-
         credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_str)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
@@ -579,7 +579,7 @@ class Language(commands.Cog):
         )
 
     @app_commands.command(name="zrvl")
-    async def zreview_vocab_listening(self, interaction, lesson_number: int = 0):
+    async def zreview_vocab_listening(self, interaction):
         #"""Start listening vocab exercise.
 
         #In the case of customized lesson, audio files will be loaded only
@@ -589,6 +589,100 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
+
+        def get_worksheet(ws_name):
+            credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
+            credentials_dict = json.loads(credentials_dict_str)
+            g_credentials = gspread.service_account_from_dict(credentials_dict)
+            g_sheet = g_credentials.open("Korea - Users stats")
+            worksheet = g_sheet.worksheet(ws_name)
+            return worksheet
+        
+        vocab_g_ws = get_worksheet("Freezpmark")
+        df = pd.DataFrame(vocab_g_ws.get_all_records())
+        df.sort_values(["Word", "Date"], ascending=[True, False], inplace=True)
+
+        distr = (1, 0.8, 0.64, 0.512, 0.4096, 0.32768, 0.262144, 0.209715, 0.167772, 0.1342176)
+        scores = {i: j for i, j in enumerate(distr)}
+        datetime_now = datetime.now()
+
+        # knowledge = []
+        word_scores = {}
+        new_word = ""
+        new_word_score = 0
+        new_word_counter = 1
+        for row in df.itertuples():
+            if new_word_counter >= 10:
+                continue  # needs opt -> use pd
+            if new_word == row.Word:
+                new_word_counter += 1
+            else:
+                if new_word:
+                    empty_fill = fmean(knowledge) * (10-new_word_counter)
+                    word_scores[new_word] = new_word_score + empty_fill
+                    new_word_score = 0
+                    new_word_counter = 1
+                    # knowledge = []
+                new_word = row.Word
+
+            if row.Knowledge == "✅":
+                knowledge_multiplier = 1
+            elif row.Knowledge == "⏭️":
+                knowledge_multiplier = 2
+            elif row.Knowledge == "❌":
+                knowledge_multiplier = 4
+            # new_word_score.append(f"{knowledge_multiplier}*{scores[new_word_counter]}")
+            
+            new_word_score += knowledge_multiplier * scores[new_word_counter]
+            # knowledge.append(knowledge_multiplier)
+
+            row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
+            now_datetime = datetime_now
+            days_diff = (now_datetime - row_datetime).days
+            new_word_score += days_diff * 0.01
+
+            # if row.Word == "열쇠" or row.Word == "뭐1":
+            #     print(f"{row.Word}: {knowledge_multiplier}*{scores[new_word_counter]};; {new_word_score}")
+
+
+        sorted_word_score = list(sorted(word_scores.items(), key=lambda item: item[1], reverse=True))
+
+        nl = []
+        size = 10
+        for i in range(0, len(sorted_word_score), size):
+            if i > 4:
+                nl += sorted_word_score[i::]
+                break
+            subset = sorted_word_score[i:i+size]
+            random.shuffle(subset)
+            nl += subset
+
+        nl = nl[::-1]
+        # while True:
+        #     kor = nl[-1][0]
+        #     kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
+
+        #     # handling word that has no audio
+        #     if kor_no_num in name_to_path_dict:
+        #         msg_display = f"||{kor} = {eng}||"
+        #         try:
+        #             voice.play(
+        #                 discord.FFmpegPCMAudio(
+        #                     name_to_path_dict[kor_no_num],
+        #                     executable=self.ffmpeg_path,
+        #                 )
+        #             )
+        #         except Exception as err:
+        #             print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
+        #     else:
+        #         msg_display = f"{kor} = ||{eng}||"
+
+
+        # green: go back by 50
+        # blue: 20
+        # red: 10
+
+
 
     # Button commands
     async def pause(self, interaction):
