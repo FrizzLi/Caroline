@@ -92,62 +92,62 @@ class Language(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command()
-    async def zset_level(self, interaction, number: int):
-        self.level = number
-        msg = f"Level number was set to {number}."
-        await interaction.response.send_message(msg)
+    # @app_commands.command()
+    # async def zset_level(self, interaction, number: int):
+    #     self.level = number
+    #     msg = f"Level number was set to {number}."
+    #     await interaction.response.send_message(msg)
 
-    @app_commands.command()
-    async def zset_lesson(self, interaction, number: int):
-        self.lesson = number
-        msg = f"Lesson number was set to {number}."
-        await interaction.response.send_message(msg)
+    # @app_commands.command()
+    # async def zset_lesson(self, interaction, number: int):
+    #     self.lesson = number
+    #     msg = f"Lesson number was set to {number}."
+    #     await interaction.response.send_message(msg)
 
-    @app_commands.command()
-    async def zset_custom_filename(self, interaction, fname: str):
-        self.custom = fname
-        msg = f"Custom file name was set to {fname}."
-        await interaction.response.send_message(msg)
+    # @app_commands.command()
+    # async def zset_custom_filename(self, interaction, fname: str):
+    #     self.custom = fname
+    #     msg = f"Custom file name was set to {fname}."
+    #     await interaction.response.send_message(msg)
 
-    @app_commands.command()
-    async def zadd_lesson(self, interaction):
-        """Adds lesson into user's customized lesson file."""
+    # @app_commands.command()
+    # async def zadd_lesson(self, interaction):
+    #     """Adds lesson into user's customized lesson file."""
 
-        source_dir = Path(__file__).parents[0]
-        data_path = Path(f"{source_dir}/data")
-        data_user_path = Path(f"{data_path}/users/{interaction.user.name}")
-        Path(data_user_path).mkdir(parents=True, exist_ok=True)
-        custom_path = Path(f"{data_user_path}/{self.custom}.json")
+    #     source_dir = Path(__file__).parents[0]
+    #     data_path = Path(f"{source_dir}/data")
+    #     data_user_path = Path(f"{data_path}/users/{interaction.user.name}")
+    #     Path(data_user_path).mkdir(parents=True, exist_ok=True)
+    #     custom_path = Path(f"{data_user_path}/{self.custom}.json")
 
-        if os.path.exists(custom_path):
-            with open(custom_path, encoding="utf-8") as file:
-                custom_vocab = json.load(file)
-        else:
-            custom_vocab = {}
+    #     if os.path.exists(custom_path):
+    #         with open(custom_path, encoding="utf-8") as file:
+    #             custom_vocab = json.load(file)
+    #     else:
+    #         custom_vocab = {}
 
-        level_path = Path(f"{data_path}/{self.level}.json")
-        with open(level_path, encoding="utf-8") as file:
-            level_vocab = json.load(file)
+    #     level_path = Path(f"{data_path}/{self.level}.json")
+    #     with open(level_path, encoding="utf-8") as file:
+    #         level_vocab = json.load(file)
 
-        custom_vocab = {**custom_vocab, **level_vocab[self.lesson]}
-        with open(custom_path, "w", encoding="utf-8") as file:
-            json.dump(custom_vocab, file, indent=4, ensure_ascii=False)
+    #     custom_vocab = {**custom_vocab, **level_vocab[self.lesson]}
+    #     with open(custom_path, "w", encoding="utf-8") as file:
+    #         json.dump(custom_vocab, file, indent=4, ensure_ascii=False)
 
-        msg = f"{self.lesson} from {self.level} was saved into {self.custom}."
-        await interaction.response.send_message(msg)
+    #     msg = f"{self.lesson} from {self.level} was saved into {self.custom}."
+    #     await interaction.response.send_message(msg)
 
-    @app_commands.command()
-    async def zcreate_vocab(
-        self, interaction, lesson_only: int = 1, text_only: int = 1
-    ):
-        """Creates audio and json files from the text files."""
+    # @app_commands.command()
+    # async def zcreate_vocab(
+    #     self, interaction, lesson_only: int = 1, text_only: int = 1
+    # ):
+    #     """Creates audio and json files from the text files."""
 
-        lesson = self.lesson if lesson_only else False
-        msg = "Downloading and creating vocab..."
-        await interaction.response.send_message(msg)
-        dl_vocab(self.level, lesson, text_only)
-        await interaction.followup.send("Vocab has been created!")
+    #     lesson = self.lesson if lesson_only else False
+    #     msg = "Downloading and creating vocab..."
+    #     await interaction.response.send_message(msg)
+    #     dl_vocab(self.level, lesson, text_only)
+    #     await interaction.followup.send("Vocab has been created!")
 
     @app_commands.command(name="zev")
     async def zexercise_vocab(self, interaction):
@@ -267,13 +267,14 @@ class Language(commands.Cog):
         await interaction.followup.send(f"Exiting {self.lesson} exercise..")
 
     @app_commands.command(name="zevl")
-    async def zexercise_vocab_listening(self, interaction, lesson_number: int = 0):
+    async def zexercise_vocab_listening(self, interaction, lesson_number: int):
         """Start listening vocab exercise.
 
         In the case of customized lesson, audio files will be loaded only
         from level that is set in the settings. TODO!!! find that are in custom
         """
 
+        print(lesson_number)  # debug gcloud issue..
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
@@ -502,7 +503,7 @@ class Language(commands.Cog):
         ):
             with open(name_to_path_dict["listening_text"], encoding="utf-8") as f:
                 listening_text = f.read()
-            audio_paths2 = glob(f"{data_path}/listening_audio/*")
+            audio_paths2 = sorted(glob(f"{data_path}/listening_audio/*"))  # add sorted cuz linux reversed it
 
             name_to_audio_path_dict = {}
             for audio_path2 in audio_paths2:
