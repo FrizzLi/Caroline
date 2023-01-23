@@ -148,6 +148,7 @@ class MusicPlayer:
 
     def play_next_song(self, error=None):
         if error:
+            pass
             # print(f"halo? {error}")
         self.workaround = 1
 
