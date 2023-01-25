@@ -24,6 +24,7 @@ from cogs.korean.session_view2 import SessionView2
 class Language(commands.Cog):
     def __init__(self, bot):
         self.vocab_audio_paths = self.get_vocab_paths()
+        self.vocab_df = self.get_vocab()
         self.bot = bot
         self.config = self.load_config()
         self.ffmpeg_path = (
@@ -34,6 +35,15 @@ class Language(commands.Cog):
     personalization = True  # NotImplemented
     show_eng_word = 1  # works for writing exercise
 
+    def get_vocab(self):
+        credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
+        credentials_dict = json.loads(credentials_dict_str)
+        g_credentials = gspread.service_account_from_dict(credentials_dict)
+        gs_vocab = g_credentials.open("Korea - Vocabulary")
+        ws_vocab = gs_vocab.worksheet("Level 1-2 (modified)")
+        df = pd.DataFrame(ws_vocab.get_all_records())
+
+        return df
 
     def get_vocab_paths(self):
         source_dir = Path(__file__).parents[0]
@@ -314,8 +324,6 @@ class Language(commands.Cog):
         credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_str)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
-        gs_vocab = g_credentials.open("Korea - Vocabulary")
-        ws_vocab = gs_vocab.worksheet("Level 1-2 (modified)")
 
         gs_stats = g_credentials.open("Korea - Users stats")
         try:
@@ -667,9 +675,6 @@ class Language(commands.Cog):
             nl += subset
 
         nl = nl[::-1]
-        # while True:
-        #     kor = nl[-1][0]
-        #     kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
         # get the eng words out of self.vocab_df
 
