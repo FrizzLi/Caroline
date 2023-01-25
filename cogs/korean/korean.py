@@ -605,7 +605,15 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
-
+        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        user_voice = interaction.user.voice
+        if not voice and not user_voice:
+            raise commands.CommandError("No bot nor you is connected.")
+        elif not voice:
+            await user_voice.channel.connect()
+        voice = discord.utils.get(
+            self.bot.voice_clients, guild=interaction.guild
+        )
         def get_worksheet(ws_name):
             credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
             credentials_dict = json.loads(credentials_dict_str)
@@ -614,7 +622,17 @@ class Language(commands.Cog):
             worksheet = g_sheet.worksheet(ws_name)
             return worksheet
         
-        vocab_g_ws = get_worksheet("Freezpmark")
+        vocab_g_ws = get_worksheet(interaction.user.name)
+
+        # get session number
+        session_numbers = vocab_g_ws.col_values(4)
+        if session_numbers:
+            last_session_number = max(map(int, session_numbers[1:]))
+            current_session_number = last_session_number + 1
+        else:
+            current_session_number = 1
+        
+        # get 50 sorted word scores
         df = pd.DataFrame(vocab_g_ws.get_all_records())
         df.sort_values(["Word", "Date"], ascending=[True, False], inplace=True)
 
@@ -622,7 +640,7 @@ class Language(commands.Cog):
         scores = {i: j for i, j in enumerate(distr)}
         datetime_now = datetime.now()
 
-        # knowledge = []
+        knowledge = []
         word_scores = {}
         new_word = ""
         new_word_score = 0
@@ -638,7 +656,7 @@ class Language(commands.Cog):
                     word_scores[new_word] = new_word_score + empty_fill
                     new_word_score = 0
                     new_word_counter = 1
-                    # knowledge = []
+                    knowledge = []
                 new_word = row.Word
 
             if row.Knowledge == "✅":
@@ -650,43 +668,32 @@ class Language(commands.Cog):
             # new_word_score.append(f"{knowledge_multiplier}*{scores[new_word_counter]}")
             
             new_word_score += knowledge_multiplier * scores[new_word_counter]
-            # knowledge.append(knowledge_multiplier)
+            knowledge.append(knowledge_multiplier)
 
             row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
             now_datetime = datetime_now
             days_diff = (now_datetime - row_datetime).days
             new_word_score += days_diff * 0.01
 
-            # if row.Word == "열쇠" or row.Word == "뭐1":
-            #     print(f"{row.Word}: {knowledge_multiplier}*{scores[new_word_counter]};; {new_word_score}")
-            # TODO CONTINUE
-
-
         sorted_word_score = list(sorted(word_scores.items(), key=lambda item: item[1], reverse=True))
 
         nl = []
         size = 10
         for i in range(0, len(sorted_word_score), size):
-            if i > 4:
-                nl += sorted_word_score[i::]
+            if i > size * 4:
+                # nl += sorted_word_score[i::]
                 break
             subset = sorted_word_score[i:i+size]
             random.shuffle(subset)
             nl += subset
 
         nl = nl[::-1]
-
-        # get the eng words out of self.vocab_df
-
-        # No need to load paths every time... lets store it in pickle. 
-        # Load it just once, when turning on the program for the first time
-        # Add it into ignore
-        # Upon start -> korean.py loaded (means also the cache)
-        # Upon korean.py command -> load it
-        # green: go back by 50
-        # blue: 20
-        # red: 10
-
+        i = 1
+        count_n = len(nl)
+        kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean).to_dict()
+        await interaction.followup.send(f"[Review]; session: {current_session_number}")
+        counter = f"{i}. word out of {count_n}."
+        msg = await interaction.followup.send(counter)
 
 
     # Button commands
