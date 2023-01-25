@@ -78,7 +78,7 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
 
     missing_vocab_set = set()
     log_file.write("\n")
-    if text_type:
+    if text_type == "writing":
         for row in vocab_df.itertuples():
             w = row.Korean
             vocab_base_word = w[:-1] if w[-1].isdigit() else w
@@ -111,7 +111,7 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
                 row_dict = {"Word": w, f"Read_{str(int(lesson[-2:]))}": count}
                 df = pd.DataFrame(row_dict, columns=occurs_df.columns, index=[0])
                 occurs_df = pd.concat([occurs_df, df])
-    else:
+    elif text_type == "listening":
         for row in vocab_df.itertuples():
             w = row.Korean
             vocab_base_word = w[:-1] if w[-1].isdigit() else w
@@ -144,6 +144,9 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
                 row_dict = {"Word": w, f"Listen_{str(int(lesson[-2:]))}": count}
                 df = pd.DataFrame(row_dict, columns=occurs_df.columns, index=[0])
                 occurs_df = pd.concat([occurs_df, df])
+    else:
+        print("Wrong text type setted!")
+        exit()
 
     log_file.write("\n")
     for leftover in occurs:
