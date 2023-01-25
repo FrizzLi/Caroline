@@ -1,5 +1,6 @@
 import json
 import os
+import pickle
 import random
 from collections import defaultdict
 from datetime import datetime
@@ -22,6 +23,7 @@ from cogs.korean.session_view2 import SessionView2
 
 class Language(commands.Cog):
     def __init__(self, bot):
+        self.vocab_audio_paths = self.get_vocab_paths()
         self.bot = bot
         self.config = self.load_config()
         self.ffmpeg_path = (
@@ -31,6 +33,27 @@ class Language(commands.Cog):
     # These parameters doesn't need to be in config, they're not so usable
     personalization = True  # NotImplemented
     show_eng_word = 1  # works for writing exercise
+
+
+    def get_vocab_paths(self):
+        source_dir = Path(__file__).parents[0]
+        pickle_path = f"{source_dir}/data/vocab_audio_path.pickle"
+        if os.path.isfile(pickle_path):
+            with open(pickle_path, "rb") as handle:
+                audio_paths_labelled = pickle.loads(handle.read())
+        else:
+            print("korean: Creating pickle file for vocab audio paths...", end=" ")
+            audio_paths = glob(f"{source_dir}/data/*/*/vocabulary_audio/*")
+            audio_paths_labelled = {}
+            for audio_path in audio_paths:
+                word = Path(audio_path).stem
+                audio_paths_labelled[word] = audio_path
+
+            with open(pickle_path, "wb") as file:
+                pickle.dump(audio_paths_labelled, file)
+            print("Done!")
+        
+        return audio_paths_labelled
 
     def load_config(self):
         source_dir = Path(__file__).parents[0]
@@ -193,11 +216,6 @@ class Language(commands.Cog):
         voice = discord.utils.get(
             self.bot.voice_clients, guild=interaction.guild
         )
-        audio_paths = glob(f"cogs/data/{self.level}/{self.lesson}/*")
-        name_to_path_dict = {}
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            name_to_path_dict[word] = audio_path
 
         # session starts
         attempts = 0
@@ -228,10 +246,10 @@ class Language(commands.Cog):
             attempts += 1
 
             # play sound
-            if answer in name_to_path_dict:
+            if answer in self.vocab_audio_paths:
                 voice.play(
                     discord.FFmpegPCMAudio(
-                        name_to_path_dict[answer],
+                        self.vocab_audio_paths[answer],
                         executable=self.ffmpeg_path,
                     )
                 )
@@ -313,10 +331,10 @@ class Language(commands.Cog):
         else:
             current_session_number = 1
 
-        df = pd.DataFrame(ws_vocab.get_all_records())
+        
         vocab = []
 
-        for row in df.itertuples():
+        for row in self.vocab_df.itertuples():
             if not row.Lesson:
                 continue
             if row.Lesson > lesson_number:
@@ -325,17 +343,6 @@ class Language(commands.Cog):
                 vocab.append((row.Book_English, row.Korean))
 
         random.shuffle(vocab)
-
-        # load audio files
-        source_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
-        data_path = f"{source_dir}/data/level_{level}/lesson_{lesson}"
-        audio_paths = glob(f"{data_path}/vocabulary_audio/*")
-        name_to_path_dict = {}
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            name_to_path_dict[word] = audio_path
 
         # prepping msgs for the loop session
         i = 1
@@ -366,12 +373,12 @@ class Language(commands.Cog):
             kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
             # handling word that has no audio
-            if kor_no_num in name_to_path_dict:
+            if kor_no_num in self.vocab_audio_paths:
                 msg_display = f"||{kor} = {eng}||"
                 try:
                     voice.play(
                         discord.FFmpegPCMAudio(
-                            name_to_path_dict[kor_no_num],
+                            self.vocab_audio_paths[kor_no_num],
                             executable=self.ffmpeg_path,
                         )
                     )
@@ -644,6 +651,7 @@ class Language(commands.Cog):
 
             # if row.Word == "열쇠" or row.Word == "뭐1":
             #     print(f"{row.Word}: {knowledge_multiplier}*{scores[new_word_counter]};; {new_word_score}")
+            # TODO CONTINUE
 
 
         sorted_word_score = list(sorted(word_scores.items(), key=lambda item: item[1], reverse=True))
@@ -663,20 +671,7 @@ class Language(commands.Cog):
         #     kor = nl[-1][0]
         #     kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
-        #     # handling word that has no audio
-        #     if kor_no_num in name_to_path_dict:
-        #         msg_display = f"||{kor} = {eng}||"
-        #         try:
-        #             voice.play(
-        #                 discord.FFmpegPCMAudio(
-        #                     name_to_path_dict[kor_no_num],
-        #                     executable=self.ffmpeg_path,
-        #                 )
-        #             )
-        #         except Exception as err:
-        #             print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
-        #     else:
-        #         msg_display = f"{kor} = ||{eng}||"
+        # get the eng words out of self.vocab_df
 
         # No need to load paths every time... lets store it in pickle. 
         # Load it just once, when turning on the program for the first time
@@ -749,6 +744,7 @@ async def setup(bot):
     )
 
 # TODO: Together! Not well known words practice (check stats!) + Mix vocab / listening lessons
+# TODO: Listening parts not all in one msg
 # MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
 # Refresh scoring after 10 attempts
 # FILL MISSING VALS: all ❌ and one day diff.
@@ -766,7 +762,9 @@ async def setup(bot):
 # 4.463128600000001 perf score
 # 4.588911 last word not well known
 # TODO: [During polish]
+# TODO: Make sessions end properly (if its not buttoned, and add another session, its bugged)
 # TODO: Maybe no need to use pandas, gspread has operations too! (research it)
 # TODO: Ending session stats?: Stats Graph, sort hardest from easiest words!
-# TODO: Download sound for all? (current script is published in memo bookmark)
+# TODO: Download sound for all? (current script is published in memo bookmark), also need to force pickle save
 # TODO: Competitive mode?
+# TODO: local audio is not synced with changed gspread - we're loading everything anyway,, but still its ugly

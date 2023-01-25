@@ -3,6 +3,7 @@ venv
 *.pyc
 *.vscode
 *.gif
+*.pickle
 cogs/ai_algo/data/knowledge/*facts.txt
 cogs/ai_algo/data/maps
 cogs/ai_algo/data/solutions
