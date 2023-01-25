@@ -518,6 +518,7 @@ class Language(commands.Cog):
         ):
             with open(name_to_path_dict["listening_text"], encoding="utf-8") as f:
                 listening_text = f.read()
+                listening_text_tracks = listening_text.split("\n\n")
             audio_paths2 = sorted(glob(f"{data_path}/listening_audio/*"))  # add sorted cuz linux reversed it
 
             name_to_audio_path_dict = {}
@@ -530,7 +531,10 @@ class Language(commands.Cog):
         i = 1
         count_n = len(name_to_audio_path_dict)
 
-        queue = list(name_to_audio_path_dict)
+        queue = []  # list(name_to_audio_path_dict)
+        for track_name, track_text in zip(name_to_audio_path_dict, listening_text_tracks):
+            queue.append((track_name, track_text))
+
         await interaction.followup.send(f"[Lesson {lesson_number}]")
         counter = f"{i}. lesson out of {count_n}."
         msg = await interaction.followup.send(counter)
@@ -542,14 +546,14 @@ class Language(commands.Cog):
                 play_track = queue.pop(0)
                 voice.play(
                     discord.FFmpegPCMAudio(
-                        name_to_audio_path_dict[play_track],
+                        name_to_audio_path_dict[play_track[0]],
                         executable=self.ffmpeg_path,
                     )
                 )
             except Exception as err:
                 print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
 
-            content = f"```{counter}\n{listening_text}```"
+            content = f"```{counter}\n{play_track[1]}```"
             await msg.edit(content=content, view=view)
 
             # wait for interaction
@@ -574,8 +578,10 @@ class Language(commands.Cog):
                     button_id2 = interaction.data["custom_id"]
             elif button_id == "next":
                 queue.append(play_track)
+                i += 1
             elif button_id == "repeat":
                 queue.insert(0, play_track)
+                i += 1
             elif button_id == "end":
                 listening_text = "Ending listening session."
 
@@ -722,7 +728,6 @@ class Language(commands.Cog):
 
     @app_commands.command(name="zer")
     async def zexercise_reading(self, interaction, lesson_number: int = 102):
-        # TODO: add reading listening if present
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
@@ -780,3 +785,4 @@ async def setup(bot):
 # TODO: Download sound for all? (current script is published in memo bookmark), also need to force pickle save
 # TODO: Competitive mode?
 # TODO: local audio is not synced with changed gspread - we're loading everything anyway,, but still its ugly
+# TODO: Exercise reading - add reading listening if present
