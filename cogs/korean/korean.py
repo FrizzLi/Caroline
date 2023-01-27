@@ -702,6 +702,116 @@ class Language(commands.Cog):
         msg = await interaction.followup.send(counter)
 
 
+        def compute_percentages(easy, medium, hard):
+            total = easy + medium + hard
+            return (
+                round(easy * 100 / total, 1),
+                round(medium * 100 / total, 1),
+                round(hard * 100 / total, 1),
+            )
+
+        stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
+        stats_list = []
+        easy = easy_p = 0
+        medium = medium_p = 0
+        hard = hard_p = 0
+        stats = ""
+        view = SessionView()
+
+        # change: vocab = nl[-1][0], eng = kor_to_eng
+
+        while True:
+            kor = nl[-1][0]
+            kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
+
+            # handling word that has no audio
+            if kor_no_num in self.vocab_audio_paths:
+                msg_display = f"||{kor} = {kor_to_eng[kor]}||"
+                try:
+                    voice.play(
+                        discord.FFmpegPCMAudio(
+                            self.vocab_audio_paths[kor_no_num],
+                            executable=self.ffmpeg_path,
+                        )
+                    )
+                except Exception as err:
+                    print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
+            else:
+                msg_display = f"{kor} = ||{kor_to_eng[kor]}||"
+
+            content = f"{counter}\n{msg_display}\n{stats}"
+            await msg.edit(content=content, view=view)
+
+            # wait for interaction
+            interaction = await self.bot.wait_for(
+                "interaction",
+                check=lambda inter: "custom_id" in inter.data.keys()
+                and inter.user.name == interaction.user.name,
+            )
+
+            # button interactions
+            button_id = interaction.data["custom_id"]
+            if button_id == "easy":
+                word_to_move = nl.pop()
+
+                nl.insert(0, word_to_move)
+                easy += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = compute_percentages(
+                    easy, medium, hard
+                )
+            elif button_id == "medium":
+                word_to_move = nl.pop()
+
+                nl.insert(len(nl) // 2, word_to_move)
+                medium += 1
+                count_n += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = compute_percentages(
+                    easy, medium, hard
+                )
+            elif button_id == "hard":
+                word_to_move = nl.pop()
+
+                new_index = len(nl) // 5
+                nl.insert(-new_index, word_to_move)
+                hard += 1
+                count_n += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = compute_percentages(
+                    easy, medium, hard
+                )
+
+            elif button_id == "end":
+                msg_display = "Ending listening session."
+
+                # ending message
+                content = f"{counter}\n{msg_display}\n{stats}"
+                await msg.edit(content=content, view=view)
+                vocab_g_ws.append_rows(stats_list)
+                break
+            elif button_id == "repeat":
+                continue
+
+            stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
+            counter = f"{i}. word out of {count_n}"
+
+            time = datetime.now(pytz.timezone("Europe/Bratislava"))
+            time = time.strftime("%Y-%m-%d %H:%M:%S")
+            stats_list.append(
+                [
+                    time,
+                    word_to_move[0],
+                    stats_label[button_id],
+                    current_session_number,
+                ]
+            )
+
+
+
     # Button commands
     async def pause(self, interaction):
         """Pause the currently playing song."""
