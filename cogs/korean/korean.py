@@ -10,6 +10,7 @@ from statistics import fmean
 
 import discord
 import gspread
+import numpy as np
 import pandas as pd
 import pytz
 from discord import app_commands
@@ -42,6 +43,8 @@ class Language(commands.Cog):
         gs_vocab = g_credentials.open("Korea - Vocabulary")
         ws_vocab = gs_vocab.worksheet("Level 1-2 (modified)")
         df = pd.DataFrame(ws_vocab.get_all_records())
+        df["Lesson"].replace("", np.nan, inplace=True)
+        df.dropna(subset=["Lesson"], inplace=True)
 
         return df
 
