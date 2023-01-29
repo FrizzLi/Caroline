@@ -1,0 +1,216 @@
+Detailed tokenization cuz of grouping chaos.
+저 Noun
+는 Josa
+월요일 Noun
+부터 Josa
+금요일 Noun
+까지 Josa
+학교 Noun
+에 Josa
+가요 Noun
+Skipping garbage... (('.', 'Punctuation')
+오전 Noun
+9시 Number
+Skipping garbage... (('부터', 'Foreign')
+오후 Noun
+1시 Number
+Skipping garbage... (('까지', 'Foreign')
+학교 Noun
+에서 Josa
+한국어 Noun
+를 Josa
+배우다 Verb
+Skipping garbage... (('.', 'Punctuation')
+화요일 Noun
+에는 Josa
+오후 Noun
+2시 Number
+Skipping garbage... (('에', 'Foreign')
+도우미 Noun
+친구 Noun
+를 Josa
+만나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+도우미 Noun
+친구 Noun
+와 Josa
+같이 Adverb
+한국어 Noun
+연습 Noun
+을 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+2시간 Number
+Skipping garbage... (('쯤', 'Foreign')
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+도우미 Noun
+친구 Noun
+가 Josa
+친절하다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+목요일 Noun
+저녁 Noun
+에는 Josa
+고향 Noun
+친구 Noun
+들 Suffix
+과 Josa
+같이 Adverb
+고향 Noun
+음식 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+보통 Noun
+식당 Noun
+에서 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+우리 Noun
+고향 Noun
+음식 Noun
+이 Josa
+아주 Noun
+맛있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+금요일 Noun
+에는 Josa
+집 Noun
+에서 Josa
+빨래 Noun
+와 Josa
+청소 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+토요일 Noun
+에는 Josa
+아주 Noun
+바쁘다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+아침 Noun
+에 Josa
+태권도 Noun
+수업 Noun
+이 Josa
+있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+그래서 Adverb
+일찍 Noun
+일어나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+태권도 Noun
+선생님 Noun
+이 Josa
+아주 Noun
+멋있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+오후 Noun
+에는 Josa
+제임스 Noun
+씨 Noun
+와 Josa
+같이 Adverb
+농구 Noun
+를 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+농구 Noun
+가 Josa
+재미있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+일요일 Noun
+에는 Josa
+늦다 Verb
+일어나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+혼자 Noun
+집 Noun
+에서 Josa
+쉬다 Verb
+Skipping garbage... (('.', 'Punctuation')
+집 Noun
+에서 Josa
+영화 Noun
+를 Josa
+보다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+
+Duplicates: set()
+
+Going to fill 선생님 from 101 Lesson!
+Out of lesson (in previous): 씨1 1 Noun
+Out of lesson (in previous): 저1 1 Noun
+Out of lesson (in previous): 한국어 2 Noun
+Out of lesson (in previous): 이1 3 Josa~~
+Out of lesson (in previous): 보다1 1 Verb
+Going to fill 먹다1 from 104 Lesson!
+Out of lesson (in previous): 영화 1 Noun
+Out of lesson (in previous): 배우다 1 Verb
+Going to fill 쉬다1 from 104 Lesson!
+Going to fill 바쁘다 from 104 Lesson!
+Going to fill 재미있다 from 104 Lesson!
+Going to fill 맛있다 from 104 Lesson!
+Out of lesson (in previous): 멋있다 1 Adjective
+Out of lesson (in previous): 집 3 Noun
+Out of lesson (in previous): 만나다 1 Verb
+Out of lesson (in previous): 아주 3 Noun
+Out of lesson (in previous): 친구 4 Noun
+Out of lesson (in previous): 학교 2 Noun
+Going to fill 식당 from 105 Lesson!
+Out of lesson (in previous): 저녁 1 Noun
+Going to fill 혼자 from 107 Lesson!
+Going to fill 아침 from 107 Lesson!
+Going to fill 음식 from 107 Lesson!
+Out of lesson (in previous): 오후 3 Noun
+Going to fill 고향 from 107 Lesson!
+Going to fill 오전 from 107 Lesson!
+Going to fill 일요일 from 107 Lesson!
+Going to fill 토요일 from 107 Lesson!
+Going to fill 태권도 from 107 Lesson!
+Out of lesson (in previous): 월요일 1 Noun
+Going to fill 화요일 from 107 Lesson!
+Going to fill 목요일 from 107 Lesson!
+Going to fill 금요일 from 107 Lesson!
+Fill 우리!
+Fill 그래서!
+Fill 일어나다!
+Fill 수업!
+Fill 일찍!
+Fill 농구!
+Fill 도우미!
+Fill 보통!
+Fill 친절하다!
+Out of lesson (in next): 같이 3 Adverb~~
+Out of lesson (in next): 늦다 1 Verb++
+Out of lesson (in next): 가요 1 Noun-- 가다
+Out of lesson (in next): 해 4 Noun~~
+
+Out of vocab: 는 1 Josa
+Out of vocab: 부터 1 Josa
+Out of vocab: 까지 1 Josa
+Out of vocab: 에 2 Josa
+Out of vocab: 9시 1 Number--
+Out of vocab: 1시 1 Number--
+Out of vocab: 에서 5 Josa
+Out of vocab: 를 5 Josa
+Out of vocab: 에는 6 Josa
+Out of vocab: 2시 1 Number--
+Out of vocab: 와 3 Josa
+Out of vocab: 연습 1 Noun-- (연습을 하다)
+Out of vocab: 을 2 Josa
+Out of vocab: 요 4 Josa
+Out of vocab: 2시간 1 Number--
+Out of vocab: 가 2 Josa
+Out of vocab: 들 1 Suffix
+Out of vocab: 과 1 Josa
+Out of vocab: 빨래 1 Noun-- (빨래(를) 하다)
+Out of vocab: 청소 1 Noun-- (청소를 하다)
+Out of vocab: 있다 1 Adjective
+Out of vocab: 제임스 1 Noun

@@ -395,17 +395,18 @@ Skipping garbage... (('\n', 'Foreign')
 
 Duplicates: set()
 
+Out of lesson (in previous): 아니다 1 Adjective
 Out of lesson (in previous): 씨1 10 Noun
 Out of lesson (in previous): 저1 4 Noun
 Out of lesson (in previous): 한국 1 Noun
 Out of lesson (in previous): 한국어 2 Noun
 Out of lesson (in previous): 이1 1 Josa~~
-Out of lesson (in previous): 뭐 3 Noun
+Out of lesson (in previous): 뭐1 3 Noun
 Out of lesson (in previous): 무엇 1 Noun
 Out of lesson (in previous): 가방 1 Noun
-Out of lesson (in previous): 보다 2 Verb
-Out of lesson (in previous): 오다 1 Verb
-Out of lesson (in previous): 먹다 4 Verb
+Out of lesson (in previous): 보다1 2 Verb
+Out of lesson (in previous): 오다1 1 Verb
+Out of lesson (in previous): 먹다1 4 Verb
 Out of lesson (in previous): 밥 1 Noun
 Out of lesson (in previous): 공부 4 Noun
 Out of lesson (in previous): 좋아하다 1 Adjective
@@ -423,47 +424,67 @@ Going to fill 아르바이트 from 105 Lesson!
 Out of lesson (in previous): 커피숍 1 Noun
 Out of lesson (in previous): 공항 1 Noun
 Out of lesson (in previous): 수영 1 Noun
+Fill 다음!
+Fill 오늘1!
+Fill 이번!
+Fill 정말1!
+Fill 노래!
+Fill 혼자!
+Fill 사!--
+Fill 춤!
+Fill 시험!
+Fill 오후!
+Fill 언제1!
+Fill 열심히!
+Fill 오전!
+Fill 주1!
+Fill 방학!
+Fill 신발!
+Fill 생일!
+Fill 일요일!
+Fill 주말!
+Fill 토요일!
+Fill 냉면!
+Fill 노래방!
+Fill 쇼핑!
+Fill 파티!
+Fill 월요일!
+Fill 화요일!
+Fill 수요일!
+Fill 목요일!
+Fill 금요일!
 Out of lesson (in next): 가요 6 Noun--
 Out of lesson (in next): 왕 10 Noun~~
 Out of lesson (in next): 해 10 Noun~~
-Out of lesson (in next): 하다 2 Verb~~
 
 Out of vocab: Track 4 Alpha
 Out of vocab: 은 4 Josa
-Out of vocab: 2월 1 Number
-Out of vocab: 12일 1 Number
-Out of vocab: 4월 2 Number
-Out of vocab: 30일 1 Number
+Out of vocab: 2월 1 Number--
+Out of vocab: 12일 1 Number--
+Out of vocab: 4월 2 Number--
+Out of vocab: 30일 1 Number--
 Out of vocab: 는 9 Josa
-Out of vocab: 12월 1 Number
-Out of vocab: 24일 1 Number
-Out of vocab: 6월 1 Number
-Out of vocab: 14일 1 Number
-Out of vocab: 9월 1 Number
-Out of vocab: 22일 1 Number
-Out of vocab: 월요일 2 Noun
+Out of vocab: 12월 1 Number--
+Out of vocab: 24일 1 Number--
+Out of vocab: 6월 1 Number--
+Out of vocab: 14일 1 Number--
+Out of vocab: 9월 1 Number--
+Out of vocab: 22일 1 Number--
 Out of vocab: 에 17 Josa
 Out of vocab: 를 8 Josa
-Out of vocab: 화요일 1 Noun
+Out of vocab: 하다 2 Verb
 Out of vocab: 에서 8 Josa
 Out of vocab: 을 9 Josa
 Out of vocab: 요 11 Josa
-Out of vocab: 수요일 1 Noun
-Out of vocab: 목요일 1 Noun
-Out of vocab: 금요일 1 Noun
 Out of vocab: 가 2 Josa
 Out of vocab: 리나 13 Noun
 Out of vocab: 타오 10 Noun
-Out of vocab: 아니다 1 Adjective
 Out of vocab: 제임스 1 Noun
 Out of vocab: 와 2 Josa
 Out of vocab: 황남 1 Noun
 Out of vocab: 있다 2 Adjective
 Out of vocab: 에바 1 Noun
 Out of vocab: 과 3 Josa
-Out of vocab: 사 1 Noun--
-Out of vocab: 19일 1 Number
+Out of vocab: 19일 1 Number--
 Out of vocab: 에는 3 Josa
-Out of vocab: 토요일 2 Noun
-Out of vocab: 일요일 1 Noun
 Out of vocab: 휴 1 Exclamation

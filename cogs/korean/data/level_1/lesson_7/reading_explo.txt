@@ -125,14 +125,25 @@ Going to fill 정문 from 105 Lesson!
 Out of lesson (in previous): 영화관 2 Noun
 Out of lesson (in previous): 앞 1 Noun
 Out of lesson (in previous): 옆 1 Noun
+Fill 오늘1!
+Fill 저녁!
+Fill 반!
+Fill 사진!
+Fill 찍다!
+Fill 오후!
+Fill 준비!
+Fill 학원!
+Fill 자전거!
+Fill 과일!
+Fill 김밥!
+Fill 음료수!
+Fill 월요일!
 Out of lesson (in next): 장 4 Noun~~
-Out of lesson (in next): 찍다 1 Verb--
 Out of lesson (in next): 가요 2 Noun--
 
 Out of vocab: 은 3 Josa
 Out of vocab: 8월 2 Number
 Out of vocab: 2일 1 Number
-Out of vocab: 월요일 1 Noun
 Out of vocab: 이에요 1 Josa
 Out of vocab: 웨이 4 Noun
 Out of vocab: 는 4 Josa
@@ -145,7 +156,6 @@ Out of vocab: 7일 1 Number
 Out of vocab: 리나 1 Noun
 Out of vocab: 과 1 Josa
 Out of vocab: 를 4 Josa
-Out of vocab: 준비 3 Noun--
 Out of vocab: 하다 3 Verb
 Out of vocab: 제임스 1 Noun
 Out of vocab: 타요 1 Noun--

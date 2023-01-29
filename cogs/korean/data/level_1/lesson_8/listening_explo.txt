@@ -328,77 +328,87 @@ Duplicates: {'를'}
 ('를', 'Noun'): 1
 
 Out of lesson (in previous): 저1 4 Noun
-Going to fill 프랑스 from 102 Lesson!
+Out of lesson (in previous): 프랑스 1 Noun
 Out of lesson (in previous): 한국어 1 Noun
-Out of lesson (in previous): 이1 4 Josa
+Out of lesson (in previous): 이1 4 Josa~~
 Out of lesson (in previous): 보다1 2 Verb
-Going to fill 먹다1 from 104 Lesson!
-Out of lesson (in previous): 영화 1 Noun
-Going to fill 쉬다1 from 104 Lesson!
-Going to fill 일1 from 105 Lesson!
+Out of lesson (in previous): 먹다1 5 Verb
+Going to fill 영화 from 104 Lesson!
+Out of lesson (in previous): 쉬다1 1 Verb
+Out of lesson (in previous): 일1 1 Noun
 Out of lesson (in previous): 집 3 Noun
 Going to fill 시간1 from 105 Lesson!
 Out of lesson (in previous): 만나다 1 Verb
 Out of lesson (in previous): 친구 3 Noun
-Out of lesson (in previous): 학교 2 Noun
-Going to fill 잠 from 105 Lesson!
-Going to fill 요리 from 105 Lesson!
-Going to fill 식당 from 105 Lesson!
-Out of lesson (in previous): 숙제 2 Noun
+Going to fill 학교 from 105 Lesson!
+Out of lesson (in previous): 잠 2 Noun
+Out of lesson (in previous): 요리 1 Noun
+Out of lesson (in previous): 식당 1 Noun
+Going to fill 숙제 from 105 Lesson!
 Out of lesson (in previous): 커피숍 3 Noun
 Out of lesson (in previous): 옆 1 Noun
-Going to fill 수영 from 106 Lesson!
-Going to fill 수영장 from 106 Lesson!
+Out of lesson (in previous): 수영 1 Noun
+Out of lesson (in previous): 수영장 2 Noun
 Out of lesson (in previous): 오늘1 1 Noun
 Going to fill 밤 from 107 Lesson!
-Out of lesson (in previous): 저녁 2 Noun
+Going to fill 저녁 from 107 Lesson!
 Going to fill 아침 from 107 Lesson!
-Out of lesson (in previous): 반 6 Noun
+Going to fill 반 from 107 Lesson!
 Out of lesson (in previous): 오후 1 Noun
 Going to fill 점심 from 107 Lesson!
-Out of lesson (in next): 같이 2 Adverb
-Out of lesson (in next): 가요 5 Noun
+Out of lesson (in previous): 토요일 2 Noun
+Fill 그리고!
+Fill 일어나다!
+Fill 끝나다!
+Fill 수업!
+Fill 닦다!
+Fill 뉴스!
+Fill 피곤하다!
+Fill 보통!
+Fill 조금!
+Fill 쯤!
+Out of lesson (in next): 같이 2 Adverb~~
+Out of lesson (in next): 가요 5 Noun--
 Out of lesson (in next): 해 11 Noun
 Out of lesson (in next): SNS 1 Alpha
-Out of lesson (in next): 이르다 1 Verb
+Out of lesson (in next): 이르다 1 Verb-- (이 - teeth)
 
 Out of vocab: Track 3 Alpha
 Out of vocab: 는 4 Josa
-Out of vocab: 7시 8 Number
-Out of vocab: 10분 1 Number
+Out of vocab: 7시 8 Number--
+Out of vocab: 10분 1 Number--++ (분)
 Out of vocab: 을 11 Josa
-Out of vocab: 30분 2 Number
-Out of vocab: 50분 1 Number
-Out of vocab: 화장 1 Noun
+Out of vocab: 30분 2 Number--
+Out of vocab: 50분 1 Number--
+Out of vocab: 화장 1 Noun-- (화장(을) 하다)
 Out of vocab: 요 13 Josa
-Out of vocab: 8시 5 Number
-Out of vocab: 20분 1 Number
+Out of vocab: 8시 5 Number--
+Out of vocab: 20분 1 Number--
 Out of vocab: 에 9 Josa
 Out of vocab: 은 1 Josa
-Out of vocab: 토요일 2 Noun
 Out of vocab: 이에요 1 Josa
 Out of vocab: 에는 1 Josa
 Out of vocab: 없다 1 Adjective
-Out of vocab: 10시 4 Number
-Out of vocab: 12시 2 Number
-Out of vocab: 2시 1 Number
+Out of vocab: 10시 4 Number--
+Out of vocab: 12시 2 Number--
+Out of vocab: 2시 1 Number--
 Out of vocab: 에서 4 Josa
 Out of vocab: 들 3 Suffix
-Out of vocab: 4시 4 Number
+Out of vocab: 4시 4 Number--
 Out of vocab: 과 2 Josa
 Out of vocab: 를 10 Noun
 Out of vocab: 있다 1 Adjective
 Out of vocab: 부터 2 Josa
-Out of vocab: 5시 2 Number
+Out of vocab: 5시 2 Number--
 Out of vocab: 까지 2 Josa
-Out of vocab: 6시 3 Number
-Out of vocab: 청소 1 Noun
-Out of vocab: 9시 2 Number
-Out of vocab: 11시 2 Number
-Out of vocab: 자 2 Noun
-Out of vocab: 세수 1 Noun
-Out of vocab: 면도 1 Noun
-Out of vocab: 시작 1 Noun
+Out of vocab: 6시 3 Number--
+Out of vocab: 청소 1 Noun-- 청소를 하다
+Out of vocab: 9시 2 Number--
+Out of vocab: 11시 2 Number--
+Out of vocab: 자 2 Noun?? 자다
+Out of vocab: 세수 1 ?? 세수(를) 하다
+Out of vocab: 면도 1 Noun?? 면도(를) 하다
+Out of vocab: 시작 1 Noun?? 시작하다
 Out of vocab: 하다 2 Verb
-Out of vocab: 1시 2 Number
-Out of vocab: 샤워 1 Noun
+Out of vocab: 1시 2 Number--
+Out of vocab: 샤워 1 Noun?? 샤워(를) 하다
