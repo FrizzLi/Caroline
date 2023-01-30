@@ -105,6 +105,7 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
                         vocab_df.at[row.Index, "Reading_Used"] = lesson
                 else:
                     vocab_df.at[row.Index, "Reading_Used"] = lesson
+                    log_file.write(f"Fill {row.Korean}!\n")
 
                 # update occurances
                 count = occurs.pop(vocab_base_word)
@@ -116,7 +117,7 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
             w = row.Korean
             vocab_base_word = w[:-1] if w[-1].isdigit() else w
             if vocab_base_word in occurs:
-                if not row.Lesson or row.Lesson > int(lesson):
+                if not row.Lesson or row.Lesson > int(lesson):  # lesson is GLOBAL!!
                     missing_vocab_set.add(vocab_base_word)
                     write_line_msg(
                         "lesson (in next)", w, occurs, word_types, vocab_base_word
@@ -138,6 +139,9 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
                         vocab_df.at[row.Index, "Listening_Used"] = lesson
                 else:
                     vocab_df.at[row.Index, "Listening_Used"] = lesson
+                    log_file.write(
+                        f"Fill {row.Korean}!\n"
+                    )
 
                 # update occurances
                 count = occurs.pop(vocab_base_word)
