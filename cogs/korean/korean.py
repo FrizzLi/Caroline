@@ -659,7 +659,7 @@ class Language(commands.Cog):
         new_word_score = 0
         new_word_counter = 0
         for row in df.itertuples():
-            if new_word_counter >= 10:
+            if new_word_counter >= 10 and new_word == row.Word:
                 continue  # needs opt -> use pd
             if new_word == row.Word:
                 new_word_counter += 1
