@@ -648,7 +648,7 @@ class Language(commands.Cog):
         df = pd.DataFrame(vocab_g_ws.get_all_records())
         df.sort_values(["Word", "Date"], ascending=[True, False], inplace=True)
 
-        distr = (1, 0.8, 0.64, 0.512, 0.4096, 0.32768, 0.262144, 0.209715, 0.167772, 0.1342176)
+        distr = (1, 0.8, 0.64, 0.512, 0.4096, 0.32768, 0.262144, 0.209715, 0.167772, 0.1342176, 0.107374)
         scores = {i: j for i, j in enumerate(distr)}
         datetime_now = datetime.now()
 
