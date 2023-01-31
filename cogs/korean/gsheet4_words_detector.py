@@ -78,7 +78,7 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
 
     missing_vocab_set = set()
     log_file.write("\n")
-    if text_type == "writing":
+    if text_type == "reading":
         for row in vocab_df.itertuples():
             w = row.Korean
             vocab_base_word = w[:-1] if w[-1].isdigit() else w
