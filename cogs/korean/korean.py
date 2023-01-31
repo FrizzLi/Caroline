@@ -623,15 +623,18 @@ class Language(commands.Cog):
         voice = discord.utils.get(
             self.bot.voice_clients, guild=interaction.guild
         )
-        def get_worksheet(ws_name):
+        def get_worksheet(spread_name, sheet_name):
             credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
             credentials_dict = json.loads(credentials_dict_str)
             g_credentials = gspread.service_account_from_dict(credentials_dict)
-            g_sheet = g_credentials.open("Korea - Users stats")
-            worksheet = g_sheet.worksheet(ws_name)
+            g_sheet = g_credentials.open(spread_name)
+            worksheet = g_sheet.worksheet(sheet_name)
             return worksheet
         
-        vocab_g_ws = get_worksheet(interaction.user.name)
+        vocab_g_ws = get_worksheet("Korea - Users stats", interaction.user.name)
+        score_g_ws = get_worksheet("Korea - Users stats", "score_monitor")
+        score_g_ws.clear()
+        score_list = []
 
         # get session number
         session_numbers = vocab_g_ws.col_values(4)
@@ -650,10 +653,11 @@ class Language(commands.Cog):
         datetime_now = datetime.now()
 
         knowledge = []
+        knowledge_marks = []  # redundant,, but will opt later
         word_scores = {}
         new_word = ""
         new_word_score = 0
-        new_word_counter = 1
+        new_word_counter = 0
         for row in df.itertuples():
             if new_word_counter >= 10:
                 continue  # needs opt -> use pd
@@ -661,11 +665,27 @@ class Language(commands.Cog):
                 new_word_counter += 1
             else:
                 if new_word:
-                    empty_fill = fmean(knowledge) * (10-new_word_counter)
-                    word_scores[new_word] = new_word_score + empty_fill
+                    mean = fmean(knowledge)
+                    empty_fill = 0
+                    for i in range(new_word_counter+1, 10):
+                        empty_fill += mean * scores[i]
+                        # print(f"i({i}){new_word}: empty_fill")
+
+                    # empty_fill = fmean(knowledge) * (10-new_word_counter)
+                    word_score = new_word_score + empty_fill
+                    word_scores[new_word] = word_score
                     new_word_score = 0
-                    new_word_counter = 1
+                    new_word_counter = 0
+                    score_list.append(
+                        [
+                            new_word,
+                            word_score,
+                            "".join(knowledge_marks),
+                            # ", ".join(str(x) for x in knowledge)
+                        ]
+                    )
                     knowledge = []
+                    knowledge_marks = []
                 new_word = row.Word
 
             if row.Knowledge == "✅":
@@ -678,13 +698,18 @@ class Language(commands.Cog):
             
             new_word_score += knowledge_multiplier * scores[new_word_counter]
             knowledge.append(knowledge_multiplier)
+            knowledge_marks.append(row.Knowledge)
 
             row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
             now_datetime = datetime_now
             days_diff = (now_datetime - row_datetime).days
             new_word_score += days_diff * 0.01
 
+        score_list = sorted(score_list, key=lambda x:x[1], reverse=True)
+        score_g_ws.append_rows(score_list)
+
         sorted_word_score = list(sorted(word_scores.items(), key=lambda item: item[1], reverse=True))
+        # word, score, marks arranged
 
         nl = []
         size = 10
@@ -873,8 +898,6 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# TODO: Together! Not well known words practice (check stats!) + Mix vocab / listening lessons
-# TODO: Listening parts not all in one msg
 # MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
 # Refresh scoring after 10 attempts
 # FILL MISSING VALS: all ❌ and one day diff.
@@ -891,6 +914,7 @@ async def setup(bot):
 
 # 4.463128600000001 perf score
 # 4.588911 last word not well known
+# TODO: Spreadsheets: Duplicates with lesson label overweite..! Deal with it in sheets
 # TODO: [During polish]
 # TODO: Make sessions end properly (if its not buttoned, and add another session, its bugged)
 # TODO: Maybe no need to use pandas, gspread has operations too! (research it)
