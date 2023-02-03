@@ -766,7 +766,7 @@ def _save_solution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
     solutions_dir = Path(f"{source_dir}/data/solutions")
     Path(solutions_dir).mkdir(parents=True, exist_ok=True)
 
-    fname_path = Path(f"{solutions_dir}/{fname}_rake")
+    fname_path = Path(f"{solutions_dir}/{fname}_rake.pickle")
     with open(fname_path, "wb") as file:
         pickle.dump(rake_paths, file)
 

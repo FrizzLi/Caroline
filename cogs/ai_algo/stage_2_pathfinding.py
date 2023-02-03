@@ -634,7 +634,7 @@ def _save_solution(
     solutions_dir = Path(f"{source_dir}/data/solutions")
     solutions_dir.mkdir(parents=True, exist_ok=True)
 
-    fname_path = Path(f"{solutions_dir}/{fname}_path")
+    fname_path = Path(f"{solutions_dir}/{fname}_path.pickle")
     with open(fname_path, "wb") as file:
         pickle.dump(routed_paths, file)
 
