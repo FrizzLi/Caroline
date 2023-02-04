@@ -66,12 +66,12 @@ def run_production(
 
         for known_fact in known_facts:
             using_facts += [known_fact]
-            new_facts = run_forward_chain(using_facts, rules, fname_save_facts)
+            new_facts = run_forward_chain(using_facts, rules)
             fact_discovery_flow[known_fact] = new_facts
 
     else:
         using_facts = known_facts
-        new_facts = run_forward_chain(using_facts, rules, fname_save_facts)
+        new_facts = run_forward_chain(using_facts, rules)
         fact_discovery_flow = {"All steps at once": new_facts}
 
     _save_facts(using_facts, fname_save_facts)
@@ -170,9 +170,7 @@ def _get_4_lines_from_file(file: Any) -> Tuple[Any, ...]:
     return rule  # -> Tuple[str, str, str]
 
 
-def run_forward_chain(
-    known_facts: List[str], rules: List[Any], fname_save_facts: str
-) -> List[str]:
+def run_forward_chain(known_facts: List[str], rules: List[Any]) -> List[str]:
     """Discovers new facts from the given known facts and rules.
 
     Runs forward chaining to find actions that updates our facts collection
@@ -184,7 +182,6 @@ def run_forward_chain(
             name - name of the rule (unused)
             conds - conditions to fulfill actions
             acts - actions (message, add or remove fact from the set of facts)
-        fname_save_facts (str): name of the file into which facts will be saved
 
     Returns:
         List[str]: newly found facts that have been added by action
@@ -279,7 +276,6 @@ def _apply_actions(acts: List[str], known_facts: List[str]) -> List[str]:
         elif type_ == "remove":
             known_facts.remove(act)
         newly_found_facts.append(act)
-        # TODO: [During polish] remove might not work
 
     return newly_found_facts
 

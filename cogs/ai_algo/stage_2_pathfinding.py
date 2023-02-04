@@ -51,7 +51,7 @@ class Node:
     """Represents discrete coordinate position on the 2D map.
 
     This class is being used in Map class. Map is composed of Nodes that
-    represent the space of the map.
+    represent discrete space of the map.
 
     Attributes:
         pos (Tuple[int, int]): node's position on the map
@@ -67,12 +67,12 @@ class Node:
 
     __slots__ = ("pos", "terr", "parent", "dist", "g", "h")
 
-    def __init__(self, position, terrain):
+    def __init__(self, position: Tuple[int, int], terrain: int):
         self.pos = position  # type: Tuple[int, int]
         self.terr = terrain  # type: int
 
         # variables to fill with pathfinding algorithm
-        self.parent = -1  # type: Tuple[int, int]
+        self.parent = (0, 0)  # type: Tuple[int, int]
         self.dist = maxsize  # type: int
 
         # helping A* heuristic variables

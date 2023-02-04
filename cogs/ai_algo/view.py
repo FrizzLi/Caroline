@@ -14,13 +14,12 @@ create_gif
 import json
 import pickle
 from functools import partial
-from typing import Any, Dict, List, Tuple
 from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
-from cogs.ai_algo import stage_1_evolution
-from cogs.ai_algo import stage_2_pathfinding
+from cogs.ai_algo import stage_1_evolution, stage_2_pathfinding
 
 
 def _load_pickle(fname: str, suffix: str) -> Any:
@@ -37,7 +36,7 @@ def _load_pickle(fname: str, suffix: str) -> Any:
     """
 
     source_dir = Path(__file__).parents[0]
-    fname_path = Path(f"{source_dir}/data/solutions/{fname}{suffix}")
+    fname_path = Path(f"{source_dir}/data/solutions/{fname}{suffix}.pickle")
     with open(fname_path, "rb") as handle:
         return pickle.loads(handle.read())
 
