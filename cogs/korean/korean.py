@@ -385,7 +385,7 @@ class Language(commands.Cog):
 
             # handling word that has no audio
             if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {eng}||"
+                msg_display = f"||{kor} = {eng:20}||"
                 try:
                     voice.play(
                         discord.FFmpegPCMAudio(
@@ -396,7 +396,7 @@ class Language(commands.Cog):
                 except Exception as err:
                     print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
             else:
-                msg_display = f"{kor} = ||{eng}||"
+                msg_display = f"{kor} = ||{eng:20}||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
             await msg.edit(content=content, view=view)
@@ -754,7 +754,7 @@ class Language(commands.Cog):
 
             # handling word that has no audio
             if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {kor_to_eng[kor]}||"
+                msg_display = f"||{kor} = {kor_to_eng[kor]:20}||"
                 try:
                     voice.play(
                         discord.FFmpegPCMAudio(
@@ -765,7 +765,7 @@ class Language(commands.Cog):
                 except Exception as err:
                     print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
             else:
-                msg_display = f"{kor} = ||{kor_to_eng[kor]}||"
+                msg_display = f"{kor} = ||{kor_to_eng[kor]:20}||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
             await msg.edit(content=content, view=view)
