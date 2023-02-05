@@ -139,6 +139,3 @@ class AiAlgo(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(AiAlgo(bot))
-
-# TODO: ADD .pickle extensions for pickle files..
-# https://stackoverflow.com/questions/40433474/preferred-or-most-common-file-extension-for-a-python-pickle

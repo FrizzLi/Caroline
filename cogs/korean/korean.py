@@ -916,6 +916,7 @@ async def setup(bot):
 # 4.588911 last word not well known
 # TODO: Spreadsheets: Duplicates with lesson label overweite..! Deal with it in sheets
 # TODO: [During polish]
+# TODO: example button for each word (have already one sentece)
 # TODO: Make sessions end properly (if its not buttoned, and add another session, its bugged)
 # TODO: Maybe no need to use pandas, gspread has operations too! (research it)
 # TODO: Ending session stats?: Stats Graph, sort hardest from easiest words!
