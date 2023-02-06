@@ -186,7 +186,7 @@ def find_shortest_path(
             Options: "M", "D" (Manhattan or Diagonal + Manhattan)
         climb (bool): determines distance calculcation approach. If True,
             distance is measured as abs(current terrain number - next terrain
-            number)
+            number), otherwise it is just (next terrain number)
         algorithm (string): determines what algorithm to use to find the
             shortest path
             Options: "NP", "HK" (Naive Permutations or Held Karp)
