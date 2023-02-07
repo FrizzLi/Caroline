@@ -68,4 +68,4 @@ bot.run(TOKEN)
 # TODO: Polish Discord related stuff: Pylint, Document, Optimize code and Async
 # TODO: Logs
 # TODO: Resolve all weird pylint errors
-# TODO: Tests (setup.py, pytest from reqs, _apply_actions test remove)
+# TODO: Tests (setup.py, pytest from reqs, AI: _apply_actions test (rmv), docs)
