@@ -38,11 +38,13 @@ class Surveillance(commands.Cog):
     #     if diff_act and before_no_act:
     #         if after.activity.name:
     #             msg = f"has started {after.activity.name}."
-    #             await self.get_log_channel().send(f"{time}: {after.name} {msg}")
+    #             msg = f"{time}: {after.name} {msg}"
+    #             await self.get_log_channel().send(msg)
     #     elif diff_act and after_no_act:
     #         if before.activity.name:
     #             msg = f"has stopped {before.activity.name}."
-    #             await self.get_log_channel().send(f"{time}: {after.name} {msg}")
+    #             msg = f"{time}: {after.name} {msg}"
+    #             await self.get_log_channel().send(msg)
     #     #     # elif not before_dnd and after_dnd:
     #     #     #     msg = "has set DND status."
     #     #     # elif before_dnd and not after_dnd:
@@ -129,10 +131,12 @@ class Surveillance(commands.Cog):
             try:  # with return
                 ans = eval(msg.content)  # pylint: disable=eval-used
                 await ctx.send(ans)
-            except Exception:  # no return
+            except SyntaxError:
+                #  no return
                 try:
                     exec(msg.content)  # pylint: disable=exec-used
-                except Exception as err:  # invalid input
+                except Exception as err:  # pylint: disable=broad-except
+                    # invalid input
                     await ctx.send(err)
             msg = await self.bot.wait_for("message", check=check)
 
@@ -157,6 +161,3 @@ class Surveillance(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Surveillance(bot))
-
-# TODO: Voice stats graphs
-# TODO: Process old surveillance text and find info out of it

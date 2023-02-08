@@ -69,3 +69,11 @@ bot.run(TOKEN)
 # TODO: Logs
 # TODO: Resolve all weird pylint errors
 # TODO: Tests (setup.py, pytest from reqs, AI: _apply_actions test (rmv), docs)
+
+# TODO surveillance: Voice stats graphs, finish/remove on_presence_update
+# TODO surveillance: Process old surveillance text and find info out of it
+
+# TODO music: Track timestamps (how long the songs have been played instead of reqs)
+# TODO music: Leaving the voice -> refresh still works.. polish that
+# TODO music: Create radio bot,, automatically detects what ppl listen/request, 
+# and just picks something out of it, or finds something to it (recommendation system!)

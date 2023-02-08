@@ -2,6 +2,7 @@ discord.py @ git+https://github.com/Rapptz/discord.py
 youtube_dl
 pillow
 pandas  # (pytz, numpy)
+types-pytz
 gspread
 pytube
 python-dotenv
