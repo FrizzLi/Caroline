@@ -1,4 +1,3 @@
-import random
 from datetime import datetime
 
 import discord
@@ -27,20 +26,20 @@ class Surveillance(commands.Cog):
     #     before_dnd = before.status == discord.Status.dnd
     #     after_dnd = after.status == discord.Status.dnd
     #     diff_act = before.activity != after.activity
-    #     before_no_act = before.activity is None
-    #     after_no_act = after.activity is None
+    #     before_act_not = before.activity is None
+    #     after_act_not = after.activity is None
 
     #     time = self.get_time()
     #     #     # if before_offline and not after_offline:
     #     #     #     msg = "has come online."
     #     #     # elif not before_offline and after_offline:
     #     #     #     msg = "has gone offline."
-    #     if diff_act and before_no_act:
+    #     if diff_act and before_act_not:
     #         if after.activity.name:
     #             msg = f"has started {after.activity.name}."
     #             msg = f"{time}: {after.name} {msg}"
     #             await self.get_log_channel().send(msg)
-    #     elif diff_act and after_no_act:
+    #     elif diff_act and after_act_not:
     #         if before.activity.name:
     #             msg = f"has stopped {before.activity.name}."
     #             msg = f"{time}: {after.name} {msg}"
@@ -60,50 +59,46 @@ class Surveillance(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         deaf = not before.deaf and after.deaf
-        no_deaf = before.deaf and not after.deaf
-        mute = not before.mute and after.mute
-        no_mute = before.mute and not after.mute
+        deaf_not = before.deaf and not after.deaf
         self_deaf = not before.self_deaf and after.self_deaf
-        self_no_deaf = before.self_deaf and not after.self_deaf
+        self_deaf_not = before.self_deaf and not after.self_deaf
+        mute = not before.mute and after.mute
+        mute_not = before.mute and not after.mute
         self_mute = not before.self_mute and after.self_mute
-        self_no_mute = before.self_mute and not after.self_mute
-        video = not before.self_video and after.self_video
-        no_video = before.self_video and not after.self_video
-        stream = not before.self_stream and after.self_stream
-        no_stream = before.self_stream and not after.self_stream
-        afk = not before.afk and after.afk
-        no_afk = before.afk and not after.afk
+        self_mute_not = before.self_mute and not after.self_mute
         left = before.channel != after.channel and after.channel is None
         join = before.channel != after.channel and before.channel is None
+        video = not before.self_video and after.self_video
+        video_not = before.self_video and not after.self_video
+        stream = not before.self_stream and after.self_stream
+        stream_not = before.self_stream and not after.self_stream
+        afk = not before.afk and after.afk
+        afk_not = before.afk and not after.afk
         move = before.channel != after.channel
 
-        if deaf or self_deaf:
-            msg = "has been deafened."
-        elif no_deaf or self_no_deaf:
-            msg = "has been undeafened."
-        elif mute or self_mute:
-            msg = "has been muted."
-        elif no_mute or self_no_mute:
-            msg = "has been unmuted."
-        elif video:
-            msg = "has enabled camera."
-        elif no_video:
-            msg = "has stopped camera."
-        elif stream:
-            msg = "has started streaming."
-        elif no_stream:
-            msg = "has stopped streaming."
-        elif afk:
-            msg = "has gone afk."
-        elif no_afk:
-            msg = "is no longer afk."
-        elif left:
-            msg = f"has left {before.channel} channel."
-        elif join:
-            msg = f"has joined {after.channel} channel."
-        elif move:
-            msg = f"has moved from {before.channel} to {after.channel}."
-        else:
+        # create 2D tuple
+        possible_state_changes = {
+            "has been deafened.": deaf or self_deaf,
+            "has been undeafened.": deaf_not or self_deaf_not,
+            "has been muted.": mute or self_mute,
+            "has been unmuted.": mute_not or self_mute_not,
+            "has enabled camera.": video,
+            "has stopped camera.": video_not,
+            "has started streaming.": stream,
+            "has stopped streaming.": stream_not,
+            "has gone afk.": afk,
+            "is no longer afk.": afk_not,
+            f"has left {before.channel} channel.": left,
+            f"has joined {after.channel} channel.": join,
+            f"has moved from {before.channel} to {after.channel}.": move
+        }
+
+        msg = change = ""
+        for msg, change in possible_state_changes.items():
+            if change:
+                break
+
+        if not change:
             print(f"{member.name} did something..!")
             return
 
