@@ -17,45 +17,6 @@ class Surveillance(commands.Cog):
         time = time.strftime("%Y-%m-%d %H:%M:%S")
         return time
 
-    # @commands.Cog.listener()
-    # async def on_presence_update(self, before, after):
-    #     before_offline = before.status == discord.Status.offline
-    #     after_offline = after.status == discord.Status.offline
-    #     before_idle = before.status == discord.Status.idle
-    #     after_idle = after.status == discord.Status.idle
-    #     before_dnd = before.status == discord.Status.dnd
-    #     after_dnd = after.status == discord.Status.dnd
-    #     diff_act = before.activity != after.activity
-    #     before_act_not = before.activity is None
-    #     after_act_not = after.activity is None
-
-    #     time = self.get_time()
-    #     #     # if before_offline and not after_offline:
-    #     #     #     msg = "has come online."
-    #     #     # elif not before_offline and after_offline:
-    #     #     #     msg = "has gone offline."
-    #     if diff_act and before_act_not:
-    #         if after.activity.name:
-    #             msg = f"has started {after.activity.name}."
-    #             msg = f"{time}: {after.name} {msg}"
-    #             await self.get_log_channel().send(msg)
-    #     elif diff_act and after_act_not:
-    #         if before.activity.name:
-    #             msg = f"has stopped {before.activity.name}."
-    #             msg = f"{time}: {after.name} {msg}"
-    #             await self.get_log_channel().send(msg)
-    #     #     # elif not before_dnd and after_dnd:
-    #     #     #     msg = "has set DND status."
-    #     #     # elif before_dnd and not after_dnd:
-    #     #     #     msg = "is no longer DND."
-    #     #     # elif before_idle and not after_idle:
-    #     #     #     msg = "is no longer idle."
-    #     #     # elif not before_idle and after_idle:
-    #     #     #     msg = "has gone idle."
-    #     # else:
-    #         # print(f"{after.name} did something..!")
-    #         # return
-
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         deaf = not before.deaf and after.deaf
