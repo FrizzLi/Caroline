@@ -147,17 +147,6 @@ class Surveillance(commands.Cog):
         )
         await ctx.send("Python mode deactivated!")
 
-    @commands.command()
-    async def history2(self, ctx, limit: int = 160000):
-        """Saves history of songs into Google Sheets."""
-
-        i = 0
-        with open("old_surv_logs.txt", "w", encoding="utf-8") as f:
-            async for elem in ctx.channel.history(limit=limit):
-                i += 1
-                f.write(f"{elem.content}\n")
-                print(f"{i}. downloaded: {elem.content}")
-
 
 async def setup(bot):
     await bot.add_cog(Surveillance(bot))
