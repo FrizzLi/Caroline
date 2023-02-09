@@ -110,12 +110,6 @@ class Surveillance(commands.Cog):
         time = self.get_time()
         await self.get_log_channel().send(f"{time}: {member.name} {msg}")
 
-    # Simple commands
-    @commands.command(brief="Rolls a number between 1 and 100. (roll 1000)")
-    async def roll(self, ctx, max_=100):
-        rolled_number = f"{str(random.randint(1, max_))} (1 - {str(max_)})"
-        await ctx.send(f"{ctx.message.author.mention} rolls {rolled_number}")
-
     @commands.command(brief="Enables Python interactive shell.")
     async def python(self, ctx):
         await ctx.send(f'Python mode activated! Exit by "{ctx.prefix}"')
