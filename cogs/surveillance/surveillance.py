@@ -1,3 +1,6 @@
+import contextlib
+import io
+import textwrap
 from datetime import datetime
 
 import discord
@@ -37,7 +40,6 @@ class Surveillance(commands.Cog):
         afk_not = before.afk and not after.afk
         move = before.channel != after.channel
 
-        # create 2D tuple
         possible_state_changes = {
             "has been deafened.": deaf or self_deaf,
             "has been undeafened.": deaf_not or self_deaf_not,
@@ -58,7 +60,6 @@ class Surveillance(commands.Cog):
         for msg, change in possible_state_changes.items():
             if change:
                 break
-
         if not change:
             print(f"{member.name} did something..!")
             return
@@ -66,8 +67,41 @@ class Surveillance(commands.Cog):
         time = self.get_time()
         await self.get_log_channel().send(f"{time}: {member.name} {msg}")
 
+    def clean_code(self, content):
+        if content.startswith("```") and content.endswith("```"):
+            return "\n".join(content.split("\n")[1:])[:-3]
+        else:
+            return content
+
     @commands.command(brief="Enables Python interactive shell.")
-    async def python(self, ctx):
+    async def python1(self, ctx, *, code):
+        code = self.clean_code(code)
+
+        # local_variables = { # last arg in exec f.
+        #     "discord": discord,
+        #     "commands": commands,
+        #     "bot": self.bot,
+        #     "ctx": ctx,
+        #     "channel": ctx.channel,
+        #     "author": ctx.author,
+        #     "guild": ctx.guild,
+        #     "message": ctx.message
+        # }
+        stdout = io.StringIO()
+
+        try:
+            with contextlib.redirect_stdout(stdout):
+                exec(f"async def func():\n{textwrap.indent(code, '   ')}")
+                # obj = await local_variables["func"]()
+                result = f"{stdout.getvalue()}" # \n-- {obj}\n"
+        except Exception as e:
+            # result = "".join(format_exception(e, e, e.__traceback__))
+            result = e
+        await ctx.send(result)
+
+
+    @commands.command(brief="Enables Python interactive shell.")
+    async def python3(self, ctx):
         await ctx.send(f'Python mode activated! Exit by "{ctx.prefix}"')
         await self.bot.change_presence(activity=discord.Game(name="Python"))
 
