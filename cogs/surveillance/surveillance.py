@@ -11,6 +11,7 @@ from discord.ext import commands
 class Surveillance(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.local_vars = {"self": self}
 
     def get_log_channel(self):
         return self.bot.get_channel(1058633423301902429)
@@ -67,37 +68,32 @@ class Surveillance(commands.Cog):
         time = self.get_time()
         await self.get_log_channel().send(f"{time}: {member.name} {msg}")
 
-    def clean_code(self, content):
-        if content.startswith("```") and content.endswith("```"):
-            return "\n".join(content.split("\n")[1:])[:-3]
+    def get_code(self, msg):
+        if msg.startswith("```") and msg.endswith("```"):
+            code = "\n".join(msg.split("\n")[1:])[:-3]
+            code += "\nreturn locals()"
+            code = textwrap.indent(code, "  ")
+            return code
         else:
-            return content
+            err_msg = ("Your input must start with a code block! "
+                       "Write it as \`\`\`<code>\`\`\`!")
+            raise Exception(err_msg)
 
     @commands.command(brief="Enables Python interactive shell.")
-    async def python1(self, ctx, *, code):
-        code = self.clean_code(code)
-
-        # local_variables = { # last arg in exec f.
-        #     "discord": discord,
-        #     "commands": commands,
-        #     "bot": self.bot,
-        #     "ctx": ctx,
-        #     "channel": ctx.channel,
-        #     "author": ctx.author,
-        #     "guild": ctx.guild,
-        #     "message": ctx.message
-        # }
-        stdout = io.StringIO()
+    async def python1(self, ctx, *, msg):
+        self.local_vars["ctx"] = ctx
 
         try:
+            code = self.get_code(msg)
+            stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):
-                exec(f"async def func():\n{textwrap.indent(code, '   ')}")
-                # obj = await local_variables["func"]()
-                result = f"{stdout.getvalue()}" # \n-- {obj}\n"
-        except Exception as e:
-            # result = "".join(format_exception(e, e, e.__traceback__))
-            result = e
-        await ctx.send(result)
+                exec(f"async def func():\n{code}", self.local_vars)
+                new_local_vars = await self.local_vars["func"]()
+                self.local_vars.update(new_local_vars)
+                result = stdout.getvalue()
+        except Exception as err:
+            result = err
+        await ctx.send(f"```py\n{result}```")
 
 
     @commands.command(brief="Enables Python interactive shell.")
