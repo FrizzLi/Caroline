@@ -21,7 +21,7 @@ class Surveillance(commands.Cog):
         time = time.strftime("%Y-%m-%d %H:%M:%S")
         return time
 
-    def get_code(self, msg):    
+    def get_code(self, msg):
         if msg.startswith("```") and msg.endswith("```"):
             code = "\n".join(msg.split("\n")[1:])[:-3]
             code += "\nreturn locals()"
@@ -29,8 +29,9 @@ class Surveillance(commands.Cog):
             return code
         else:
             err_msg = ("Your input must start with a code block! "
-                       "Write it as \`\`\`<code>\`\`\`!")
+                       r"Write it as \`\`\`<code>\`\`\`!")
             raise Exception(err_msg)
+
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         deaf = not before.deaf and after.deaf
@@ -86,7 +87,7 @@ class Surveillance(commands.Cog):
             code = self.get_code(msg)
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):
-                exec(f"async def func():\n{code}", self.local_vars)
+                exec(f"async def func():\n{code}", self.local_vars)  # pylint: disable=exec-used
                 new_local_vars = await self.local_vars["func"]()
                 self.local_vars.update(new_local_vars)
                 result = stdout.getvalue()
@@ -94,7 +95,7 @@ class Surveillance(commands.Cog):
                     warning_msg = ("The output has been shortened "
                                    "because it was too long.\n")
                     result = warning_msg + result[:1900]
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             result = err
         await ctx.send(f"```py\n{result}```")
 
