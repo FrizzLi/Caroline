@@ -21,6 +21,16 @@ class Surveillance(commands.Cog):
         time = time.strftime("%Y-%m-%d %H:%M:%S")
         return time
 
+    def get_code(self, msg):    
+        if msg.startswith("```") and msg.endswith("```"):
+            code = "\n".join(msg.split("\n")[1:])[:-3]
+            code += "\nreturn locals()"
+            code = textwrap.indent(code, "  ")
+            return code
+        else:
+            err_msg = ("Your input must start with a code block! "
+                       "Write it as \`\`\`<code>\`\`\`!")
+            raise Exception(err_msg)
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         deaf = not before.deaf and after.deaf
@@ -68,17 +78,6 @@ class Surveillance(commands.Cog):
         time = self.get_time()
         await self.get_log_channel().send(f"{time}: {member.name} {msg}")
 
-    def get_code(self, msg):
-        if msg.startswith("```") and msg.endswith("```"):
-            code = "\n".join(msg.split("\n")[1:])[:-3]
-            code += "\nreturn locals()"
-            code = textwrap.indent(code, "  ")
-            return code
-        else:
-            err_msg = ("Your input must start with a code block! "
-                       "Write it as \`\`\`<code>\`\`\`!")
-            raise Exception(err_msg)
-
     @commands.command(brief="Enables Python interactive shell.")
     async def python1(self, ctx, *, msg):
         self.local_vars["ctx"] = ctx
@@ -91,10 +90,13 @@ class Surveillance(commands.Cog):
                 new_local_vars = await self.local_vars["func"]()
                 self.local_vars.update(new_local_vars)
                 result = stdout.getvalue()
+                if len(result) > 1990:
+                    warning_msg = ("The output has been shortened "
+                                   "because it was too long.\n")
+                    result = warning_msg + result[:1900]
         except Exception as err:
             result = err
         await ctx.send(f"```py\n{result}```")
-
 
     @commands.command(brief="Enables Python interactive shell.")
     async def python3(self, ctx):
