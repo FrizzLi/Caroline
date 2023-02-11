@@ -3,7 +3,6 @@ import io
 import textwrap
 from datetime import datetime
 
-import discord
 import pytz
 from discord.ext import commands
 
@@ -98,37 +97,6 @@ class Surveillance(commands.Cog):
         except Exception as err:  # pylint: disable=broad-except
             result = err
         await ctx.send(f"```py\n{result}```")
-
-    @commands.command(brief="Enables Python interactive shell.")
-    async def python3(self, ctx):
-        await ctx.send(f'Python mode activated! Exit by "{ctx.prefix}"')
-        await self.bot.change_presence(activity=discord.Game(name="Python"))
-
-        def check(message):
-            return message.channel == ctx.channel
-
-        msg = await self.bot.wait_for("message", check=check)
-        ans = 0
-
-        while not msg.content.startswith(f"{ctx.prefix}"):
-            try:  # with return
-                ans = eval(msg.content)  # pylint: disable=eval-used
-                await ctx.send(ans)
-            except SyntaxError:
-                #  no return
-                try:
-                    exec(msg.content)  # pylint: disable=exec-used
-                except Exception as err:  # pylint: disable=broad-except
-                    # invalid input
-                    await ctx.send(err)
-            msg = await self.bot.wait_for("message", check=check)
-
-        await self.bot.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.listening, name=f"{ctx.prefix}help"
-            )
-        )
-        await ctx.send("Python mode deactivated!")
 
 
 async def setup(bot):
