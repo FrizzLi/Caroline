@@ -1,3 +1,7 @@
+"""This module serves to run Python code and surveillance system which tracks
+activity on all voice channels.
+"""
+
 import contextlib
 import io
 import textwrap
@@ -8,19 +12,51 @@ from discord.ext import commands
 
 
 class Surveillance(commands.Cog):
+    """Represents cog extension that tracks activity on all voice channels
+    and also allows us to run Python code.
+
+    Args:
+        commands (discord.ext.commands.cog.CogMeta): class that is taken to
+            create subclass - our own customized cog module
+    """
+
     def __init__(self, bot):
         self.bot = bot
         self.local_vars = {"self": self}
 
     def get_log_channel(self):
+        """Gets surveillance text channel through fixed ID for surveillance.
+
+        Returns:
+            discord.channel.TextChannel: "🎥surveillance" text channel
+        """
+
         return self.bot.get_channel(1058633423301902429)
 
     def get_time(self):
+        """Gets current time based in Bratislava for surveillance.
+
+        Returns:
+            str: datetime in Year-Month-Day Time format
+        """
         time = datetime.now(pytz.timezone("Europe/Bratislava"))
         time = time.strftime("%Y-%m-%d %H:%M:%S")
         return time
 
     def get_code(self, msg):
+        """Cleanses the message to a pure code that will be executed 
+
+        _extended_summary_
+
+        Args:
+            msg (str): _description_
+
+        Raises:
+            Exception: _description_
+
+        Returns:
+            str: _description_
+        """
         if msg.startswith("```") and msg.endswith("```"):
             code = "\n".join(msg.split("\n")[1:])[:-3]
             code += "\nreturn locals()"
@@ -33,6 +69,17 @@ class Surveillance(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
+        """
+        Every action's information is written into "🎥surveillance" text 
+        channel.
+
+        _extended_summary_
+
+        Args:
+            member (_type_): _description_
+            before (_type_): _description_
+            after (_type_): _description_
+        """
         deaf = not before.deaf and after.deaf
         deaf_not = before.deaf and not after.deaf
         self_deaf = not before.self_deaf and after.self_deaf
@@ -80,6 +127,14 @@ class Surveillance(commands.Cog):
 
     @commands.command(brief="Enables Python interactive shell.")
     async def python1(self, ctx, *, msg):
+        """_summary_
+
+        _extended_summary_
+
+        Args:
+            ctx (_type_): _description_
+            msg (_type_): _description_
+        """
         self.local_vars["ctx"] = ctx
 
         try:
@@ -100,4 +155,11 @@ class Surveillance(commands.Cog):
 
 
 async def setup(bot):
+    """Loads up this module (cog) into the bot that was initialized
+    in the main function.
+
+    Args:
+        bot (__main__.MyBot): bot instance initialized in the main function
+    """
+
     await bot.add_cog(Surveillance(bot))
