@@ -27,8 +27,8 @@ class AiAlgo(commands.Cog):
     by files that are placed in our current directory (ai_algo).
 
     Args:
-        commands (CogMeta): class that is taken to create subclass - our own
-            customized cog module
+        commands (discord.ext.commands.cog.CogMeta): class that is taken to
+            create subclass - our own customized cog module
 
     Attributes:
         shared_fname (str):
@@ -226,7 +226,7 @@ async def setup(bot):
     in the main function.
 
     Args:
-        bot (MyBot): bot instance initialized in the main function
+        bot (__main__.MyBot): bot instance initialized in the main function
     """
 
     await bot.add_cog(AiAlgo(bot))
