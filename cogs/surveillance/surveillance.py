@@ -25,7 +25,7 @@ class Surveillance(commands.Cog):
         self.local_vars = {"self": self}
 
     def get_log_channel(self):
-        """Gets surveillance text channel through fixed ID for surveillance.
+        """Gets surveillance text channel through fixed ID.
 
         Returns:
             discord.channel.TextChannel: "🎥surveillance" text channel
@@ -34,28 +34,32 @@ class Surveillance(commands.Cog):
         return self.bot.get_channel(1058633423301902429)
 
     def get_time(self):
-        """Gets current time based in Bratislava for surveillance.
+        """Gets current time based in Bratislava for surveillance logging.
 
         Returns:
-            str: datetime in Year-Month-Day Time format
+            str: datetime in "Year-Month-Day Time" format
         """
+
         time = datetime.now(pytz.timezone("Europe/Bratislava"))
         time = time.strftime("%Y-%m-%d %H:%M:%S")
         return time
 
-    def get_code(self, msg):
-        """Cleanses the message to a pure code that will be executed 
+    def get_code(self, message):
+        """Cleanses the message to a pure code ready to be executed.
 
-        _extended_summary_
+        It removes the first line that contains the command call and
+        the block characters surrounding the code itself (```<code>```).
+        In addition, it wraps the code into function and returns local
+        variables that are going to be stored for next command call.
 
         Args:
-            msg (str): _description_
+            message (str): message that contains the command and code in block
 
         Raises:
-            Exception: _description_
+            Exception: the code is not inside a block (```<code>```)
 
         Returns:
-            str: _description_
+            str: executable code
         """
         if msg.startswith("```") and msg.endswith("```"):
             code = "\n".join(msg.split("\n")[1:])[:-3]
@@ -69,17 +73,17 @@ class Surveillance(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-        """
-        Every action's information is written into "🎥surveillance" text 
-        channel.
+        """Tracks every voice channel action of all people on the server.
 
-        _extended_summary_
+        It writes action's information into log text channel.
+        The information includes time, person's name and the action itself.
 
         Args:
-            member (_type_): _description_
-            before (_type_): _description_
-            after (_type_): _description_
+            member (discord.member.Member): person that acts
+            before (discord.member.VoiceState): person's voice state
+            after (discord.member.VoiceState): person's voice state
         """
+
         deaf = not before.deaf and after.deaf
         deaf_not = before.deaf and not after.deaf
         self_deaf = not before.self_deaf and after.self_deaf
@@ -125,25 +129,26 @@ class Surveillance(commands.Cog):
         time = self.get_time()
         await self.get_log_channel().send(f"{time}: {member.name} {msg}")
 
-    @commands.command(brief="Enables Python interactive shell.")
-    async def python1(self, ctx, *, msg):
-        """_summary_
-
-        _extended_summary_
+    @commands.command(aliases=["py"])
+    async def python(self, ctx, *, message):
+        """Executes Python code that was written in a block of the message.
 
         Args:
-            ctx (_type_): _description_
-            msg (_type_): _description_
+            ctx (discord.ext.commands.context.Context): context (old commands)
+            message (str): message that contains the command and code in block
         """
+
         self.local_vars["ctx"] = ctx
 
         try:
-            code = self.get_code(msg)
+            code = self.get_code(message)
+
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):
-                exec(f"async def func():\n{code}", self.local_vars)  # pylint: disable=exec-used
+                exec(code, self.local_vars)  # pylint: disable=exec-used
                 new_local_vars = await self.local_vars["func"]()
                 self.local_vars.update(new_local_vars)
+
                 result = stdout.getvalue()
                 if len(result) > 1990:
                     warning_msg = ("The output has been shortened "
