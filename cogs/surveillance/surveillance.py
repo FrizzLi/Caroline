@@ -61,10 +61,12 @@ class Surveillance(commands.Cog):
         Returns:
             str: executable code
         """
-        if msg.startswith("```") and msg.endswith("```"):
-            code = "\n".join(msg.split("\n")[1:])[:-3]
+
+        if message.startswith("```") and message.endswith("```"):
+            code = "\n".join(message.split("\n")[1:])[:-3]
             code += "\nreturn locals()"
             code = textwrap.indent(code, "  ")
+            code = "async def func():\n" + code
             return code
         else:
             err_msg = ("Your input must start with a code block! "
