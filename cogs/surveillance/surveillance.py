@@ -1,5 +1,5 @@
 """This module serves to run Python code and surveillance system which tracks
-activity on all voice channels.
+activity on all voice channels on the Discord server.
 """
 
 import contextlib
@@ -69,8 +69,10 @@ class Surveillance(commands.Cog):
             code = "async def func():\n" + code
             return code
         else:
-            err_msg = ("Your input must start with a code block! "
-                       r"Write it as \`\`\`<code>\`\`\`!")
+            err_msg = (
+                "Your input must start with a code block! "
+                r"Write it as \`\`\`<code>\`\`\`!"
+            )
             raise Exception(err_msg)
 
     @commands.Cog.listener()
@@ -117,7 +119,7 @@ class Surveillance(commands.Cog):
             "is no longer afk.": afk_not,
             f"has left {before.channel} channel.": left,
             f"has joined {after.channel} channel.": join,
-            f"has moved from {before.channel} to {after.channel}.": move
+            f"has moved from {before.channel} to {after.channel}.": move,
         }
 
         msg = change = ""
@@ -153,8 +155,10 @@ class Surveillance(commands.Cog):
 
                 result = stdout.getvalue()
                 if len(result) > 1990:
-                    warning_msg = ("The output has been shortened "
-                                   "because it was too long.\n")
+                    warning_msg = (
+                        "The output has been shortened "
+                        "because it was too long.\n"
+                    )
                     result = warning_msg + result[:1900]
         except Exception as err:  # pylint: disable=broad-except
             result = err
