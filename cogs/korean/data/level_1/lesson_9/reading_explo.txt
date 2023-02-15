@@ -1,0 +1,173 @@
+Detailed tokenization cuz of grouping chaos.
+10월 Number
+27일 Number
+목요일 Noun
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+오늘 Noun
+민속촌 Noun
+에 Josa
+가다 Verb
+Skipping garbage... (('.', 'Punctuation')
+9시 Number
+Skipping garbage... (('에', 'Foreign')
+학교 Noun
+에서 Josa
+친구 Noun
+들 Suffix
+과 Josa
+선생님 Noun
+을 Josa
+만나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+우리 Noun
+는 Josa
+10시 Number
+30분 Number
+Skipping garbage... (('에', 'Foreign')
+민속촌 Noun
+에 Josa
+도착 Noun
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+민속촌 Noun
+에서 Josa
+한국 Noun
+의 Josa
+옛날 Noun
+집 Noun
+을 Josa
+보다 Verb
+Skipping garbage... (('.', 'Punctuation')
+공연 Noun
+도 Josa
+보다 Verb
+Skipping garbage... (('.', 'Punctuation')
+배우 Noun
+하고 Josa
+같이 Adverb
+사진 Noun
+을 Josa
+찍다 Verb
+Skipping garbage... (('.', 'Punctuation')
+민속촌 Noun
+에 Josa
+단풍 Noun
+이 Josa
+많다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+단풍 Noun
+이 Josa
+아주 Noun
+예쁘다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+12시 Number
+Skipping garbage... (('에', 'Foreign')
+식당 Noun
+에서 Josa
+점심 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+우리 Noun
+반 Noun
+친구 Noun
+들 Suffix
+모두 Noun
+한국 Noun
+음식 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+맛있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+민속촌 Noun
+에서 Josa
+신지 Noun
+씨 Noun
+의 Josa
+선물 Noun
+을 Josa
+사다 Verb
+Skipping garbage... (('.', 'Punctuation')
+내일 Noun
+이 Josa
+신지 Noun
+씨 Noun
+의 Josa
+생일 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+우리 Noun
+는 Josa
+6시 Number
+Skipping garbage... (('에', 'Foreign')
+학교 Noun
+에 Josa
+도착 Noun
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+
+Duplicates: set()
+
+Out of lesson (in previous): 선생님 1 Noun
+Out of lesson (in previous): 씨1 2 Noun
+Out of lesson (in previous): 저1 2 Noun
+Going to fill 한국 from 102 Lesson!
+Going to fill 배우 from 102 Lesson!
+Out of lesson (in previous): 이1 3 Josa~~
+Out of lesson (in previous): 가다1 1 Verb
+Out of lesson (in previous): 보다1 2 Verb
+Out of lesson (in previous): 먹다1 2 Verb
+Going to fill 많다 from 104 Lesson!
+Out of lesson (in previous): 사다 1 Verb
+Going to fill 예쁘다 from 104 Lesson!
+Out of lesson (in previous): 맛있다 1 Adjective
+Out of lesson (in previous): 집 1 Noun
+Out of lesson (in previous): 만나다 1 Verb
+Out of lesson (in previous): 아주 1 Noun
+Out of lesson (in previous): 친구 2 Noun
+Out of lesson (in previous): 학교 2 Noun
+Out of lesson (in previous): 식당 1 Noun
+Out of lesson (in previous): 오늘1 1 Noun
+Out of lesson (in previous): 반 1 Noun
+Out of lesson (in previous): 사진 1 Noun
+Going to fill 내일 from 107 Lesson!
+Out of lesson (in previous): 찍다 1 Verb
+Out of lesson (in previous): 음식 1 Noun
+Going to fill 점심 from 107 Lesson!
+Going to fill 생일 from 107 Lesson!
+Out of lesson (in previous): 목요일 1 Noun
+Out of lesson (in previous): 우리 3 Noun
+Going to fill 같이1 from 108 Lesson!
+Fill 옛날!
+Fill 공연!
+Fill 단풍!
+Fill 모두!
+Fill 민속촌!
+Fill 하고!
+Fill 선물!
+
+Out of vocab: 10월 1 Number--
+Out of vocab: 27일 1 Number--
+Out of vocab: 는 4 Josa
+Out of vocab: 에 4 Josa
+Out of vocab: 9시 1 Number--
+Out of vocab: 에서 4 Josa
+Out of vocab: 들 2 Suffix
+Out of vocab: 과 1 Josa
+Out of vocab: 을 6 Josa
+Out of vocab: 10시 1 Number--
+Out of vocab: 30분 1 Number--
+Out of vocab: 도착 2 Noun--
+Out of vocab: 하다 2 Verb
+Out of vocab: 의 3 Josa
+Out of vocab: 도 1 Josa
+Out of vocab: 12시 1 Number--
+Out of vocab: 신지 2 Noun
+Out of vocab: 이에요 1 Josa
+Out of vocab: 6시 1 Number--

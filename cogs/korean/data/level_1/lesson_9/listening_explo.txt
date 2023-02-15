@@ -1,0 +1,498 @@
+Detailed tokenization cuz of grouping chaos.
+Skipping garbage... (('{', 'Punctuation')
+1 Number
+Skipping garbage... (('}', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+1 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+27 Number
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+1 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+이 Noun
+게 Josa
+왕 Noun
+타오 Noun
+씨 Noun
+의 Josa
+가방 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+네 Noun
+Skipping garbage... ((',', 'Punctuation')
+왕 Noun
+타오 Noun
+씨 Noun
+의 Josa
+가방 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+이 Noun
+우산도 Noun
+왕 Noun
+타오 Noun
+씨 Noun
+의 Josa
+우산 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+그 Noun
+우산 Noun
+은 Josa
+리나 Noun
+씨 Noun
+의 Josa
+우산 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+2 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+이 Noun
+책 Noun
+이 Josa
+누구 Noun
+의 Josa
+책 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+그 Noun
+책 Noun
+은 Josa
+신지 Noun
+씨 Noun
+의 Josa
+책 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+이 Noun
+필통 Noun
+은 Josa
+리나 Noun
+씨 Noun
+의 Josa
+필통 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+그 Noun
+필통 Noun
+도 Josa
+신지 Noun
+씨 Noun
+의 Josa
+필통 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+Skipping garbage... (('(', 'Punctuation')
+3 Number
+Skipping garbage... ((')', 'Punctuation')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+이 Noun
+휴대폰 Noun
+이 Josa
+왕 Noun
+타오 Noun
+씨 Noun
+의 Josa
+휴대폰 Noun
+이에요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... ((',', 'Punctuation')
+리나 Noun
+씨 Noun
+의 Josa
+휴대폰 Noun
+이에요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+남 Noun
+Skipping garbage... ((':', 'Punctuation')
+이 Noun
+시계 Noun
+도 Josa
+리나 Noun
+씨 Noun
+의 Josa
+시계 Noun
+예요 Josa
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+여 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+그건 Adverb
+왕 Noun
+타오 Noun
+씨 Noun
+의 Josa
+시계 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n\n', 'Foreign')
+2 Number
+Skipping garbage... (('.', 'Punctuation')
+Track Alpha
+28 Number
+Skipping garbage... (('\n', 'Foreign')
+김진우 Noun
+Skipping garbage... ((':', 'Punctuation')
+에바 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+어제 Noun
+뭐 Noun
+하다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+에 Josa
+바 Noun
+Skipping garbage... ((':', 'Punctuation')
+집 Noun
+에 Josa
+있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+김진우 Noun
+Skipping garbage... ((':', 'Punctuation')
+쉬다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+에 Josa
+바 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+빨래 Noun
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+진우 Noun
+씨 Noun
+는 Josa
+뭐 Noun
+하다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+김진우 Noun
+Skipping garbage... ((':', 'Punctuation')
+백화점 Noun
+에서 Josa
+우리 Noun
+어머니 Noun
+를 Josa
+만나다 Verb
+Skipping garbage... (('.', 'Punctuation')
+어머니 Noun
+하고 Josa
+저녁 Noun
+을 Josa
+먹다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n\n', 'Foreign')
+Skipping garbage... (('{', 'Punctuation')
+2 Number
+Skipping garbage... (('}', 'Punctuation')
+Track Alpha
+29 Number
+Skipping garbage... (('\n', 'Foreign')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+리나 Noun
+씨 Noun
+Skipping garbage... ((',', 'Punctuation')
+주말 Noun
+에 Josa
+뭐 Noun
+하다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+토요일 Noun
+에 Josa
+집 Noun
+에서 Josa
+집안일 Noun
+을 Josa
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+청소 Noun
+를 Josa
+하다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+네 Noun
+Skipping garbage... ((',', 'Punctuation')
+옷장 Noun
+정리 Noun
+도 Josa
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+왕 Noun
+타오 Noun
+씨 Noun
+는 Josa
+주말 Noun
+에 Josa
+뭐 Noun
+하다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+저 Noun
+는 Josa
+제 Noun
+동생 Noun
+하고 Josa
+같이 Adverb
+토요일 Noun
+에 Josa
+한강 Noun
+공원 Noun
+에 Josa
+가다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+거기 Noun
+에서 Josa
+뭐 Noun
+하다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+한강 Noun
+공원 Noun
+에서 Josa
+콘서트 Noun
+를 Josa
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+우리 Noun
+는 Josa
+콘서트 Noun
+를 Josa
+보다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+재미있다 Adjective
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+네 Noun
+Skipping garbage... ((',', 'Punctuation')
+재미있다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+리나 Noun
+씨 Noun
+는 Josa
+일요일 Noun
+에도 Josa
+집 Noun
+에 Josa
+있다 Adjective
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+일요일 Noun
+에 Josa
+에바 Noun
+씨 Noun
+하고 Josa
+동대문 Noun
+시장 Noun
+에 Josa
+가다 Verb
+Skipping garbage... (('.', 'Punctuation')
+동대문 Noun
+시장 Noun
+에서 Josa
+쇼핑 Noun
+을 Josa
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+옷 Noun
+을 Josa
+사다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+리나 Noun
+Skipping garbage... ((':', 'Punctuation')
+아니다 Adjective
+Skipping garbage... ((',', 'Punctuation')
+가방 Noun
+을 Josa
+사다 Verb
+Skipping garbage... (('.', 'Punctuation')
+왕 Noun
+타오 Noun
+씨 Noun
+는 Josa
+일요일 Noun
+에 Josa
+뭐 Noun
+하다 Verb
+Skipping garbage... (('?', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+왕 Noun
+타오 Noun
+Skipping garbage... ((':', 'Punctuation')
+학교 Noun
+도서관 Noun
+에 Josa
+가다 Verb
+Skipping garbage... (('.', 'Punctuation')
+도서관 Noun
+에서 Josa
+숙제 Noun
+를 Josa
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+단어 Noun
+도 Josa
+외우다 Verb
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+
+Duplicates: {'이'}
+('이', 'Noun'): 6
+('이', 'Josa'): 2
+
+Out of lesson (in previous): 아니다 7 Adjective
+Out of lesson (in previous): 씨1 18 Noun
+Out of lesson (in previous): 저1 1 Noun
+Out of lesson (in previous): 네1 3 Noun
+Going to fill 동생 from 102 Lesson!
+Out of lesson (in previous): 이1 8 Noun-- 6 occurences
+Out of lesson (in previous): 뭐1 6 Noun
+Out of lesson (in previous): 누구 1 Noun
+Out of lesson (in previous): 책 4 Noun
+Out of lesson (in previous): 가방 3 Noun
+Out of lesson (in previous): 시계 3 Noun
+Out of lesson (in previous): 우산 3 Noun
+Out of lesson (in previous): 필통 4 Noun
+Out of lesson (in previous): 휴대폰 3 Noun
+Out of lesson (in previous): 가다1 3 Verb
+Out of lesson (in previous): 보다1 1 Verb
+Out of lesson (in previous): 먹다1 1 Verb
+Out of lesson (in previous): 사다 2 Verb
+Out of lesson (in previous): 옷 1 Noun
+Out of lesson (in previous): 쉬다1 1 Verb
+Out of lesson (in previous): 재미있다 2 Adjective
+Out of lesson (in previous): 도서관 2 Noun
+Out of lesson (in previous): 집 3 Noun
+Out of lesson (in previous): 만나다 1 Verb
+Out of lesson (in previous): 학교 1 Noun
+Out of lesson (in previous): 공원 2 Noun
+Out of lesson (in previous): 백화점 1 Noun
+Out of lesson (in previous): 숙제 1 Noun
+Out of lesson (in previous): 어머니 2 Noun
+Going to fill 옷장 from 106 Lesson!
+Out of lesson (in previous): 저녁 1 Noun
+Going to fill 어제1 from 107 Lesson!
+Out of lesson (in previous): 일요일 3 Noun
+Out of lesson (in previous): 주말 2 Noun
+Out of lesson (in previous): 토요일 2 Noun
+Out of lesson (in previous): 쇼핑 1 Noun
+Out of lesson (in previous): 같이 1 Adverb
+Going to fill 우리 from 108 Lesson!
+Fill 단어!
+Fill 한강!
+Fill 외우다!
+Fill 콘서트!
+Fill 하고!
+Fill 시장!
+Fill 동대문!
+Fill 집안일!
+Out of lesson (in next): 왕 14 Noun~~
+
+Out of vocab: Track 3 Alpha
+Out of vocab: 남 6 Noun
+Out of vocab: 게 1 Josa
+Out of vocab: 타오 14 Noun
+Out of vocab: 의 12 Josa
+Out of vocab: 이에요 10 Josa
+Out of vocab: 여 6 Noun
+Out of vocab: 우산도 1 Noun--
+Out of vocab: 그 3 Noun
+Out of vocab: 은 3 Josa
+Out of vocab: 리나 12 Noun
+Out of vocab: 신지 2 Noun
+Out of vocab: 도 4 Josa
+Out of vocab: 예요 2 Josa
+Out of vocab: 그건 1 Adverb
+Out of vocab: 김진우 3 Noun
+Out of vocab: 에바 2 Noun
+Out of vocab: 하다 13 Verb
+Out of vocab: 에 13 Josa
+Out of vocab: 바 2 Noun
+Out of vocab: 있다 2 Adjective
+Out of vocab: 빨래 1 Noun--
+Out of vocab: 진우 1 Noun
+Out of vocab: 는 6 Josa
+Out of vocab: 에서 6 Josa
+Out of vocab: 를 5 Josa
+Out of vocab: 을 5 Josa
+Out of vocab: 청소 1 Noun--
+Out of vocab: 정리 1 Noun--
+Out of vocab: 제 1 Noun
+Out of vocab: 거기 1 Noun
+Out of vocab: 에도 1 Josa

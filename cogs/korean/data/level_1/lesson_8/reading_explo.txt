@@ -187,7 +187,7 @@ Fill 농구!
 Fill 도우미!
 Fill 보통!
 Fill 친절하다!
-Out of lesson (in next): 같이 3 Adverb~~
+Out of lesson (in next): 같이 3 Adverb
 Out of lesson (in next): 늦다 1 Verb++
 Out of lesson (in next): 가요 1 Noun-- 가다
 Out of lesson (in next): 해 4 Noun~~
