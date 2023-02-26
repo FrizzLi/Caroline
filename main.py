@@ -1,8 +1,10 @@
 import os
+from datetime import datetime
 from glob import glob
 
 import discord
-from discord.ext import commands
+import pytz
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 
@@ -13,6 +15,28 @@ class MyBot(commands.Bot):
             intents=discord.Intents().all(),
             application_id=APP_ID,
         )
+        self.channel_msg = ""
+
+    def get_time(self):
+        """Gets current time based in Bratislava for logging.
+
+        Returns:
+            str: datetime in "Year-Month-Day Time" format
+        """
+
+        time = datetime.now(pytz.timezone("Europe/Bratislava"))
+        time = time.strftime("%Y-%m-%d %H:%M:%S")
+        return time
+
+    def get_log_channel(self):
+        """Gets surveillance text channel.
+
+        Returns:
+            discord.channel.TextChannel: "🎥surveillance" text channel
+        """
+
+        channel_id = int(os.environ["SURVEILLANCE_CHANNEL_ID"])  # int?
+        return self.bot.get_channel(channel_id)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -75,7 +99,7 @@ bot.run(TOKEN)
 # TODO surveillance: Look into "did something" part
 # TODO music: Track timestamps (how long the songs have been played instead of reqs)
 # TODO music: Leaving the voice -> refresh still works.. polish that
-# TODO music: Create radio bot,, automatically detects what ppl listen/request, 
+# TODO music: Create radio bot,, automatically detects what ppl listen/request
 # and just picks something out of it, or finds something to it (recommendation system!)
 
 # opt ideas: yield, 1_000_000, slots, dict to namedtuple

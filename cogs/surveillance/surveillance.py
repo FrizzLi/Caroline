@@ -5,9 +5,7 @@ activity on all voice channels on the Discord server.
 import contextlib
 import io
 import textwrap
-from datetime import datetime
 
-import pytz
 from discord.ext import commands
 
 
@@ -25,26 +23,6 @@ class Surveillance(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.local_vars = {"self": self}
-
-    def get_log_channel(self):
-        """Gets surveillance text channel through fixed ID.
-
-        Returns:
-            discord.channel.TextChannel: "🎥surveillance" text channel
-        """
-
-        return self.bot.get_channel(1058633423301902429)
-
-    def get_time(self):
-        """Gets current time based in Bratislava for surveillance logging.
-
-        Returns:
-            str: datetime in "Year-Month-Day Time" format
-        """
-
-        time = datetime.now(pytz.timezone("Europe/Bratislava"))
-        time = time.strftime("%Y-%m-%d %H:%M:%S")
-        return time
 
     def get_code(self, message):
         """Cleanses the message to a pure code ready to be executed.
@@ -132,8 +110,8 @@ class Surveillance(commands.Cog):
             print(f"{member.name} did something..!")
             return
 
-        time = self.get_time()
-        await self.get_log_channel().send(f"{time}: {member.name} {msg}")
+        time = self.bot.get_time()
+        await self.bot.get_log_channel().send(f"{time}: {member.name} {msg}")
 
     @commands.command(aliases=["py"])
     async def python(self, ctx, *, message):
