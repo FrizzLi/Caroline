@@ -47,7 +47,37 @@ class MyBot(commands.Bot):
             ),
             status=discord.Status.online,
         )
-        print(f"Logged {bot.user.name} with {discord.__version__} version.")
+
+        self.test.start()
+
+        surveillance_channel = self.get_log_channel()
+        time = self.get_time()
+        msg = f"{time}: {bot.user.name} logged in with {discord.__version__} version."
+        await surveillance_channel.send(msg)
+        print(msg)
+
+    async def close(self):
+        surveillance_channel = self.get_log_channel()
+        time = self.get_time()
+        await surveillance_channel.send(f"{time}: {self.user.name} has gone offline successfully!")
+        await bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name="/play",
+            ),
+            status=discord.Status.invisible,
+        )
+        await super().close()
+
+    @tasks.loop(minutes=5)
+    async def test(self):
+        surveillance_channel = self.get_log_channel()
+        time = self.get_time()
+        msg = f"{time}: {bot.user.name} is online."
+        if self.channel_msg:
+            await self.channel_msg.delete()
+
+        self.channel_msg = await surveillance_channel.send(msg)
 
     async def setup_hook(self):
         py_files = {
