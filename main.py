@@ -120,9 +120,10 @@ bot = MyBot()
 bot.run(TOKEN)
 
 # TODO: Polish Discord related stuff: Pylint, Document, Optimize code and Async
-# TODO: Logs
+# TODO: music: Logs during polishing
+
 # TODO: Resolve all weird pylint errors
-# TODO: Tests (setup.py, pytest from reqs, AI: _apply_actions test (rmv), docs)
+# TODO: Tests (AI: setup.py, pytest from reqs, _apply_actions test (rmv), docs)
 
 # TODO surveillance: Voice stats graphs, finish/remove on_presence_update
 # TODO surveillance: Process old surveillance text and find info out of it

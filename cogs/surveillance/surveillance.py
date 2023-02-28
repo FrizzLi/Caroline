@@ -1,5 +1,5 @@
-"""This module serves to run Python code and surveillance system which tracks
-activity on all voice channels on the Discord server.
+"""This module serves to run Python code through a message and surveillance
+system which tracks activity on all voice channels on the Discord server.
 """
 
 import contextlib
