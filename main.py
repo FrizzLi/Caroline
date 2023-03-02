@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 from glob import glob
 
@@ -36,7 +37,7 @@ class MyBot(commands.Bot):
         """
 
         channel_id = int(os.environ["SURVEILLANCE_CHANNEL_ID"])  # int?
-        return self.bot.get_channel(channel_id)
+        return self.get_channel(channel_id)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -105,7 +106,7 @@ class MyBot(commands.Bot):
         )
 
 load_dotenv()
-if os.name == "nt":
+if os.name == "nt" and len(sys.argv) < 2:
     TOKEN = os.environ["CAROLINE_TOKEN"]
     APP_ID = os.environ["CAROLINE_ID"]
     BLACK_LIST = ("surveillance")

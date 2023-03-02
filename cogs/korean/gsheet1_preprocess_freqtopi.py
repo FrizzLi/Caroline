@@ -67,7 +67,6 @@ with open(map_json, encoding="utf-8") as file:
     config = json.load(file)
 
 # topik
-source_dir = Path(__file__).parents[0]
 map_txt = Path(f"{source_dir}/data/topik_vocab.txt")
 map_json = Path(f"{source_dir}/data/topik_vocab.json")
 
