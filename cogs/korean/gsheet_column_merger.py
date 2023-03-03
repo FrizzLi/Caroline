@@ -29,9 +29,7 @@ def create_df(worksheet):
         elif isinstance(row.Book_Level, str):
             print("Level string bug:", row.Book_Level)
             continue
-        df.at[row.Index, "Book_Level"] = (
-            row.Book_Level * 100 + row.Book_Lesson
-        )
+        df.at[row.Index, "Book_Level"] = row.Book_Level * 100 + row.Book_Lesson
 
     return df
 
@@ -70,6 +68,14 @@ def update_worksheet(dataframe, worksheet):
     worksheet.update(df_list, value_input_option="USER_ENTERED")
 
 
-google_worksheet = get_worksheet("Korea - Vocabulary", "Level 1-2 (modified)")
-google_dataframe = create_df(google_worksheet)
-update_worksheet(google_dataframe, google_worksheet)
+def merge(gs_name, ws_name):
+    google_worksheet = get_worksheet(gs_name, ws_name)
+    google_dataframe = create_df(google_worksheet)
+    update_worksheet(google_dataframe, google_worksheet)
+
+
+if __name__ == "__main__":
+    google_sheet_name = "Korea - Vocabulary"
+    google_worksheet_name = "Level 1-2 (modified)"
+
+    merge(google_sheet_name, google_worksheet_name)
