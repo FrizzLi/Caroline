@@ -8,7 +8,7 @@ import gspread
 import pandas as pd
 
 
-def create_df(worksheet):
+def _create_df(worksheet):
     """Creates a dataframe out from a google worksheet.
 
     Args:
@@ -34,7 +34,7 @@ def create_df(worksheet):
     return df
 
 
-def get_worksheet(gs_name, ws_name):
+def _get_worksheet(gs_name, ws_name):
     """Gets a worksheet instance that is pulled from google sheets.
 
     Args:
@@ -54,7 +54,7 @@ def get_worksheet(gs_name, ws_name):
     return worksheet
 
 
-def update_worksheet(dataframe, worksheet):
+def _update_worksheet(dataframe, worksheet):
     """Updates the google worksheet with the dataframe.
 
     Args:
@@ -69,9 +69,9 @@ def update_worksheet(dataframe, worksheet):
 
 
 def merge(gs_name, ws_name):
-    google_worksheet = get_worksheet(gs_name, ws_name)
-    google_dataframe = create_df(google_worksheet)
-    update_worksheet(google_dataframe, google_worksheet)
+    google_worksheet = _get_worksheet(gs_name, ws_name)
+    google_dataframe = _create_df(google_worksheet)
+    _update_worksheet(google_dataframe, google_worksheet)
 
 
 if __name__ == "__main__":
