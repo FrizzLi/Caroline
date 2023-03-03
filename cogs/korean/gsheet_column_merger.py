@@ -9,7 +9,9 @@ import pandas as pd
 
 
 def _create_df(worksheet):
-    """Creates a dataframe out from a google worksheet.
+    """Creates a dataframe out from a google worksheet and merges the columns.
+
+    Merges two columns Book_Lesson and Book_Level into one -> Book_Level
 
     Args:
         worksheet (gspread.worksheet.Worksheet): worksheet table
@@ -69,6 +71,13 @@ def _update_worksheet(dataframe, worksheet):
 
 
 def merge(gs_name, ws_name):
+    """Merges columns of worksheet according to _create_df method
+
+    Args:
+        gs_name (str): name of the google sheets
+        ws_name (str): name of the worksheet (a tab of google sheets)
+    """
+
     google_worksheet = _get_worksheet(gs_name, ws_name)
     google_dataframe = _create_df(google_worksheet)
     _update_worksheet(google_dataframe, google_worksheet)
