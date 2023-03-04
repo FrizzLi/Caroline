@@ -1,87 +1,112 @@
-"""Takes raw text of freq and topi content and creates comprehensive
-vocabulary represented by json file. Contents are in data/gsheet folder."""
+"""Takes and transforms sources' raw vocabulary text into json file."""
 
 import json
 from pathlib import Path
 
-# freq
-source_dir = Path(__file__).parents[0]
-map_txt = Path(f"{source_dir}/data/gsheet/freq_dict_kor.txt")
-map_json = Path(f"{source_dir}/data/gsheet/freq_dict_kor.json")
 
-NUM = 0
-CON = 1
-EXA = 2
-line_num = NUM
+def create_freq_json():
+    """Creates freq json vocabulary file out from raw text.
 
-vocab = {}
-content = []
-with open(map_txt, encoding="utf-8") as file:
-    for line in file:
-        if line != "\n":
-            stripped_line = line.strip()
-            if line_num == NUM and stripped_line.isdigit():
-                rank = stripped_line
+    Takes and transforms raw text of freq vocabulary taken from book
+    into json file. Contents are stored data/vocab_sources folder.
+    """
 
-                line_num = CON
-            elif line_num == CON:
-                line = stripped_line.split()
-                content += line
-                if len(content) > 3:
-                    kr, ro, type_ = content[0], content[1], content[2]
-                    en = content[3:]
-                    en = " ".join(en)
+    src_dir = Path(__file__).parents[0]
+    freq_text_file = Path(f"{src_dir}/data/vocab_sources/freq_dict_kor.txt")
+    freq_json_file = Path(f"{src_dir}/data/vocab_sources/freq_dict_kor.json")
 
-                    line_num = EXA
-                    content.clear()
+    vocab = {}
+    word_data = []
 
-            elif line_num == EXA:
-                stripped_line = stripped_line.replace("•", "")
-                stripped_line = stripped_line.strip()
-                if "—" in stripped_line:
-                    ex_kr, ex_en = stripped_line.split("—")
-                    ex_kr = ex_kr.strip()
-                    ex_en = ex_en.strip()
-                elif " | " not in stripped_line:
-                    ex_en += f" {stripped_line}"
+    with open(freq_text_file, encoding="utf-8") as file:
+        line_num = 0
+        for line in file:
+            if line != "\n":
+                stripped_line = line.strip()
 
-            if " | " in stripped_line:
-                freq, disp = stripped_line.split(" | ")
-                line_num = NUM
+                # get rank
+                if line_num == 0 and stripped_line.isdigit():
+                    rank = stripped_line
 
-                print(rank, kr, ro, type_, en, ex_kr, ex_en, freq, disp)
-                vocab[kr] = {
-                    "rank": rank,
-                    "romanization": ro,
-                    "type": type_,
-                    "content": en,
-                    "example_kr": ex_kr,
-                    "example_en": ex_en,
-                    "frequency": freq,
-                    "disp": disp,
-                }
+                    line_num = 1
 
-with open(map_json, "w", encoding="utf-8") as file:
-    json.dump(vocab, file, indent=4, ensure_ascii=False)
-with open(map_json, encoding="utf-8") as file:
-    config = json.load(file)
+                # get korean and english word, romanization, type of word
+                elif line_num == 1:
+                    line = stripped_line.split()
+                    word_data += line
+                    if len(word_data) > 3:
+                        kor = word_data[0]
+                        rom = word_data[1]
+                        type_ = word_data[2]
+                        eng = " ".join(word_data[3:])
+                        word_data.clear()
 
-# topik
-map_txt = Path(f"{source_dir}/data/topik_vocab.txt")
-map_json = Path(f"{source_dir}/data/topik_vocab.json")
+                        line_num = 2
 
-vocab = {}
-with open(map_txt, encoding="utf-8") as file:
-    for line in file:
-        worded = line.split(maxsplit=2)
-        kr = worded[1]
-        en = worded[2].strip()
+                # get examples in korean and english
+                elif line_num == 2:
+                    stripped_line = stripped_line.replace("•", "")
+                    stripped_line = stripped_line.strip()
+                    if "—" in stripped_line:
+                        ex_kr, ex_en = stripped_line.split("—")
+                        ex_kr = ex_kr.strip()
+                        ex_en = ex_en.strip()
+                    elif " | " not in stripped_line:
+                        ex_en += f" {stripped_line}"
 
-        print(kr, en)
-        vocab[kr] = en
+                # get frequency and dispersion
+                if " | " in stripped_line:
+                    freq, disp = stripped_line.split(" | ")
+                    line_num = 0
 
-with open(map_json, "w", encoding="utf-8") as file:
-    json.dump(vocab, file, indent=4, ensure_ascii=False)
+                    # save all the data of word into vocab dictionary
+                    print(rank, kor, rom, type_, eng, ex_kr, ex_en, freq, disp)
+                    vocab[kor] = {
+                        "rank": rank,
+                        "romanization": rom,
+                        "type": type_,
+                        "content": eng,
+                        "example_kr": ex_kr,
+                        "example_en": ex_en,
+                        "frequency": freq,
+                        "disp": disp,
+                    }
 
-with open(map_json, encoding="utf-8") as file:
-    config = json.load(file)
+    with open(freq_json_file, "w", encoding="utf-8") as file:
+        json.dump(vocab, file, indent=4, ensure_ascii=False)
+
+
+def create_topi_json():
+    """Creates topi json vocabulary file out from raw text.
+
+    Takes and transforms raw text of topi vocabulary into json file.
+    Contents are stored data/vocab_sources folder.
+    """
+
+    src_dir = Path(__file__).parents[0]
+    topi_text_file = Path(f"{src_dir}/data/vocab_sources/topik_vocab.txt")
+    topi_json_file = Path(f"{src_dir}/data/vocab_sources/topik_vocab.json")
+
+    vocab = {}
+
+    with open(topi_text_file, encoding="utf-8") as file:
+        for line in file:
+
+            # get korean and english word
+            worded = line.split(maxsplit=2)
+            kor = worded[1]
+            eng = worded[2].strip()
+
+            # save them into vocab dictionary
+            print(kor, eng)
+            vocab[kor] = eng
+
+    with open(topi_json_file, "w", encoding="utf-8") as file:
+        json.dump(vocab, file, indent=4, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    create_freq_json()
+    create_topi_json()
+
+# vocab_raw_to_json

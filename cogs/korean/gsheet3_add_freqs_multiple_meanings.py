@@ -35,8 +35,8 @@ credentials_dict = json.loads(credentials_dict_str)
 g_credentials = gspread.service_account_from_dict(credentials_dict)
 g_sheet_main = g_credentials.open("Korea - Vocabulary")
 
-source_dir = Path(__file__).parents[0]
-fre_json = Path(f"{source_dir}/data/gsheet/freq_dict_kor.json")
+src_dir = Path(__file__).parents[0]
+fre_json = Path(f"{src_dir}/data/vocab_sources/freq_dict_kor.json")
 
 with open(fre_json, encoding="utf-8") as fre:
     freq = json.load(fre)
@@ -62,7 +62,7 @@ for row in lvl_1_2_df.itertuples():
                 "",
                 numered_word,
                 "",
-                word["content"],
+                word["freq_eng"],
                 "",
                 word["example_en"],
                 word["example_kr"],

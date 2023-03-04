@@ -1446,7 +1446,6 @@
 1483 치료하다 treat
 1444 처음 first, for the first time
 1484 치마 skirt
-1445 처음 뵙겠습니다 Nice to meet you.
 1485 치약 toothpaste
 1446 천 1000
 1486 친구 friend

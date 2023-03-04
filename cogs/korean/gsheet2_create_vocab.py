@@ -52,9 +52,9 @@ arranged_vocab_g_work_sheet.update(
 print("Created arranged vocab")
 
 # create Level 1-2
-source_dir = Path(__file__).parents[0]
-fre_json = Path(f"{source_dir}/data/gsheet/freq_dict_kor.json")
-top_json = Path(f"{source_dir}/data/gsheet/topik_vocab.json")
+src_dir = Path(__file__).parents[0]
+fre_json = Path(f"{src_dir}/data/vocab_sources/freq_dict_kor.json")
+top_json = Path(f"{src_dir}/data/vocab_sources/topik_vocab.json")
 
 with open(fre_json, encoding="utf-8") as fre:
     freq = json.load(fre)
@@ -74,7 +74,7 @@ for row in arranged_vocab_df.itertuples():
     lvl_1_2_df.at[row.Index, "Book_English"] = row.Book_English
     if row.Korean in freq:
         word = freq.pop(row.Korean)
-        lvl_1_2_df.at[row.Index, "Freq_English"] = word["content"]
+        lvl_1_2_df.at[row.Index, "Freq_English"] = word["freq_eng"]
         lvl_1_2_df.at[row.Index, "Rank"] = word["rank"]
         lvl_1_2_df.at[row.Index, "Example_KR"] = word["example_kr"]
         lvl_1_2_df.at[row.Index, "Example_EN"] = word["example_en"]
@@ -96,7 +96,7 @@ for row in freq:
         "Rank": freq[row]["rank"],
         "Romanization": freq[row]["romanization"],
         "Type": freq[row]["type"],
-        "Freq_English": freq[row]["content"],
+        "Freq_English": freq[row]["freq_eng"],
         "Example_KR": freq[row]["example_kr"],
         "Example_EN": freq[row]["example_en"],
         "Frequency": freq[row]["frequency"],
@@ -129,3 +129,6 @@ lvl_1_2_df = lvl_1_2_df.fillna("")
 lvl_1_2_list = [lvl_1_2_df.columns.values.tolist()]
 lvl_1_2_list += lvl_1_2_df.values.tolist()
 lvl_1_2_g_work_sheet.update(lvl_1_2_list, value_input_option="USER_ENTERED")
+
+# create_gsheet_vocab
+# vocab_json_to_gsheet
