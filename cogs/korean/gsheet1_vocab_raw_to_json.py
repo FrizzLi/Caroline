@@ -108,5 +108,3 @@ def create_topi_json():
 if __name__ == "__main__":
     create_freq_json()
     create_topi_json()
-
-# vocab_raw_to_json
