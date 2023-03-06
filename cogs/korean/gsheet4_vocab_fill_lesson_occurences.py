@@ -184,8 +184,8 @@ lesson = input("Enter lesson in 3 digits: ")
 final = input("Press ENTER if you don't want to update sheets.")
 text_type = input("Press ENTER for listening_text, else reading text.")
 
-source_dir = Path(__file__).parents[0]
-lesson_dir = f"{source_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}"
+src_dir = Path(__file__).parents[0]
+lesson_dir = f"{src_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}"
 text_type = "reading" if text_type else "listening"
 
 path_str = f"{lesson_dir}/{text_type}_text.txt"

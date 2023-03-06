@@ -65,8 +65,8 @@ def dl_vocab(level, lesson, text_only):
     def get_lesson_names(paths):
         return paths.split("\\")[-1][:-4]
 
-    source_dir = Path(__file__).parents[0]
-    level_dir = Path(f"{source_dir}/data/{level}")
+    src_dir = Path(__file__).parents[0]
+    level_dir = Path(f"{src_dir}/data/{level}")
     if lesson:
         path = f"{level_dir}\\{lesson}.txt"
     else:

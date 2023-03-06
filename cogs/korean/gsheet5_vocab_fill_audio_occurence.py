@@ -28,8 +28,8 @@ vocab_g_ws = get_worksheet("Level 1-2 (modified)")
 vocab_df = pd.DataFrame(vocab_g_ws.get_all_records())
 
 lesson = input("Enter lesson in 3 digits: ")
-source_dir = Path(__file__).parents[0]
-data_path = f"{source_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}"
+src_dir = Path(__file__).parents[0]
+data_path = f"{src_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}"
 audio_paths = glob(f"{data_path}/vocabulary_audio/*")
 audio_words = [Path(audio_path).stem for audio_path in audio_paths]
 lesson = int(lesson)
