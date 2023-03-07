@@ -132,8 +132,8 @@ class Map:
         }  # type: Dict[str, Any]
         nodes = {}  # type: Dict[Tuple[int, int], Node]
 
-        source_dir = Path(__file__).parents[0]
-        fname_path = Path(f"{source_dir}/data/maps/{fname}_pro.txt")
+        src_dir = Path(__file__).parents[0]
+        fname_path = Path(f"{src_dir}/data/maps/{fname}_pro.txt")
         with open(fname_path, encoding="utf-8") as file:
             for i, row in enumerate(file):
                 for j, col in enumerate(row.split()):
@@ -630,8 +630,8 @@ def _save_solution(
         fname (str): name of pickle file into which solution will be saved
     """
 
-    source_dir = Path(__file__).parents[0]
-    solutions_dir = Path(f"{source_dir}/data/solutions")
+    src_dir = Path(__file__).parents[0]
+    solutions_dir = Path(f"{src_dir}/data/solutions")
     solutions_dir.mkdir(parents=True, exist_ok=True)
 
     fname_path = Path(f"{solutions_dir}/{fname}_path.pickle")

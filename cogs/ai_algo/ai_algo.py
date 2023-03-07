@@ -168,8 +168,8 @@ class AiAlgo(commands.Cog):
             ctx (_type_): _description_
         """
 
-        source_dir = Path(__file__).parents[0]
-        gif_path = Path(f"{source_dir}/data/{self.shared_fname}.gif")
+        src_dir = Path(__file__).parents[0]
+        gif_path = Path(f"{src_dir}/data/{self.shared_fname}.gif")
         with open(gif_path, "rb") as file:
             await ctx.message.channel.send(file=File(file))
 

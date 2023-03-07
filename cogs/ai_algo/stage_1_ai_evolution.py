@@ -253,8 +253,8 @@ def _save_map(
             Defaults to "{:^3}".
     """
 
-    source_dir = Path(__file__).parents[0]
-    map_dir = Path(f"{source_dir}/data/maps")
+    src_dir = Path(__file__).parents[0]
+    map_dir = Path(f"{src_dir}/data/maps")
     map_dir.mkdir(parents=True, exist_ok=True)
 
     fname_path = Path(f"{map_dir}/{fname}.txt")
@@ -283,8 +283,8 @@ def load_map(fname: str, suffix: str) -> List[List[str]]:
         List[List[str]]: 2D map loaded from file
     """
 
-    source_dir = Path(__file__).parents[0]
-    fname_path = Path(f"{source_dir}/data/maps/{fname}{suffix}.txt")
+    src_dir = Path(__file__).parents[0]
+    fname_path = Path(f"{src_dir}/data/maps/{fname}{suffix}.txt")
     map_ = []
 
     try:
@@ -762,8 +762,8 @@ def _save_solution(rake_paths: Dict[Tuple[int, int], int], fname: str) -> None:
         fname (str): name of pickle file into which the solution will be saved
     """
 
-    source_dir = Path(__file__).parents[0]
-    solutions_dir = Path(f"{source_dir}/data/solutions")
+    src_dir = Path(__file__).parents[0]
+    solutions_dir = Path(f"{src_dir}/data/solutions")
     Path(solutions_dir).mkdir(parents=True, exist_ok=True)
 
     fname_path = Path(f"{solutions_dir}/{fname}_rake.pickle")

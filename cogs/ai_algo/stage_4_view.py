@@ -37,8 +37,8 @@ def _load_pickle(fname: str, suffix: str) -> Any:
         Any: pickled content
     """
 
-    source_dir = Path(__file__).parents[0]
-    fname_path = Path(f"{source_dir}/data/solutions/{fname}{suffix}.pickle")
+    src_dir = Path(__file__).parents[0]
+    fname_path = Path(f"{src_dir}/data/solutions/{fname}{suffix}.pickle")
     with open(fname_path, "rb") as handle:
         return pickle.loads(handle.read())
 
@@ -56,8 +56,8 @@ def _load_json(fname: str, suffix: str) -> Dict[str, Any]:
         Dict[str, Any]: json-ed content
     """
 
-    source_dir = Path(__file__).parents[0]
-    fname_path = Path(f"{source_dir}/data/solutions/{fname}{suffix}.json")
+    src_dir = Path(__file__).parents[0]
+    fname_path = Path(f"{src_dir}/data/solutions/{fname}{suffix}.json")
     with open(fname_path, encoding="utf-8") as file:
         return json.load(file)
 
@@ -72,8 +72,8 @@ def _save_gif(fname: str, frames: List[Any]) -> None:
         frames (Image]): drawn images
     """
 
-    source_dir = Path(__file__).parents[0]
-    fname_path = Path(f"{source_dir}/data/{fname}.gif")
+    src_dir = Path(__file__).parents[0]
+    fname_path = Path(f"{src_dir}/data/{fname}.gif")
     frames[0].save(
         fname_path,
         format="GIF",
