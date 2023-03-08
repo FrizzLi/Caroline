@@ -25,7 +25,14 @@ class Music(commands.Cog):
         self.bot = bot
         self.players = {}
 
+    # Helping methods
     async def cleanup(self, guild):
+        """Deletes guild player if one exists.
+
+        Args:
+            guild (_type_): _description_
+        """
+
         try:
             await guild.voice_client.disconnect()
         except AttributeError:
@@ -37,7 +44,14 @@ class Music(commands.Cog):
             pass
 
     def get_player(self, interaction):
-        """Retrieve the guild player, or generate one."""
+        """Retrieves guild player, or generate one.
+
+        Args:
+            interaction (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
 
         try:
             player = self.players[interaction.guild_id]
@@ -47,18 +61,6 @@ class Music(commands.Cog):
 
         return player
 
-    @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
-        """Leave the channel when all other members leave."""
-
-        voice_state = member.guild.voice_client
-
-        # Checking if the bot is connected to a channel and
-        # if there is only 1 member connected to it (the bot itself)
-        if voice_state is not None and len(voice_state.channel.members) == 1:
-            await self.cleanup(member.guild)
-
-    # General commands
     def get_ytb_cmd_data(self, elem):
         search_expr = elem.content[6:]
         data = ytdl.extract_info(url=search_expr, download=False)
@@ -101,6 +103,25 @@ class Music(commands.Cog):
 
         return duration, views, categories
 
+    # Listeners
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        """Leave the channel when all other members leave.
+
+        Args:
+            member (_type_): _description_
+            before (_type_): _description_
+            after (_type_): _description_
+        """
+
+        voice_state = member.guild.voice_client
+
+        # Checks if the bot is connected in voice channel and
+        # if theres only 1 member connected to it (the bot itself)
+        if voice_state is not None and len(voice_state.channel.members) == 1:
+            await self.cleanup(member.guild)
+
+    # General commands (with no slash)
     @commands.command()
     async def history(self, ctx, limit: int = 1000):
         """Saves history of songs into Google Sheets."""

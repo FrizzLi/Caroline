@@ -1,4 +1,4 @@
-from timeit import default_timer as timer
+from timeit import default_timer
 
 import discord
 from discord.ui import Button, Select, View
@@ -56,7 +56,7 @@ class PlayerView(View):
         )
         self.player = player
         self.source = source
-        self.start = timer()
+        self.start = default_timer()
         self.update_msg()
 
     def update_msg(self):
@@ -66,7 +66,7 @@ class PlayerView(View):
         """Display information about player and queue of songs."""
 
         tracks, remains, volume, loop_q, loop_t = self._get_page_info()
-        end = timer()
+        end = default_timer()
         dur_total = self.source.duration
         dur_total = get_readable_duration(dur_total)
         dur_total = "0:00:00" if dur_total.startswith("-") else dur_total
