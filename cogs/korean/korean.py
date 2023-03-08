@@ -18,8 +18,7 @@ from discord.ext import commands
 from discord.utils import get
 
 from cogs.korean.search_and_create_vocab import dl_vocab
-from cogs.korean.session_view import SessionView
-from cogs.korean.session_view2 import SessionView2
+from cogs.korean.session_views import SessionVocabView, SessionListenView
 
 
 class Language(commands.Cog):
@@ -49,14 +48,14 @@ class Language(commands.Cog):
         return df
 
     def get_vocab_paths(self):
-        source_dir = Path(__file__).parents[0]
-        pickle_path = f"{source_dir}/data/vocab_audio_path.pickle"
+        src_dir = Path(__file__).parents[0]
+        pickle_path = f"{src_dir}/data/vocab_audio_path.pickle"
         if os.path.isfile(pickle_path):
             with open(pickle_path, "rb") as handle:
                 audio_paths_labelled = pickle.loads(handle.read())
         else:
             print("korean: Creating pickle file for vocab audio paths...", end=" ")
-            audio_paths = glob(f"{source_dir}/data/*/*/vocabulary_audio/*")
+            audio_paths = glob(f"{src_dir}/data/*/*/vocabulary_audio/*")
             audio_paths_labelled = {}
             for audio_path in audio_paths:
                 word = Path(audio_path).stem
@@ -69,8 +68,8 @@ class Language(commands.Cog):
         return audio_paths_labelled
 
     def load_config(self):
-        source_dir = Path(__file__).parents[0]
-        config_path = Path(f"{source_dir}/config.json")
+        src_dir = Path(__file__).parents[0]
+        config_path = Path(f"{src_dir}/config.json")
         if os.path.exists(config_path):
             with open(config_path, encoding="utf-8") as file:
                 config = json.load(file)
@@ -82,8 +81,8 @@ class Language(commands.Cog):
         return config
 
     def save_config(self):
-        source_dir = Path(__file__).parents[0]
-        config_path = Path(f"{source_dir}/config.json")
+        src_dir = Path(__file__).parents[0]
+        config_path = Path(f"{src_dir}/config.json")
         with open(config_path, "w", encoding="utf-8") as file:
             json.dump(self.config, file)
 
@@ -150,8 +149,8 @@ class Language(commands.Cog):
     # async def zadd_lesson(self, interaction):
     #     """Adds lesson into user's customized lesson file."""
 
-    #     source_dir = Path(__file__).parents[0]
-    #     data_path = Path(f"{source_dir}/data")
+    #     src_dir = Path(__file__).parents[0]
+    #     data_path = Path(f"{src_dir}/data")
     #     data_user_path = Path(f"{data_path}/users/{interaction.user.name}")
     #     Path(data_user_path).mkdir(parents=True, exist_ok=True)
     #     custom_path = Path(f"{data_user_path}/{self.custom}.json")
@@ -189,8 +188,8 @@ class Language(commands.Cog):
     async def zexercise_vocab(self, interaction):
         """Start vocab exercise."""
 
-        source_dir = Path(__file__).parents[0]
-        level_path = Path(f"{source_dir}/data/{self.level}.json")
+        src_dir = Path(__file__).parents[0]
+        level_path = Path(f"{src_dir}/data/{self.level}.json")
         await interaction.response.send_message('Exit by "EXIT"')
         await self.bot.change_presence(
             activity=discord.Game(name="Vocab typing")
@@ -211,7 +210,7 @@ class Language(commands.Cog):
 
             name = interaction.user.name
             file_name = f"{name}-{self.level}-{self.lesson}.json"
-            users_dir = Path(f"{source_dir}/data/users")
+            users_dir = Path(f"{src_dir}/data/users")
             Path(users_dir).mkdir(parents=True, exist_ok=True)
             file_score_path = Path(f"{users_dir}/{file_name}")
             if os.path.exists(file_score_path):
@@ -333,7 +332,7 @@ class Language(commands.Cog):
             ws_stats = gs_stats.worksheet(interaction.user.name)
         except gspread.exceptions.WorksheetNotFound:
             ws_stats = gs_stats.add_worksheet(
-                title=interaction.user.name, rows=10000, cols=4
+                title=interaction.user.name, rows=10_000, cols=4
             )
         session_numbers = ws_stats.col_values(4)
         if session_numbers:
@@ -504,10 +503,10 @@ class Language(commands.Cog):
         )
 
         # load audio files
-        source_dir = Path(__file__).parents[0]
+        src_dir = Path(__file__).parents[0]
         level = lesson_number // 100
         lesson = lesson_number % 100
-        data_path = f"{source_dir}/data/level_{level}/lesson_{lesson}"
+        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
         audio_paths = glob(f"{data_path}/*")
         name_to_path_dict = {}
 
@@ -871,10 +870,10 @@ class Language(commands.Cog):
         )
 
         # load audio files
-        source_dir = Path(__file__).parents[0]
+        src_dir = Path(__file__).parents[0]
         level = lesson_number // 100
         lesson = lesson_number % 100
-        data_path = f"{source_dir}/data/level_{level}/lesson_{lesson}"
+        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
         audio_paths = glob(f"{data_path}/*")
         name_to_path_dict = {}
 
@@ -914,7 +913,7 @@ async def setup(bot):
 
 # 4.463128600000001 perf score
 # 4.588911 last word not well known
-# TODO: Spreadsheets: Duplicates with lesson label overweite..! Deal with it in sheets
+# TODO: Spreadsheets: Duplicates with lesson label overweite..! Deal with it in sheets / Script for removing duplicates and merging them into one
 # TODO: [During polish]
 # TODO: example button for each word (have already one sentece)
 # TODO: Make sessions end properly (if its not buttoned, and add another session, its bugged)
