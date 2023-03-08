@@ -6,6 +6,7 @@ import contextlib
 import io
 import textwrap
 
+import discord
 from discord.ext import commands
 
 
@@ -153,4 +154,6 @@ async def setup(bot):
         bot (__main__.MyBot): bot instance initialized in the main function
     """
 
-    await bot.add_cog(Surveillance(bot))
+    await bot.add_cog(
+        Surveillance(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
+    )

@@ -9,9 +9,9 @@ import gspread
 import pandas as pd
 import pytz
 import youtube_dl
-from pytube import Playlist
 from discord import app_commands
 from discord.ext import commands
+from pytube import Playlist
 
 from cogs.music.player import MusicPlayer
 from cogs.music.player_view import SearchView, get_readable_duration
@@ -700,6 +700,13 @@ class Music(commands.Cog):
 
 
 async def setup(bot):
+    """Loads up this module (cog) into the bot that was initialized
+    in the main function.
+
+    Args:
+        bot (__main__.MyBot): bot instance initialized in the main function
+    """
+
     await bot.add_cog(
         Music(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )

@@ -5,15 +5,12 @@ that is represented by the AiAlgo class.
 
 from pathlib import Path
 
+import discord
 from discord import File
 from discord.ext import commands
 
-from cogs.ai_algo import (
-    stage_1_ai_evolution,
-    stage_2_ai_pathfinding,
-    stage_3_ai_forward_chain,
-    stage_4_view,
-)
+from cogs.ai_algo import (stage_1_ai_evolution, stage_2_ai_pathfinding,
+                          stage_3_ai_forward_chain, stage_4_view)
 
 
 class AiAlgo(commands.Cog):
@@ -229,4 +226,6 @@ async def setup(bot):
         bot (__main__.MyBot): bot instance initialized in the main function
     """
 
-    await bot.add_cog(AiAlgo(bot))
+    await bot.add_cog(
+        AiAlgo(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
+    )

@@ -18,7 +18,7 @@ from discord.ext import commands
 from discord.utils import get
 
 from cogs.korean.search_and_create_vocab import dl_vocab
-from cogs.korean.session_views import SessionVocabView, SessionListenView
+from cogs.korean.session_views import SessionListenView, SessionVocabView
 
 
 class Language(commands.Cog):
@@ -893,6 +893,13 @@ class Language(commands.Cog):
 
 
 async def setup(bot):
+    """Loads up this module (cog) into the bot that was initialized
+    in the main function.
+
+    Args:
+        bot (__main__.MyBot): bot instance initialized in the main function
+    """
+
     await bot.add_cog(
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
