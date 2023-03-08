@@ -120,12 +120,12 @@ else:
 bot = MyBot()
 bot.run(TOKEN)
 
-# TODO: Polish Discord related stuff: Pylint, Document, Optimize code and Async
-# TODO: music: Logs during polishing
+# TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
+# TODO music: Logs during polishing
+# TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there)
 
-# TODO: Resolve all weird pylint errors
-# TODO: Tests (AI: setup.py, pytest from reqs, _apply_actions test (rmv), docs)
-
+# TODO Resolve all weird pylint errors
+# TODO Tests (AI: setup.py, pytest from reqs, _apply_actions test (rmv), docs)
 # TODO surveillance: Voice stats graphs, finish/remove on_presence_update
 # TODO surveillance: Process old surveillance text and find info out of it
 # TODO surveillance: Look into "did something" part
@@ -134,4 +134,4 @@ bot.run(TOKEN)
 # TODO music: Create radio bot,, automatically detects what ppl listen/request
 # and just picks something out of it, or finds something to it (recommendation system!)
 
-# opt ideas: yield, 1_000_000, slots, dict to namedtuple
+# opt ideas: yield, slots, dict to namedtuple
