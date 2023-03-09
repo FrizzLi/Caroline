@@ -17,8 +17,8 @@ from discord import app_commands
 from discord.ext import commands
 from discord.utils import get
 
-from cogs.korean.search_and_create_vocab import dl_vocab
 from cogs.korean.session_views import SessionListenView, SessionVocabView
+from cogs.korean.vocab_audio_search import dl_vocab
 
 
 class Language(commands.Cog):

@@ -4,6 +4,7 @@ system which tracks activity on all voice channels on the Discord server.
 
 import contextlib
 import io
+import os
 import textwrap
 
 import discord
