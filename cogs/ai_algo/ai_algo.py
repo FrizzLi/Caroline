@@ -3,14 +3,19 @@ Algorithms into Discord text channel. Module is loaded up as a cog extension
 that is represented by the AiAlgo class.
 """
 
+import os
 from pathlib import Path
 
 import discord
 from discord import File
 from discord.ext import commands
 
-from cogs.ai_algo import (stage_1_ai_evolution, stage_2_ai_pathfinding,
-                          stage_3_ai_forward_chain, stage_4_view)
+from cogs.ai_algo import (
+    stage_1_ai_evolution,
+    stage_2_ai_pathfinding,
+    stage_3_ai_forward_chain,
+    stage_4_view,
+)
 
 
 class AiAlgo(commands.Cog):
@@ -53,16 +58,18 @@ class AiAlgo(commands.Cog):
     # stage_3_ai_forward_chain: fname, points_amount
     # stage_4_view:             fname,                climb
     shared_fname = "queried"
-    shared_points_amount = 10 #
-    shared_climb = False #
+    shared_points_amount = 10  #
+    shared_climb = False  #
 
     # Parameters for evolution algorithm stage
-    evo_query = "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9)" # harder: add (6,7)
+    evo_query = (
+        "10x12 (1,5) (2,1) (3,4) (4,2) (6,8) (6,9)"  # harder: add (6,7)
+    )
     evo_begin_create = "walls"
     evo_max_runs = 3
 
     # Parameters for pathfinding algorithm stage
-    path_movement_type = "M" #
+    path_movement_type = "M"  #
     path_algorithm = "HK"
 
     # Parameters for forward chain algorithm stage
@@ -70,9 +77,9 @@ class AiAlgo(commands.Cog):
     chain_fname_load_facts = "facts_init"
     chain_fname_load_rules = "rules"
     chain_step_by_step = True
-    chain_randomize_facts_order = False #
+    chain_randomize_facts_order = False  #
 
-    view_skip_rake = False #
+    view_skip_rake = False  #
 
     @commands.command(brief=shared_points_amount)
     async def change_points_amount(self, ctx, points_amount: int):

@@ -27,7 +27,7 @@ class SessionVocabView(discord.ui.View):
         await interaction.response.defer()
 
 
-class Session_Listen_View(discord.ui.View):
+class SessionListenView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
