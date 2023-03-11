@@ -1,6 +1,5 @@
 import json
 import os
-import random
 import re
 from pathlib import Path
 
@@ -30,7 +29,7 @@ class Music(commands.Cog):
         """Deletes guild player if one exists.
 
         Args:
-            guild (_type_): _description_
+            guild (discord.guild.Guild): discord server the bot is currently in
         """
 
         try:
@@ -44,13 +43,13 @@ class Music(commands.Cog):
             pass
 
     def get_player(self, interaction):
-        """Retrieves guild player, or generate one.
+        """Retrieves guild player, or generates one.
 
         Args:
-            interaction (_type_): _description_
+            interaction (discord.interaction.Interaction): slash cmd context
 
         Returns:
-            _type_: _description_
+            cogs.music.player.MusicPlayer: music player
         """
 
         try:
@@ -61,30 +60,47 @@ class Music(commands.Cog):
 
         return player
 
-    def get_ytb_cmd_data(self, elem):
-        search_expr = elem.content[6:]
+    def get_ytb_data_from_old_cmd_req(self, msg_id):
+        """Gets data from song requesting commands for Groovy or Rythm.
+
+        Args:
+            msg_id (_type_): _description_
+
+        Returns:
+            Tuple[str, str, str, str]: datetime, author, title, webpage_url
+        """
+
+        search_expr = msg_id.content[6:]
         data = ytdl.extract_info(url=search_expr, download=False)
+
         if "entries" in data:
             if len(data["entries"]) == 1:  # for search single song
                 data["title"] = data["entries"][0]["title"]
                 data["webpage_url"] = data["entries"][0]["webpage_url"]
 
-        timezone = pytz.timezone("Europe/Berlin")
-        tz_aware_date = elem.created_at.astimezone(timezone)
         data["title"] = data["title"].replace('"', "'")
         data["webpage_url"] = data["webpage_url"].replace('"', "'")
+        timezone = pytz.timezone("Europe/Berlin")
+        tz_aware_date = msg_id.created_at.astimezone(timezone)
 
-        # removed # between % and H (outdated windows?)
         datetime = tz_aware_date.strftime("%Y-%m-%d %H:%M:%S")
-        author = elem.author.name
+        author = msg_id.author.name
         title = data["title"]
         webpage_url = data["webpage_url"]
-        # f"""=HYPERLINK("{data['webpage_url']}","{data['title']}")""",
 
         return datetime, author, title, webpage_url
 
-    def get_ytb_track_data(self, row):
-        data = ytdl.extract_info(url=row.URL, download=False)
+    def get_ytb_data_from_url(self, row_URL):
+        """Gets data from URL that is in dataframe's row.
+
+        Args:
+            row_URL (str): URL link to the youtube video
+
+        Returns:
+            Tuple[str, str, str]: duration, views, categories
+        """
+
+        data = ytdl.extract_info(url=row_URL, download=False)
         if "entries" in data:
             if len(data["entries"]) == 1:  # for search single song
                 data["duration"] = data["entries"][0]["duration"]
