@@ -125,16 +125,19 @@ class Music(commands.Cog):
         """Leave the channel when all other members leave.
 
         Args:
-            member (_type_): _description_
-            before (_type_): _description_
-            after (_type_): _description_
+            member (discord.member.Member): the bot
+            before (discord.member.VoiceState): state before certain
+                (anyone's) action [unused]
+            after (discord.member.VoiceState): state after certain
+                (anyone's) action [unused]
         """
 
         voice_state = member.guild.voice_client
+        members_amount = len(voice_state.channel.members)
 
-        # Checks if the bot is connected in voice channel and
-        # if theres only 1 member connected to it (the bot itself)
-        if voice_state is not None and len(voice_state.channel.members) == 1:
+        # Checks if the bot is connected in the voice channel and
+        # whether theres only 1 member connected to it (the bot itself)
+        if voice_state is not None and members_amount == 1:
             await self.cleanup(member.guild)
 
     # General commands (with no slash)
