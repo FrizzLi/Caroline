@@ -4,9 +4,11 @@ system which tracks activity on all voice channels on the Discord server.
 
 import contextlib
 import io
+import json
 import os
 import textwrap
 from datetime import datetime
+from pathlib import Path
 
 import discord
 import pytz
@@ -28,6 +30,7 @@ class Surveillance(commands.Cog):
         self.bot = bot
         self.local_vars = {"self": self}
         self.channel_msg = ""
+        self.surveillance_channel = None
 
     def get_code(self, message):
         """Cleanses the message to a pure code ready to be executed.
@@ -71,17 +74,6 @@ class Surveillance(commands.Cog):
         time = time.strftime("%Y-%m-%d %H:%M:%S")
         return time
 
-    def get_log_channel(self):
-        """Gets surveillance text channel.
-
-        Returns:
-            discord.channel.TextChannel: "🎥surveillance" text channel
-        """
-
-        channel_id = int(os.environ["SURVEILLANCE_CHANNEL_ID"])
-        print(channel_id)
-        return self.bot.get_channel(channel_id)
-
     @tasks.loop(minutes=5)
     async def online_tracking(self):
         """Sends or updates a message about being online every 5 minutes.
@@ -90,17 +82,26 @@ class Surveillance(commands.Cog):
         offline.
         """
 
-        surveillance_channel = self.get_log_channel()
         time = self.get_time()
         msg = f"{time}: {self.bot.user.name} is online."
         if self.channel_msg:
             await self.channel_msg.delete()
 
-        self.channel_msg = await surveillance_channel.send(msg)
+        self.channel_msg = await self.surveillance_channel.send(msg)
 
     @commands.Cog.listener()
     async def on_ready(self):
-        """Executes when the cog was loaded. Turns on online tracking."""
+        """Executes when the cog is loaded and prepares surveillance tracking.
+
+        Gets surveillance text channel and calls method for online tracking.
+        """
+
+        src_dir = Path(__file__).parents[2]
+        json_path = Path(f"{src_dir}/config.json")
+        with open(json_path, encoding="utf-8") as file:
+            surveillance_settings = json.load(file)["surveillance"]
+        channel_id = int(surveillance_settings["channel_id"])
+        self.surveillance_channel = self.bot.get_channel(channel_id)
 
         self.online_tracking.start()
 
@@ -159,8 +160,8 @@ class Surveillance(commands.Cog):
             print(f"{member.name} did something..!")
             return
 
-        time = self.bot.get_time()
-        await self.bot.get_log_channel().send(f"{time}: {member.name} {msg}")
+        time = self.get_time()
+        await self.surveillance_channel.send(f"{time}: {member.name} {msg}")
 
     @commands.command(aliases=["py"])
     async def python(self, ctx, *, message):
