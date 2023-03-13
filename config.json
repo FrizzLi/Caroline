@@ -1,0 +1,15 @@
+{
+    "surveillance": {
+        "channel_id": "1058633423301902429"
+    },
+    "settings": {
+        "Caroline": {
+            "blacklist": ["surveillance"],
+            "prefix": "."
+        },
+        "GLaDOS": {
+            "blacklist": ["ai_algo"],
+            "prefix": "?"
+        }
+    }
+}

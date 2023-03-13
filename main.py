@@ -1,6 +1,8 @@
+import json
 import os
 import sys
 from glob import glob
+from pathlib import Path
 
 import discord
 from discord.ext import commands
@@ -10,9 +12,9 @@ from dotenv import load_dotenv
 class MyBot(commands.Bot):
     def __init__(self):
         super().__init__(
-            command_prefix=PREFIX,
+            command_prefix=BOTS_PREFIX,
             intents=discord.Intents().all(),
-            application_id=APP_ID,
+            application_id=BOTS_APP_ID,
         )
         self.channel_msg = ""
 
@@ -36,7 +38,7 @@ class MyBot(commands.Bot):
         }
         for dir_name in os.listdir("cogs"):
             if dir_name in py_files:
-                if dir_name in BLACK_LIST:
+                if dir_name in BOTS_BLACKLIST:
                     continue
                 try:
                     path = (
@@ -52,21 +54,25 @@ class MyBot(commands.Bot):
 
         await bot.tree.sync(guild=discord.Object(id=os.environ["SERVER_ID"]))
 
-
 load_dotenv()
+src_dir = Path(__file__).parents[0]
+json_path = Path(f"{src_dir}/config.json")
+with open(json_path, encoding="utf-8") as file:
+    bots_settings = json.load(file)["settings"]
+
 if os.name == "nt" and len(sys.argv) < 2:
-    TOKEN = os.environ["CAROLINE_TOKEN"]
-    APP_ID = os.environ["CAROLINE_ID"]
-    BLACK_LIST = ("surveillance")
-    PREFIX = "."
+    BOTS_TOKEN = os.environ["CAROLINE_TOKEN"]
+    BOTS_APP_ID = os.environ["CAROLINE_ID"]
+    bot_settings = bots_settings["Caroline"]
 else:
-    TOKEN = os.environ["GLADOS_TOKEN"]
-    APP_ID = os.environ["GLADOS_ID"]
-    BLACK_LIST = ("ai_algo")
-    PREFIX = "?"
+    BOTS_TOKEN = os.environ["GLADOS_TOKEN"]
+    BOTS_APP_ID = os.environ["GLADOS_ID"]
+    bot_settings = bots_settings["GLaDOS"]
+BOTS_BLACKLIST = bot_settings["blacklist"]
+BOTS_PREFIX = bot_settings["prefix"]
 
 bot = MyBot()
-bot.run(TOKEN)
+bot.run(BOTS_TOKEN)
 
 # TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
@@ -83,4 +89,4 @@ bot.run(TOKEN)
 # TODO music: Create radio bot,, automatically detects what ppl listen/request
 # and just picks something out of it, or finds something to it (recommendation system!)
 
-# opt ideas: yield, slots, dict to namedtuple
+# opt ideas: yield, slots, dict to namedtuple, # type: ignore (for mypy?) saw in rapptz
