@@ -29,7 +29,6 @@ class Surveillance(commands.Cog):
         self.local_vars = {"self": self}
         self.channel_msg = ""
 
-    # Helping methods
     def get_code(self, message):
         """Cleanses the message to a pure code ready to be executed.
 
@@ -84,7 +83,13 @@ class Surveillance(commands.Cog):
         return self.bot.get_channel(channel_id)
 
     @tasks.loop(minutes=5)
-    async def test(self):
+    async def online_tracking(self):
+        """Sends or updates a message about being online every 5 minutes.
+
+        This method was made for the purposes of tracking when the bot went
+        offline.
+        """
+
         surveillance_channel = self.get_log_channel()
         time = self.get_time()
         msg = f"{time}: {self.bot.user.name} is online."
@@ -95,7 +100,9 @@ class Surveillance(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.test.start()
+        """Executes when the cog was loaded. Turns on online tracking."""
+
+        self.online_tracking.start()
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -176,7 +183,7 @@ class Surveillance(commands.Cog):
                 self.local_vars.update(new_local_vars)
 
                 result = stdout.getvalue()
-                if len(result) > 1990:
+                if len(result) > 1990:  # limit for 2000 - 10 (chars below)
                     warning_msg = (
                         "The output has been shortened "
                         "because it was too long.\n"
