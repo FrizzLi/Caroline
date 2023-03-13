@@ -6,9 +6,11 @@ import contextlib
 import io
 import os
 import textwrap
+from datetime import datetime
 
 import discord
-from discord.ext import commands
+import pytz
+from discord.ext import commands, tasks
 
 
 class Surveillance(commands.Cog):
@@ -25,7 +27,9 @@ class Surveillance(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.local_vars = {"self": self}
+        self.channel_msg = ""
 
+    # Helping methods
     def get_code(self, message):
         """Cleanses the message to a pure code ready to be executed.
 
@@ -56,6 +60,42 @@ class Surveillance(commands.Cog):
                 r"Write it as \`\`\`<code>\`\`\`!"
             )
             raise Exception(err_msg)
+
+    def get_time(self):
+        """Gets current time based in Bratislava for logging.
+
+        Returns:
+            str: datetime in "Year-Month-Day Time" format
+        """
+
+        time = datetime.now(pytz.timezone("Europe/Bratislava"))
+        time = time.strftime("%Y-%m-%d %H:%M:%S")
+        return time
+
+    def get_log_channel(self):
+        """Gets surveillance text channel.
+
+        Returns:
+            discord.channel.TextChannel: "🎥surveillance" text channel
+        """
+
+        channel_id = int(os.environ["SURVEILLANCE_CHANNEL_ID"])
+        print(channel_id)
+        return self.bot.get_channel(channel_id)
+
+    @tasks.loop(minutes=5)
+    async def test(self):
+        surveillance_channel = self.get_log_channel()
+        time = self.get_time()
+        msg = f"{time}: {self.bot.user.name} is online."
+        if self.channel_msg:
+            await self.channel_msg.delete()
+
+        self.channel_msg = await surveillance_channel.send(msg)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.test.start()
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
