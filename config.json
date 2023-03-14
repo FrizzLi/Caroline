@@ -1,8 +1,9 @@
 {
+    "timezone": "Europe/Vienna",
     "surveillance": {
         "channel_id": "1058633423301902429"
     },
-    "settings": {
+    "bots_settings": {
         "Caroline": {
             "blacklist": ["surveillance"],
             "prefix": "."

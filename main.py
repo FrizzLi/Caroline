@@ -58,7 +58,7 @@ load_dotenv()
 src_dir = Path(__file__).parents[0]
 json_path = Path(f"{src_dir}/config.json")
 with open(json_path, encoding="utf-8") as file:
-    bots_settings = json.load(file)["settings"]
+    bots_settings = json.load(file)["bots_settings"]
 
 if os.name == "nt" and len(sys.argv) < 2:
     BOTS_TOKEN = os.environ["CAROLINE_TOKEN"]
@@ -74,8 +74,9 @@ BOTS_PREFIX = bot_settings["prefix"]
 bot = MyBot()
 bot.run(BOTS_TOKEN)
 
-# TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
+
+# TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO music: Logs during polishing
 # TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there)
 
