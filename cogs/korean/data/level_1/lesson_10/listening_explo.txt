@@ -372,25 +372,25 @@ Fill 문구점!
 Fill 빨간색!
 Fill 원피스!
 Fill 하얀색!
-Out of lesson (in next): 살 6 Noun
+Fill 문구점!
+Out of lesson (in next): 살 6 Noun-- 사다
 Out of lesson (in next): 들다 1 Verb
-Out of lesson (in next): 가요 6 Noun
-Out of lesson (in next): 점 1 Noun
-Out of lesson (in next): 볼 1 Noun
-Out of lesson (in next): 왕 9 Noun
+Out of lesson (in next): 가요 6 Noun-- 가다
+Out of lesson (in next): 볼 1 Noun-- 보다
+Out of lesson (in next): 왕 9 Noun~~
 
 Out of vocab: Track 3 Alpha
 Out of vocab: 않다 3 Verb
 Out of vocab: 신지 1 Noun
 Out of vocab: 는 11 Josa
-Out of vocab: 키 1 Noun
+Out of vocab: 키 1 Noun-- 크다
 Out of vocab: 가 3 Josa
 Out of vocab: 을 6 Josa
 Out of vocab: 하다 7 Verb
 Out of vocab: 를 6 Josa
 Out of vocab: 거 8 Noun
 Out of vocab: 예요 8 Josa
-Out of vocab: 청소 1 Noun
+Out of vocab: 청소 1 Noun-- 청소를 하다
 Out of vocab: 에 9 Josa
 Out of vocab: 타오 9 Noun
 Out of vocab: 리나 7 Noun
@@ -400,7 +400,7 @@ Out of vocab: 아 1 Exclamation
 Out of vocab: 요 1 Josa
 Out of vocab: 거기 2 Noun
 Out of vocab: 그렇다 1 Adjective
-Out of vocab: 뭘 1 Noun
+Out of vocab: 뭘 1 Noun-- 뭐
 Out of vocab: USB 1 Alpha
 Out of vocab: 문구 1 Noun
 Out of vocab: 세 1 Modifier

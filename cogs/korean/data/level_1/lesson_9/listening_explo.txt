@@ -493,6 +493,6 @@ Out of vocab: 를 5 Josa
 Out of vocab: 을 5 Josa
 Out of vocab: 청소 1 Noun--
 Out of vocab: 정리 1 Noun--
-Out of vocab: 제 1 Noun
+Out of vocab: 제 1 Noun--
 Out of vocab: 거기 1 Noun
 Out of vocab: 에도 1 Josa

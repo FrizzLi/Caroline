@@ -1,0 +1,175 @@
+Detailed tokenization cuz of grouping chaos.
+저 Noun
+는 Josa
+홍대 Noun
+근처 Noun
+에서 Josa
+자주 Noun
+쇼핑 Noun
+을 Josa
+해 Noun
+요 Josa
+Skipping garbage... (('.', 'Punctuation')
+지난주 Noun
+토요일 Noun
+에는 Josa
+한국 Noun
+친구 Noun
+나영 Noun
+씨 Noun
+와 Josa
+같이 Adverb
+쇼핑 Noun
+을 Josa
+하다 Verb
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+노란색 Noun
+셔츠 Noun
+를 Josa
+하다 Verb
+벌 Noun
+사다 Verb
+Skipping garbage... (('.', 'Punctuation')
+아주 Noun
+예쁘다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+비싸다 Adjective
+않다 Verb
+Skipping garbage... (('.', 'Punctuation')
+나영 Noun
+씨 Noun
+도 Josa
+파란색 Noun
+셔츠 Noun
+를 Josa
+하다 Verb
+벌 Noun
+사다 Verb
+Skipping garbage... (('.', 'Punctuation')
+나영 Noun
+씨 Noun
+의 Josa
+셔츠 Noun
+는 Josa
+조금 Noun
+비싸다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+이번 Noun
+주말 Noun
+에도 Josa
+나영 Noun
+씨 Noun
+를 Josa
+만날 Noun
+거 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+새 Noun
+옷 Noun
+을 Josa
+입 Noun
+을 Josa
+거 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+우리 Noun
+는 Josa
+이번 Noun
+주말 Noun
+에 Josa
+명동 Noun
+에 Josa
+갈다 Verb
+거 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+모자 Noun
+를 Josa
+살 Noun
+거 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+두 Noun
+개 Noun
+살 Noun
+거 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+양말 Noun
+도 Josa
+하다 Verb
+켤레 Noun
+살 Noun
+거 Noun
+예요 Josa
+Skipping garbage... (('.', 'Punctuation')
+저 Noun
+는 Josa
+쇼핑 Noun
+을 Josa
+좋아하다 Adjective
+Skipping garbage... (('.', 'Punctuation')
+Skipping garbage... (('\n', 'Foreign')
+
+Duplicates: set()
+
+Out of lesson (in previous): 씨1 4 Noun
+Out of lesson (in previous): 저1 5 Noun
+Out of lesson (in previous): 한국 1 Noun
+Going to fill 모자 from 103 Lesson!
+Out of lesson (in previous): 사다 2 Verb
+Going to fill 옷 from 104 Lesson!
+Out of lesson (in previous): 좋아하다 1 Adjective
+Out of lesson (in previous): 예쁘다 1 Adjective
+Going to fill 비싸다 from 104 Lesson!
+Out of lesson (in previous): 아주 1 Noun
+Out of lesson (in previous): 친구 1 Noun
+Out of lesson (in previous): 자주 1 Noun
+Going to fill 이번 from 107 Lesson!
+Going to fill 근처 from 107 Lesson!
+Going to fill 주말 from 107 Lesson!
+Out of lesson (in previous): 토요일 1 Noun
+Going to fill 명동 from 107 Lesson!
+Going to fill 쇼핑 from 107 Lesson!
+Going to fill 지난주 from 107 Lesson!
+Out of lesson (in previous): 우리 1 Noun
+Out of lesson (in previous): 같이1 1 Adverb
+Going to fill 조금 from 108 Lesson!
+Fill 개!
+Fill 노란색!
+Fill 벌!
+Fill 새!
+Fill 셔츠!
+Fill 양말!
+Fill 켤레!
+Fill 파란색!
+Out of lesson (in next): 살 3 Noun-- 사다
+Out of lesson (in next): 입 1 Noun-- 입다
+Out of lesson (in next): 해 1 Noun
+
+Out of vocab: 는 7 Josa
+Out of vocab: 홍대 1 Noun
+Out of vocab: 에서 1 Josa
+Out of vocab: 을 5 Josa
+Out of vocab: 요 1 Josa
+Out of vocab: 에는 1 Josa
+Out of vocab: 나영 4 Noun
+Out of vocab: 와 1 Josa
+Out of vocab: 하다 4 Verb
+Out of vocab: 를 4 Josa
+Out of vocab: 않다 1 Verb
+Out of vocab: 도 2 Josa
+Out of vocab: 의 1 Josa
+Out of vocab: 에도 1 Josa
+Out of vocab: 만날 1 Noun-- 만나다
+Out of vocab: 거 6 Noun
+Out of vocab: 예요 6 Josa
+Out of vocab: 에 2 Josa
+Out of vocab: 갈다 1 Verb-- 가다
+Out of vocab: 두 1 Noun
