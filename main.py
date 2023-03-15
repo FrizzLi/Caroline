@@ -80,6 +80,8 @@ bot.run(BOTS_TOKEN)
 # TODO music: Logs during polishing
 # TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there)
 
+# TODO Apply ChatGPT opt. suggestions
+# TODO (UPON NLP I guess) Script that explores all my python code, counts what and how many times i used certain methods along with their data struc.
 # TODO Resolve all weird pylint errors
 # TODO Tests (AI: setup.py, pytest from reqs, _apply_actions test (rmv), docs)
 # TODO surveillance: Voice stats graphs, finish/remove on_presence_update
