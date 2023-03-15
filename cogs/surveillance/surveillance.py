@@ -31,6 +31,7 @@ class Surveillance(commands.Cog):
         self.local_vars = {"self": self}
         self.channel_msg = ""
         self.surveillance_channel = None
+        self.timezone = ""
 
     def get_code(self, message):
         """Cleanses the message to a pure code ready to be executed.
@@ -70,7 +71,7 @@ class Surveillance(commands.Cog):
             str: datetime in "Year-Month-Day Time" format
         """
 
-        time = datetime.now(pytz.timezone("Europe/Bratislava"))
+        time = datetime.now(pytz.timezone(self.timezone))
         time = time.strftime("%Y-%m-%d %H:%M:%S")
         return time
 
@@ -96,13 +97,14 @@ class Surveillance(commands.Cog):
         Gets surveillance text channel and calls method for online tracking.
         """
 
-        src_dir = Path(__file__).parents[2]
-        json_path = Path(f"{src_dir}/config.json")
-        with open(json_path, encoding="utf-8") as file:
-            surveillance_settings = json.load(file)["surveillance"]
-        channel_id = int(surveillance_settings["channel_id"])
-        self.surveillance_channel = self.bot.get_channel(channel_id)
+        with open("config.json", encoding="utf-8") as file:
+            config_json = json.load(file)
+        channel_id = int(config_json["surveillance"]["channel_id"])
 
+        # we cannot do it in __init__, self.bot.get_channel won't work
+        self.surveillance_channel = self.bot.get_channel(channel_id)
+        self.timezone = config_json["timezone"]
+        
         self.online_tracking.start()
 
     @commands.Cog.listener()

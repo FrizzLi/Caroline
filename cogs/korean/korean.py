@@ -26,10 +26,11 @@ class Language(commands.Cog):
         self.vocab_audio_paths = self.get_vocab_paths()
         self.vocab_df = self.get_vocab()
         self.bot = bot
-        self.config = self.load_config()
+        self.korean_config = self.load_korean_config()
         self.ffmpeg_path = (
             "C:/ffmpeg/ffmpeg.exe" if os.name == "nt" else "/usr/bin/ffmpeg"
         )
+        self.timezone = ""
 
     # These parameters doesn't need to be in config, they're not so usable
     personalization = True  # NotImplemented
@@ -67,7 +68,7 @@ class Language(commands.Cog):
         
         return audio_paths_labelled
 
-    def load_config(self):
+    def load_korean_config(self):
         src_dir = Path(__file__).parents[0]
         config_path = Path(f"{src_dir}/config.json")
         if os.path.exists(config_path):
@@ -84,33 +85,33 @@ class Language(commands.Cog):
         src_dir = Path(__file__).parents[0]
         config_path = Path(f"{src_dir}/config.json")
         with open(config_path, "w", encoding="utf-8") as file:
-            json.dump(self.config, file)
+            json.dump(self.korean_config, file)
 
     @property
     def level(self):
-        return f'vocab_level_{self.config["level"]}'
+        return f'vocab_level_{self.korean_config["level"]}'
 
     @level.setter
     def level(self, number):
-        self.config["level"] = number
+        self.korean_config["level"] = number
         self.save_config()
 
     @property
     def lesson(self):
-        return f'lesson_{self.config["lesson"]}'
+        return f'lesson_{self.korean_config["lesson"]}'
 
     @lesson.setter
     def lesson(self, number):
-        self.config["lesson"] = number
+        self.korean_config["lesson"] = number
         self.save_config()
 
     @property
     def custom(self):
-        return f'custom_{self.config["custom"]}'
+        return f'custom_{self.korean_config["custom"]}'
 
     @custom.setter
     def custom(self, fname):
-        self.config["custom"] = fname
+        self.korean_config["custom"] = fname
         self.save_config()
 
     @app_commands.command()
@@ -122,8 +123,8 @@ class Language(commands.Cog):
             description="Settings for choosing lessons",
             colour=discord.Colour.blue(),
         )
-        for setting in self.config:
-            embed.add_field(name=setting, value=self.config[setting])
+        for setting in self.korean_config:
+            embed.add_field(name=setting, value=self.korean_config[setting])
 
         await interaction.response.send_message(embed=embed)
 
@@ -183,6 +184,14 @@ class Language(commands.Cog):
     #     await interaction.response.send_message(msg)
     #     dl_vocab(self.level, lesson, text_only)
     #     await interaction.followup.send("Vocab has been created!")
+
+    # Listeners
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Executes when the cog is loaded and inits timezone."""
+
+        with open("config.json", encoding="utf-8") as file:
+            self.timezone = json.load(file)["timezone"]
 
     @app_commands.command(name="zev")
     async def zexercise_vocab(self, interaction):
@@ -457,7 +466,7 @@ class Language(commands.Cog):
             stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
             counter = f"{i}. word out of {count_n}"
 
-            time = datetime.now(pytz.timezone("Europe/Bratislava"))
+            time = datetime.now(pytz.timezone(self.timezone))
             time = time.strftime("%Y-%m-%d %H:%M:%S")
             stats_list.append(
                 [
@@ -826,7 +835,7 @@ class Language(commands.Cog):
             stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
             counter = f"{i}. word out of {count_n}"
 
-            time = datetime.now(pytz.timezone("Europe/Bratislava"))
+            time = datetime.now(pytz.timezone(self.timezone))
             time = time.strftime("%Y-%m-%d %H:%M:%S")
             stats_list.append(
                 [
