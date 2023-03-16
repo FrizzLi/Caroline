@@ -18,13 +18,11 @@ from cogs.music.source import YTDLSource, ytdl
 
 
 class Music(commands.Cog):
-    """Music related commands."""
-
     def __init__(self, bot):
         self.bot = bot
         self.players = {}
+        self.timezone = ""
 
-    # Helping methods
     async def cleanup(self, guild):
         """Deletes guild player if one exists.
 
@@ -64,7 +62,7 @@ class Music(commands.Cog):
         """Gets data from song requesting commands for Groovy or Rythm.
 
         Args:
-            msg_id (_type_): _description_
+            msg_id (discord.message.Message): discord's message in the chatroom
 
         Returns:
             Tuple[str, str, str, str]: datetime, author, title, webpage_url
@@ -74,14 +72,13 @@ class Music(commands.Cog):
         data = ytdl.extract_info(url=search_expr, download=False)
 
         if "entries" in data:
-            if len(data["entries"]) == 1:  # for search single song
+            if len(data["entries"]) == 1:  # for single song search
                 data["title"] = data["entries"][0]["title"]
                 data["webpage_url"] = data["entries"][0]["webpage_url"]
 
         data["title"] = data["title"].replace('"', "'")
         data["webpage_url"] = data["webpage_url"].replace('"', "'")
-        timezone = pytz.timezone("Europe/Berlin")
-        tz_aware_date = msg_id.created_at.astimezone(timezone)
+        tz_aware_date = msg_id.created_at.astimezone(pytz.timezone(self.timezone))
 
         datetime = tz_aware_date.strftime("%Y-%m-%d %H:%M:%S")
         author = msg_id.author.name
@@ -102,7 +99,7 @@ class Music(commands.Cog):
 
         data = ytdl.extract_info(url=row_URL, download=False)
         if "entries" in data:
-            if len(data["entries"]) == 1:  # for search single song
+            if len(data["entries"]) == 1:  # for single song search
                 data["duration"] = data["entries"][0]["duration"]
                 data["view_count"] = data["entries"][0]["view_count"]
                 data["categories"] = data["entries"][0]["categories"]
@@ -120,6 +117,13 @@ class Music(commands.Cog):
         return duration, views, categories
 
     # Listeners
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Executes when the cog is loaded and inits timezone."""
+
+        with open("config.json", encoding="utf-8") as file:
+            self.timezone = json.load(file)["timezone"]
+
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         """Leave the channel when all other members leave.
