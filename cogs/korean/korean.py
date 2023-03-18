@@ -385,7 +385,7 @@ class Language(commands.Cog):
         medium = medium_p = 0
         hard = hard_p = 0
         stats = ""
-        view = SessionView()
+        view = SessionVocabView()
 
         while True:
             eng, kor = vocab[-1]
@@ -549,7 +549,7 @@ class Language(commands.Cog):
         await interaction.followup.send(f"[Lesson {lesson_number}]")
         counter = f"{i}. lesson out of {count_n}."
         msg = await interaction.followup.send(counter)
-        view = SessionView2()
+        view = SessionListenView()
 
         while True:
             # handling word that has no audio
@@ -752,7 +752,7 @@ class Language(commands.Cog):
         medium = medium_p = 0
         hard = hard_p = 0
         stats = ""
-        view = SessionView()
+        view = SessionVocabView()
 
         # change: vocab = nl[-1][0], eng = kor_to_eng
 
@@ -897,7 +897,7 @@ class Language(commands.Cog):
             return
 
         await interaction.followup.send(f"[Lesson {lesson_number}]")
-        # view = SessionView2()
+        # view = SessionListenView()
         await interaction.followup.send(f"```{reading_text}```")
 
 
