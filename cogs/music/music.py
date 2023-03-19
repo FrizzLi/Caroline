@@ -58,30 +58,30 @@ class Music(commands.Cog):
 
         return player
 
-    def get_ytb_data_from_old_cmd_req(self, msg_id):
+    def get_ytb_data_from_old_cmd_req(self, msg):
         """Gets data from song requesting commands for Groovy or Rythm.
 
         Args:
-            msg_id (discord.message.Message): discord's message in the chatroom
+            msg (discord.message.Message): discord's message in the chatroom
 
         Returns:
             Tuple[str, str, str, str]: datetime, author, title, webpage_url
         """
 
-        search_expr = msg_id.content[6:]
+        search_expr = msg.content[6:]
         data = ytdl.extract_info(url=search_expr, download=False)
 
-        if "entries" in data:
+        if "entries" in data:  # ! What if not? no return? (cant reproduce)
             if len(data["entries"]) == 1:  # for single song search
                 data["title"] = data["entries"][0]["title"]
                 data["webpage_url"] = data["entries"][0]["webpage_url"]
 
         data["title"] = data["title"].replace('"', "'")
         data["webpage_url"] = data["webpage_url"].replace('"', "'")
-        tz_aware_date = msg_id.created_at.astimezone(pytz.timezone(self.timezone))
+        tz_aware_date = msg.created_at.astimezone(pytz.timezone(self.timezone))
 
         datetime = tz_aware_date.strftime("%Y-%m-%d %H:%M:%S")
-        author = msg_id.author.name
+        author = msg.author.name
         title = data["title"]
         webpage_url = data["webpage_url"]
 
@@ -137,6 +137,8 @@ class Music(commands.Cog):
         """
 
         voice_state = member.guild.voice_client
+        if not voice_state:
+            return
         members_amount = len(voice_state.channel.members)
 
         # Checks if the bot is connected in the voice channel and
@@ -147,58 +149,62 @@ class Music(commands.Cog):
     # General commands (with no slash)
     @commands.command()
     async def history(self, ctx, limit: int = 1000):
-        """Saves history of songs into Google Sheets."""
+        """Saves history of songs into Google Sheets.
 
-        table_data = []
+        _extended_summary_
+
+        Args:
+            ctx (_type_): _description_
+            limit (int, optional): amount of messages to read.
+                Defaults to 1000.
+        """
+
+        table_rows = []
         i = 0
-        async for elem in ctx.channel.history(limit=limit):
-            if elem.content.startswith("___") and (
-                elem.author.name == "GLaDOS" or elem.author.name == "Caroline"
+        async for msg in ctx.channel.history(limit=limit):
+
+            # stop searching upon starting message with ___ from bots
+            if msg.content.startswith("___") and (
+                msg.author.name in ("GLaDOS", "Caroline")
             ):
                 break
             i += 1
 
             # retrieve data from basic command - old bots (Groovy, Rhytm)
-            if elem.content.lower()[1:].startswith("play"):
+            cleansed_cmd = msg.content.lower()[1:]
+            if cleansed_cmd.startswith("play"):
                 try:
-                    (
-                        datetime,
-                        author,
-                        title,
-                        webpage_url,
-                    ) = self.get_ytb_cmd_data(elem)
+                    rec = self.get_ytb_data_from_old_cmd_req(msg)
+
+                # !unable to reproduce the problem to fix general exception
                 except Exception as err:
-                    print(f"{i}. Error: {err}. (command: {elem.content})")
+                    print(f"{i}. Error: {err}. (command: {msg.content})")
                     continue
 
-                rec = datetime, author, title, webpage_url
-                table_data.append(rec)
+                table_rows.append(rec)
                 print(f"{i}. (old) downloaded: {rec}")
 
             # retrieve data from slash command - new bot (GLaDOS)
             elif (
-                (
-                    elem.author.name == "GLaDOS"
-                    or elem.author.name == "Caroline"
-                )
-                and elem.embeds
-                and elem.embeds[0].description.startswith("Queued")
+                msg.author.name in ("GLaDOS", "Caroline")
+                and msg.embeds
+                and msg.embeds[0].description.startswith("Queued")
             ):
-                msg = elem.embeds[0].description
+                # pattern: Queued <song_name> [@<requester>]
                 matching_expr = r"Queued \[(.+?)\]\((.+?)\) \[<@!?(\d+)>]"
-
+                msg = msg.embeds[0].description
                 result = re.match(matching_expr, msg)
-                if result:
+                if result:  # TODO: why is there IF?
                     title = result[1].replace('"', "'")
                     webpage_url = result[2].replace('"', "'")
                     author_id = result[3]
-                author = await ctx.guild.fetch_member(author_id)
-                timezone = pytz.timezone("Europe/Berlin")
-                tz_aware_date = elem.created_at.astimezone(timezone)
-                datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")  # %Z%z
 
-                rec = datetime, author.name, title, webpage_url
-                table_data.append(rec)
+                tz_aware_date = msg.created_at.astimezone(pytz.timezone(self.timezone))
+                datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")  # %Z%z
+                author_name = await ctx.guild.fetch_member(author_id).name
+
+                rec = datetime, author_name, title, webpage_url
+                table_rows.append(rec)
                 print(f"{i}. (new) downloaded: {rec}")
 
         # save to gsheets
@@ -209,7 +215,7 @@ class Music(commands.Cog):
 
         # cr: g_sheet.add_worksheet("Commands Log", df.shape[0], df.shape[1])
         g_work_sheet = g_sheet.worksheet("Commands Log")
-        df = pd.DataFrame(table_data, index=None)
+        df = pd.DataFrame(table_rows, index=None)
         wks_formatted_rows = df.values.tolist()
         g_work_sheet.append_rows(
             wks_formatted_rows, value_input_option="USER_ENTERED"
@@ -330,9 +336,11 @@ class Music(commands.Cog):
                 ytb_stats = row.Duration, row.Views, row.Categories
                 if not all(ytb_stats):
                     try:
-                        duration, views, categories = self.get_ytb_track_data(
-                            row
-                        )
+                        (
+                            duration,
+                            views,
+                            categories,
+                        ) = self.get_ytb_data_from_url(row.URL)
                     except Exception as err:
                         print(f"{i}. error: {err}. (row: {row})")
                         continue
