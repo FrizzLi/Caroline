@@ -41,7 +41,7 @@ class Music(commands.Cog):
             pass
 
     def get_player(self, interaction):
-        """Retrieves guild player, or generates one.
+        """Retrieves guild player, or generates one if one does not exist.
 
         Args:
             interaction (discord.interaction.Interaction): slash cmd context
@@ -71,7 +71,7 @@ class Music(commands.Cog):
         search_expr = msg.content[6:]
         data = ytdl.extract_info(url=search_expr, download=False)
 
-        if "entries" in data:  # ! What if not? no return? (cant reproduce)
+        if "entries" in data:  # ! TODO: What if not? no return? (cant reproduce)
             if len(data["entries"]) == 1:  # for single song search
                 data["title"] = data["entries"][0]["title"]
                 data["webpage_url"] = data["entries"][0]["webpage_url"]
@@ -98,7 +98,7 @@ class Music(commands.Cog):
         """
 
         data = ytdl.extract_info(url=row_URL, download=False)
-        if "entries" in data:
+        if "entries" in data:  # TODO: what if it doesnt have?, fix above ! too
             if len(data["entries"]) == 1:  # for single song search
                 data["duration"] = data["entries"][0]["duration"]
                 data["view_count"] = data["entries"][0]["view_count"]
@@ -119,7 +119,7 @@ class Music(commands.Cog):
     # Listeners
     @commands.Cog.listener()
     async def on_ready(self):
-        """Executes when the cog is loaded and inits timezone."""
+        """Executes when the cog is loaded and inits timezone string."""
 
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
