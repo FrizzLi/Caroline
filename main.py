@@ -74,10 +74,10 @@ BOTS_PREFIX = bot_settings["prefix"]
 bot = MyBot()
 bot.run(BOTS_TOKEN)
 
+# stopped at music.py TODO: [::], other priorities
 # TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
-
-# TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO music: Logs during polishing
+# TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there)
 
 # TODO Apply ChatGPT opt. suggestions

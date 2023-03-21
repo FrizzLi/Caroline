@@ -116,6 +116,23 @@ class Music(commands.Cog):
 
         return duration, views, categories
 
+    def get_ytb_data_from_bot_embed_msg(self, ctx, msg):
+        # pattern: Queued <song_name> [@<requester>]get_ytb_data_from_bot_embed_msg
+
+        matching_expr = r"Queued \[(.+?)\]\((.+?)\) \[<@!?(\d+)>]"
+        msg_descr = msg.embeds[0].description
+        result = re.match(matching_expr, msg_descr)
+        if result:  # TODO: why is there IF?
+            title = result[1].replace('"', "'")
+            webpage_url = result[2].replace('"', "'")
+            author_id = result[3]
+
+        tz_aware_date = msg.created_at.astimezone(pytz.timezone(self.timezone))
+        datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")  # %Z%z
+
+        rec = datetime, author_id, title, webpage_url
+        return rec
+
     # Listeners
     @commands.Cog.listener()
     async def on_ready(self):
@@ -154,7 +171,7 @@ class Music(commands.Cog):
         _extended_summary_
 
         Args:
-            ctx (_type_): _description_
+            ctx (discord.ext.commands.context.Context): context (old commands)
             limit (int, optional): amount of messages to read.
                 Defaults to 1000.
         """
@@ -171,8 +188,7 @@ class Music(commands.Cog):
             i += 1
 
             # retrieve data from basic command - old bots (Groovy, Rhytm)
-            cleansed_cmd = msg.content.lower()[1:]
-            if cleansed_cmd.startswith("play"):
+            if msg.content.lower()[1:].startswith("play"):
                 try:
                     rec = self.get_ytb_data_from_old_cmd_req(msg)
 
@@ -190,22 +206,12 @@ class Music(commands.Cog):
                 and msg.embeds
                 and msg.embeds[0].description.startswith("Queued")
             ):
-                # pattern: Queued <song_name> [@<requester>]
-                matching_expr = r"Queued \[(.+?)\]\((.+?)\) \[<@!?(\d+)>]"
-                msg = msg.embeds[0].description
-                result = re.match(matching_expr, msg)
-                if result:  # TODO: why is there IF?
-                    title = result[1].replace('"', "'")
-                    webpage_url = result[2].replace('"', "'")
-                    author_id = result[3]
-
-                tz_aware_date = msg.created_at.astimezone(pytz.timezone(self.timezone))
-                datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")  # %Z%z
+                rec = self.get_ytb_data_from_bot_embed_msg(ctx, msg)
                 author_name = await ctx.guild.fetch_member(author_id).name
-
-                rec = datetime, author_name, title, webpage_url
+                # TODO rec = rec[::] : 
                 table_rows.append(rec)
                 print(f"{i}. (new) downloaded: {rec}")
+
 
         # save to gsheets
         credentials_dict_string = os.environ["GOOGLE_CREDENTIALS"]
