@@ -323,9 +323,7 @@ class Language(commands.Cog):
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
-        voice = discord.utils.get(
-            self.bot.voice_clients, guild=interaction.guild
-        )
+        voice = get(self.bot.voice_clients, guild=interaction.guild)
 
         await self.bot.change_presence(
             activity=discord.Game(name="Vocab listening")
@@ -402,12 +400,18 @@ class Language(commands.Cog):
                         )
                     )
                 except Exception as err:
-                    print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
+                    print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
             else:
                 msg_display = f"{kor} = ||{eng:20}||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
-            await msg.edit(content=content, view=view)
+            try:
+                await msg.edit(content=content, view=view)
+            except discord.errors.HTTPException as err:
+                # TODO: err resolve, cannot delete or edit msg, workarounded
+                print(err)
+                msg = await interaction.followup.send(content)
+                await msg.edit(content=content, view=view)
 
             # wait for interaction
             interaction = await self.bot.wait_for(
@@ -457,7 +461,12 @@ class Language(commands.Cog):
 
                 # ending message
                 content = f"{counter}\n{msg_display}\n{stats}"
-                await msg.edit(content=content, view=view)
+                try:
+                    await msg.edit(content=content, view=view)
+                except discord.errors.HTTPException as err:
+                    print(err)
+                    ws_stats.append_rows(stats_list)
+                    break
                 ws_stats.append_rows(stats_list)
                 break
             elif button_id == "repeat":
@@ -562,7 +571,7 @@ class Language(commands.Cog):
                     )
                 )
             except Exception as err:
-                print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
+                print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
             content = f"```{counter}\n{play_track[1]}```"
             await msg.edit(content=content, view=view)
@@ -598,7 +607,11 @@ class Language(commands.Cog):
 
                 # ending message
                 content = f"```{counter}\n{listening_text}```"
-                await msg.edit(content=content, view=view)
+                try:
+                    await msg.edit(content=content, view=view)
+                except discord.errors.HTTPException as err:
+                    print(str(err).encode("utf-8"))
+                    break
                 break
 
             counter = f"{i}. lesson out of {count_n}"
@@ -771,12 +784,16 @@ class Language(commands.Cog):
                         )
                     )
                 except Exception as err:
-                    print(f"Wait, press 🔁 to play unplayed audio!!! [{err}]")
+                    print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
             else:
                 msg_display = f"{kor} = ||{kor_to_eng[kor]:20}||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
-            await msg.edit(content=content, view=view)
+            try:
+                await msg.edit(content=content, view=view)
+            except discord.errors.HTTPException as err:
+                print(err)
+                continue
 
             # wait for interaction
             interaction = await self.bot.wait_for(
@@ -826,7 +843,12 @@ class Language(commands.Cog):
 
                 # ending message
                 content = f"{counter}\n{msg_display}\n{stats}"
-                await msg.edit(content=content, view=view)
+                try:
+                    await msg.edit(content=content, view=view)
+                except discord.errors.HTTPException as err:
+                    print(err)
+                    vocab_g_ws.append_rows(stats_list)
+                    break
                 vocab_g_ws.append_rows(stats_list)
                 break
             elif button_id == "repeat":

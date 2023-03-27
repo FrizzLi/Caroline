@@ -78,7 +78,7 @@ bot.run(BOTS_TOKEN)
 # TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
 # TODO music: Logs during polishing
 # TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
-# TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there)
+# TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there); commands from phone, applies to voice in pc bug
 
 # TODO Apply ChatGPT opt. suggestions
 # TODO (UPON NLP I guess) Script that explores all my python code, counts what and how many times i used certain methods along with their data struc.
