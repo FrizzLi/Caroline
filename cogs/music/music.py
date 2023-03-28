@@ -10,6 +10,7 @@ import pytz
 import youtube_dl
 from discord import app_commands
 from discord.ext import commands
+from discord.utils import get
 from pytube import Playlist
 
 from cogs.music.player import MusicPlayer
@@ -520,15 +521,16 @@ class Music(commands.Cog):
         voice.
         """
 
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_connected():
+        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        # vc = interaction.guild.voice_client
+        if not voice:
             msg = "I'm not connected to a voice channel."
             return await interaction.response.send_message(msg)
 
         await self.cleanup(interaction.guild)
 
         embed = discord.Embed(
-            description=f"Left **{vc.channel.name}** channel.",
+            description=f"Left **{voice.channel.name}** channel.",
             color=discord.Color.green(),
         )
         await interaction.response.send_message(embed=embed)
