@@ -320,7 +320,7 @@ class Language(commands.Cog):
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:
-            raise commands.CommandError("No bot nor you is connected.")
+            await interaction.followup.send("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
         voice = get(self.bot.voice_clients, guild=interaction.guild)
