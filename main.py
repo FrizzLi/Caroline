@@ -74,10 +74,10 @@ BOTS_PREFIX = bot_settings["prefix"]
 bot = MyBot()
 bot.run(BOTS_TOKEN)
 
+# TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # stopped at music.py TODO: [::], other priorities
 # TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
 # TODO music: Logs during polishing
-# TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there); commands from phone, applies to voice in pc bug
 
 # TODO Apply ChatGPT opt. suggestions
@@ -90,6 +90,5 @@ bot.run(BOTS_TOKEN)
 # TODO music: Track timestamps (how long the songs have been played instead of reqs)
 # TODO music: Leaving the voice -> refresh still works.. polish that
 # TODO music: Create radio bot,, automatically detects what ppl listen/request
-# and just picks something out of it, or finds something to it (recommendation system!)
 
 # opt ideas: yield, slots, dict to namedtuple, # type: ignore (for mypy?) saw in rapptz
