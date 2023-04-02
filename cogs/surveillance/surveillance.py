@@ -8,7 +8,6 @@ import json
 import os
 import textwrap
 from datetime import datetime
-from pathlib import Path
 
 import discord
 import pytz
@@ -104,7 +103,7 @@ class Surveillance(commands.Cog):
         # we cannot do it in __init__, self.bot.get_channel won't work
         self.surveillance_channel = self.bot.get_channel(channel_id)
         self.timezone = config_json["timezone"]
-        
+
         self.online_tracking.start()
 
     @commands.Cog.listener()
