@@ -677,7 +677,8 @@ class Language(commands.Cog):
         knowledge_marks = []  # redundant,, but will opt later
         word_scores = {}
         new_word = ""
-        new_word_score = 0
+        debug_compute = []
+        new_word_score_total = 0
         new_word_counter = 0
         for row in df.itertuples():
             if new_word_counter >= 10 and new_word == row.Word:
@@ -687,24 +688,28 @@ class Language(commands.Cog):
             else:
                 if new_word:
                     mean = fmean(knowledge)
-                    empty_fill = 0
+                    empty_fill_sum = 0
                     for i in range(new_word_counter+1, 10):
-                        empty_fill += mean * scores[i]
+                        empty_fill = mean * scores[i]
+                        empty_fill_sum += empty_fill
+                        debug_compute.append(empty_fill)
                         # print(f"i({i}){new_word}: empty_fill")
 
                     # empty_fill = fmean(knowledge) * (10-new_word_counter)
-                    word_score = new_word_score + empty_fill
+                    word_score = new_word_score_total + empty_fill_sum
                     word_scores[new_word] = word_score
-                    new_word_score = 0
-                    new_word_counter = 0
                     score_list.append(
                         [
                             new_word,
                             word_score,
                             "".join(knowledge_marks),
-                            # ", ".join(str(x) for x in knowledge)
+                            ", ".join(str(round(x,2)) for x in debug_compute)
                         ]
                     )
+                    new_word_score_total = 0
+                    new_word_counter = 0
+                    
+                    debug_compute = []
                     knowledge = []
                     knowledge_marks = []
                 new_word = row.Word
@@ -717,14 +722,16 @@ class Language(commands.Cog):
                 knowledge_multiplier = 4
             # new_word_score.append(f"{knowledge_multiplier}*{scores[new_word_counter]}")
             
-            new_word_score += knowledge_multiplier * scores[new_word_counter]
+            new_word_score = knowledge_multiplier * scores[new_word_counter]
+            debug_compute.append(new_word_score)
+            new_word_score_total += new_word_score
             knowledge.append(knowledge_multiplier)
             knowledge_marks.append(row.Knowledge)
 
-            row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
-            now_datetime = datetime_now
-            days_diff = (now_datetime - row_datetime).days
-            new_word_score += days_diff * 0.01
+            # row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
+            # now_datetime = datetime_now
+            # days_diff = (now_datetime - row_datetime).days
+            # new_word_score_total += days_diff * 0.01
 
         score_list = sorted(score_list, key=lambda x:x[1], reverse=True)
         score_g_ws.append_rows(score_list)
