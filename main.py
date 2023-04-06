@@ -78,6 +78,7 @@ bot.run(BOTS_TOKEN)
 # stopped at music.py TODO: [::], other priorities
 # TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
 # TODO music: Logs during polishing
+# TODO korean: update sheets when the session is over, not when it starts -> polish that whole function
 # TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there); commands from phone, applies to voice in pc bug
 
 # TODO Apply ChatGPT opt. suggestions

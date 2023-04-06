@@ -635,6 +635,8 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
+
+        # get voice
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:
@@ -644,6 +646,7 @@ class Language(commands.Cog):
         voice = discord.utils.get(
             self.bot.voice_clients, guild=interaction.guild
         )
+
         def get_worksheet(spread_name, sheet_name):
             credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
             credentials_dict = json.loads(credentials_dict_str)
@@ -657,7 +660,7 @@ class Language(commands.Cog):
         score_g_ws.clear()
         score_list = []
 
-        # get session number
+        # get current_session_number
         session_numbers = vocab_g_ws.col_values(4)
         if session_numbers:
             last_session_number = max(map(int, session_numbers[1:]))
