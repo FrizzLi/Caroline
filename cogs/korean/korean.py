@@ -402,7 +402,7 @@ class Language(commands.Cog):
                 except Exception as err:
                     print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
             else:
-                msg_display = f"{kor} = ||{eng:20}||"
+                msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + "||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
             try:
@@ -796,14 +796,16 @@ class Language(commands.Cog):
                 except Exception as err:
                     print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
             else:
-                msg_display = f"{kor} = ||{kor_to_eng[kor]:20}||"
+                msg_display = f"{kor} = ||{kor_to_eng[kor]:20}" + " " * (i % 15) + "||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
             try:
                 await msg.edit(content=content, view=view)
             except discord.errors.HTTPException as err:
+                # TODO: err resolve, cannot delete or edit msg, workarounded
                 print(err)
-                continue
+                msg = await interaction.followup.send(content)
+                await msg.edit(content=content, view=view)
 
             # wait for interaction
             interaction = await self.bot.wait_for(
