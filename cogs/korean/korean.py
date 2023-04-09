@@ -601,7 +601,6 @@ class Language(commands.Cog):
                 i += 1
             elif button_id == "repeat":
                 queue.insert(0, play_track)
-                i += 1
             elif button_id == "end":
                 listening_text = "Ending listening session."
 
@@ -755,7 +754,22 @@ class Language(commands.Cog):
         nl = nl[::-1]
         i = 1
         count_n = len(nl)
-        kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean).to_dict()
+        kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean)[::-1].to_dict()
+
+        # ### there was a problem that it read duplication instead of first occurence.. so i just removed the row;; maybe just ::-1 is enough
+        # vocab = []
+
+        # for row in self.vocab_df.itertuples():
+        #     if not row.Lesson:
+        #         continue
+        #     if row.Lesson > lesson_number:
+        #         break
+        #     if row.Lesson == lesson_number:
+        #         vocab.append((row.Book_English, row.Korean))
+
+        # random.shuffle(vocab)
+        # ###
+
         await interaction.followup.send(f"[Review]; session: {current_session_number}")
         counter = f"{i}. word out of {count_n}."
         msg = await interaction.followup.send(counter)
