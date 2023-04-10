@@ -574,7 +574,14 @@ class Language(commands.Cog):
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
             content = f"```{counter}\n{play_track[1]}```"
-            await msg.edit(content=content, view=view)
+
+            try:
+                await msg.edit(content=content, view=view)
+            except discord.errors.HTTPException as err:
+                # TODO: err resolve, cannot delete or edit msg, workarounded
+                print(err)
+                msg = await interaction.followup.send(content)
+                await msg.edit(content=content, view=view)
 
             # wait for interaction
             interaction = await self.bot.wait_for(
