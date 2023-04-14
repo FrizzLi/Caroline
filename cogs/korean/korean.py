@@ -746,20 +746,29 @@ class Language(commands.Cog):
         score_list = sorted(score_list, key=lambda x:x[1], reverse=True)
         score_g_ws.append_rows(score_list)
 
-        sorted_word_score = list(sorted(word_scores.items(), key=lambda item: item[1], reverse=True))
+        sorted_word_score = sorted(word_scores.items(), key=lambda item: item[1], reverse=True)
+        sorted_words = [sorted_word_score[i][0] for i in range(100)]
+
         # word, score, marks arranged
 
-        nl = []
-        size = 10
-        for i in range(0, len(sorted_word_score), size):
-            if i > size * 4:
-                # nl += sorted_word_score[i::]
-                break
-            subset = sorted_word_score[i:i+size]
-            random.shuffle(subset)
-            nl += subset
+        # Use probability distribution to pick the most unknown words to known words
+        # Create a list of probabilities that decrease linearly from left to right
+        weights = np.linspace(1, 0, 100)
+        weights /= weights.sum()
+        nl = np.random.choice(sorted_words, p=weights, size=50, replace=False)
 
-        nl = nl[::-1]
+        # nl2 = []
+        # size = 10
+        # for i in range(0, len(sorted_word_score), size):
+        #     if i > size * 4:
+        #         # nl += sorted_word_score[i::]
+        #         break
+        #     subset = sorted_word_score[i:i+size]
+        #     random.shuffle(subset)
+        #     nl2 += subset
+
+        nl = list(nl)[::-1]
+        # nl2 = nl2[::-1]
         i = 1
         count_n = len(nl)
         kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean)[::-1].to_dict()
