@@ -357,7 +357,7 @@ class Language(commands.Cog):
             if row.Lesson > lesson_number:
                 break
             if row.Lesson == lesson_number:
-                vocab.append((row.Book_English, row.Korean))
+                vocab.append((row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)))
 
         random.shuffle(vocab)
 
@@ -386,12 +386,13 @@ class Language(commands.Cog):
         view = SessionVocabView()
 
         while True:
-            eng, kor = vocab[-1]
+            eng, kor, ex = vocab[-1]
+            example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
             kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
             # handling word that has no audio
             if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {eng:20}||"
+                msg_display = f"||{kor} = {eng:20}" + " " * (i % 15) + f"{example}||"
                 try:
                     voice.play(
                         discord.FFmpegPCMAudio(
@@ -402,7 +403,7 @@ class Language(commands.Cog):
                 except Exception as err:
                     print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
             else:
-                msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + "||"
+                msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
             try:
@@ -762,6 +763,7 @@ class Language(commands.Cog):
         i = 1
         count_n = len(nl)
         kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean)[::-1].to_dict()
+        kor_to_eng_exs = pd.Series(zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR), index=self.vocab_df.Korean)[::-1].to_dict()
 
         # ### there was a problem that it read duplication instead of first occurence.. so i just removed the row;; maybe just ::-1 is enough
         # vocab = []
@@ -801,12 +803,13 @@ class Language(commands.Cog):
         # change: vocab = nl[-1][0], eng = kor_to_eng
 
         while True:
-            kor = nl[-1][0]
+            kor = nl[-1]
+            example = f"\n{kor_to_eng_exs[kor][1]} = {kor_to_eng_exs[kor][0]}" if kor_to_eng_exs[kor][0] else ""
             kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
             # handling word that has no audio
             if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {kor_to_eng[kor]:20}||"
+                msg_display = f"||{kor} = {kor_to_eng[kor]:20}" + " " * (i % 15) + f"{example}||"
                 try:
                     voice.play(
                         discord.FFmpegPCMAudio(
@@ -817,7 +820,7 @@ class Language(commands.Cog):
                 except Exception as err:
                     print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
             else:
-                msg_display = f"{kor} = ||{kor_to_eng[kor]:20}" + " " * (i % 15) + "||"
+                msg_display = f"{kor} = ||{kor_to_eng[kor]:20}" + " " * (i % 15) + f"{example}||"
 
             content = f"{counter}\n{msg_display}\n{stats}"
             try:
@@ -895,7 +898,7 @@ class Language(commands.Cog):
             stats_list.append(
                 [
                     time,
-                    word_to_move[0],
+                    word_to_move,
                     stats_label[button_id],
                     current_session_number,
                 ]
