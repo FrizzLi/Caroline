@@ -10,7 +10,6 @@ python-dotenv
 pylint
 mypy
 black
-pytest
 
 ffmpeg
 pynacl

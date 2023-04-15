@@ -74,23 +74,26 @@ BOTS_PREFIX = bot_settings["prefix"]
 bot = MyBot()
 bot.run(BOTS_TOKEN)
 
+# stopped at music.py TODO: [::]
 # TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
-# stopped at music.py TODO: [::], other priorities
+# TODO surveillance: Look into "did something" part
+# TODO check docs + linting outside of music + korean cogs
+# TODO look for other bots inspiration for music bots
+
+# TODO music: Logs during polishing (use wrappers?)
 # TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
-# TODO music: Logs during polishing
+# TODO music: Leaving the voice -> refresh still works.. polish that
+# TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code
 # TODO korean: update sheets when the session is over, not when it starts -> polish that whole function
-# TODO korean: Increase sparsity of picking the words (prob. distr?); Words from today less! After Green?
-# TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code (TODOs there); commands from phone, applies to voice in pc bug
 
 # TODO Apply ChatGPT opt. suggestions
-# TODO (UPON NLP I guess) Script that explores all my python code, counts what and how many times i used certain methods along with their data struc.
-# TODO Resolve all weird pylint errors
-# TODO Tests (AI: setup.py, pytest from reqs, _apply_actions test (rmv), docs)
-# TODO surveillance: Voice stats graphs, finish/remove on_presence_update
-# TODO surveillance: Process old surveillance text and find info out of it
-# TODO surveillance: Look into "did something" part
-# TODO music: Track timestamps (how long the songs have been played instead of reqs)
-# TODO music: Leaving the voice -> refresh still works.. polish that
-# TODO music: Create radio bot,, automatically detects what ppl listen/request
+# TODO Script that explores all my python code, counts what and how many times i used certain methods along with their data struc.
 
+# TODO ALL: Pylint - resolve all errors
+# TODO ai_algo: Tests (_apply_actions test (rmv), docs)
+# TODO korean: Word by word mp3, to make sound for two words.. or remove two words?..
+# TODO music: Create radio (automatically picks songs)
+# TODO surveillance: Voice stats graphs, Process old logs
+
+# [Pylint and Doc Everything]
 # opt ideas: yield, slots, dict to namedtuple, # type: ignore (for mypy?) saw in rapptz
