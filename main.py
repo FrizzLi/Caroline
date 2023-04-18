@@ -74,12 +74,14 @@ BOTS_PREFIX = bot_settings["prefix"]
 bot = MyBot()
 bot.run(BOTS_TOKEN)
 
-# stopped at music.py TODO: [::]
+
 # TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO surveillance: Look into "did something" part
 # TODO check docs + linting outside of music + korean cogs
 # TODO look for other bots inspiration for music bots
+# opt ideas: yield, dict to namedtuple, # type: ignore (for mypy?) saw in rapptz
 
+# stopped at music.py TODO: [::]
 # TODO music: Logs during polishing (use wrappers?)
 # TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
 # TODO music: Leaving the voice -> refresh still works.. polish that
@@ -95,5 +97,3 @@ bot.run(BOTS_TOKEN)
 # TODO music: Create radio (automatically picks songs)
 # TODO surveillance: Voice stats graphs, Process old logs
 
-# [Pylint and Doc Everything]
-# opt ideas: yield, slots, dict to namedtuple, # type: ignore (for mypy?) saw in rapptz

@@ -996,13 +996,9 @@ async def setup(bot):
 
 # 4.463128600000001 perf score
 # 4.588911 last word not well known
-# TODO: Spreadsheets: Duplicates with lesson label overweite..! Deal with it in sheets / Script for removing duplicates and merging them into one
 # TODO: [During polish]
-# TODO: example button for each word (have already one sentece)
-# TODO: Make sessions end properly (if its not buttoned, and add another session, its bugged)
 # TODO: Maybe no need to use pandas, gspread has operations too! (research it)
 # TODO: Ending session stats?: Stats Graph, sort hardest from easiest words!
 # TODO: Download sound for all? (current script is published in memo bookmark), also need to force pickle save
-# TODO: Competitive mode?
-# TODO: local audio is not synced with changed gspread - we're loading everything anyway,, but still its ugly
-# TODO: Exercise reading - add reading listening if present
+# TODO: Bug: Have to be connected to turn on reading lesson
+# TODO: Bug: Error when long time no use.. zel
