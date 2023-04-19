@@ -980,25 +980,6 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
+# NOTE
 # MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
 # Refresh scoring after 10 attempts
-# FILL MISSING VALS: all ❌ and one day diff.
-# 1
-# 0.8
-# 0.64
-# 0.512
-# 0.4096
-# 0.32768
-# 0.262144
-# 0.209715
-# 0.167772
-# 0.1342176
-
-# 4.463128600000001 perf score
-# 4.588911 last word not well known
-# TODO: [During polish]
-# TODO: Maybe no need to use pandas, gspread has operations too! (research it)
-# TODO: Ending session stats?: Stats Graph, sort hardest from easiest words!
-# TODO: Download sound for all? (current script is published in memo bookmark), also need to force pickle save
-# TODO: Bug: Have to be connected to turn on reading lesson
-# TODO: Bug: Error when long time no use.. zel
