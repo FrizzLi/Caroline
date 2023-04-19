@@ -21,6 +21,7 @@
 
 - [ ] Pylint - resolve all errors
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
+- [ ] check other bots for inspiration
 - [ ] music.py: Create radio (automatically picks songs)
 - [ ] surveillance.py: Voice stats graphs, Process old logs
 - [ ] korean.py
