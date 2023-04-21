@@ -23,8 +23,6 @@ class Surveillance(commands.Cog):
             create subclass - our own customized cog module
     """
 
-    __slots__ = ("bot", "local_vars")
-
     def __init__(self, bot):
         self.bot = bot
         self.local_vars = {"self": self}
