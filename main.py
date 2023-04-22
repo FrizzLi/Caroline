@@ -10,13 +10,13 @@ from dotenv import load_dotenv
 
 
 class MyBot(commands.Bot):
-    def __init__(self):
+    def __init__(self, variables):
         super().__init__(
-            command_prefix=BOTS_PREFIX,
+            command_prefix=variables["prefix"],
+            application_id=variables["app_id"],
             intents=discord.Intents().all(),
-            application_id=BOTS_APP_ID,
         )
-        self.channel_msg = ""
+        self.cog_blacklist = variables["cog_blacklist"]
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -38,7 +38,7 @@ class MyBot(commands.Bot):
         }
         for dir_name in os.listdir("cogs"):
             if dir_name in py_files:
-                if dir_name in BOTS_BLACKLIST:
+                if dir_name in self.cog_blacklist:
                     continue
                 try:
                     path = (
@@ -52,28 +52,57 @@ class MyBot(commands.Bot):
                 except Exception as err:
                     print(f"{dir_name} module cannot be loaded. [{err}]")
 
+        # is this necessary? SERVER_ID
         await bot.tree.sync(guild=discord.Object(id=os.environ["SERVER_ID"]))
 
+def load_essentials():
+    """_summary_
+
+    _extended_summary_
+
+    Returns:
+        _type_: _description_
+    """
+
+    error_msgs = ""
+
+    src_dir = Path(__file__).parents[0]
+    json_path = Path(f"{src_dir}/config.json")
+    if Path(json_path).is_file():
+        with open(json_path, encoding="utf-8") as file:
+            bots_settings = json.load(file)["bots_settings"]
+    else:
+        error_msgs += "'config.json' not found!\n"
+
+    if os.name == "nt" and len(sys.argv) < 2:
+        bot_name = "Caroline"
+    else:
+        bot_name = "GLaDOS"
+
+    token = os.environ[f"{bot_name}_TOKEN"]
+    app_id = os.environ[f"{bot_name}_ID"]
+    prefix = bots_settings[bot_name]["prefix"]
+    if not token:
+        error_msgs += f"{bot_name}'s token in .env file is not set!\n"
+    if not app_id:
+        error_msgs += f"{bot_name}'s app ID in .env file is not set!\n"
+    if not prefix:
+        error_msgs += "prefix in config.json is not set!\n"
+    if error_msgs:
+        sys.exit(error_msgs)
+
+    return {
+        "token": token,
+        "app_id": app_id,
+        "prefix": prefix,
+        "cog_blacklist": bots_settings[bot_name]["cog_blacklist"]
+    }
+
 load_dotenv()
-src_dir = Path(__file__).parents[0]
-json_path = Path(f"{src_dir}/config.json")
-with open(json_path, encoding="utf-8") as file:
-    bots_settings = json.load(file)["bots_settings"]
+bot_vars = load_essentials()
 
-if os.name == "nt" and len(sys.argv) < 2:
-    BOTS_TOKEN = os.environ["CAROLINE_TOKEN"]
-    BOTS_APP_ID = os.environ["CAROLINE_ID"]
-    bot_settings = bots_settings["Caroline"]
-else:
-    BOTS_TOKEN = os.environ["GLADOS_TOKEN"]
-    BOTS_APP_ID = os.environ["GLADOS_ID"]
-    bot_settings = bots_settings["GLaDOS"]
-BOTS_BLACKLIST = bot_settings["blacklist"]
-BOTS_PREFIX = bot_settings["prefix"]
-
-bot = MyBot()
-bot.run(BOTS_TOKEN)
-
+bot = MyBot(bot_vars)
+bot.run(bot_vars["token"])
 
 # TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO surveillance: Look into "did something" part
