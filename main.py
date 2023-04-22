@@ -56,12 +56,10 @@ class MyBot(commands.Bot):
         await bot.tree.sync(guild=discord.Object(id=os.environ["SERVER_ID"]))
 
 def load_essentials():
-    """_summary_
-
-    _extended_summary_
+    """Loads essential variables for launching the bot.
 
     Returns:
-        _type_: _description_
+        Dict[str, str]: variables - token, app. ID, prefix, cog blacklist
     """
 
     error_msgs = ""
@@ -104,25 +102,7 @@ bot_vars = load_essentials()
 bot = MyBot(bot_vars)
 bot.run(bot_vars["token"])
 
-# TODO project template insp., also try others https://github.com/kkrypt0nn/Python-Discord-Bot-Template
 # TODO surveillance: Look into "did something" part
 # TODO check docs + linting outside of music + korean cogs
-# TODO look for other bots inspiration for music bots
-# opt ideas: yield, dict to namedtuple, # type: ignore (for mypy?) saw in rapptz
-
+# opt ideas: yield, dict to namedtuple, # type: ignore (for mypy?) saw in rappt
 # stopped at music.py TODO: [::]
-# TODO music: Logs during polishing (use wrappers?)
-# TODO music: Polish Discord related stuff: Pylint, Document, Optimize code and Async
-# TODO music: Leaving the voice -> refresh still works.. polish that
-# TODO korean: Polish Discord related stuff: Pylint, Document, Optimize code
-# TODO korean: update sheets when the session is over, not when it starts -> polish that whole function
-
-# TODO Apply ChatGPT opt. suggestions
-# TODO Script that explores all my python code, counts what and how many times i used certain methods along with their data struc.
-
-# TODO ALL: Pylint - resolve all errors
-# TODO ai_algo: Tests (_apply_actions test (rmv), docs)
-# TODO korean: Word by word mp3, to make sound for two words.. or remove two words?..
-# TODO music: Create radio (automatically picks songs)
-# TODO surveillance: Voice stats graphs, Process old logs
-

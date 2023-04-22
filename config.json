@@ -5,11 +5,11 @@
     },
     "bots_settings": {
         "Caroline": {
-            "blacklist": ["surveillance", "korean"],
+            "cog_blacklist": ["korean"],
             "prefix": "."
         },
         "GLaDOS": {
-            "blacklist": ["ai_algo"],
+            "cog_blacklist": ["ai_algo"],
             "prefix": "?"
         }
     }
