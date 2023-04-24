@@ -28,6 +28,7 @@
   - [ ] Download sound for all? (current script is published in memo bookmark), also need to force pickle save
   - [ ] Ending session stats?: Stats Graph, sort hardest from easiest words!
   - [ ] Word by word mp3, to make sound for two words.. or remove two words?..
+  - [ ] Change to embedded messages for learning new words with explanation, differences with similar words (using ChatGPT)
 
 ### Done ✓
 
