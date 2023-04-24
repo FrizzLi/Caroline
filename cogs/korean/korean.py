@@ -335,11 +335,13 @@ class Language(commands.Cog):
         g_credentials = gspread.service_account_from_dict(credentials_dict)
 
         gs_stats = g_credentials.open("Korea - Users stats")
+        level_number = lesson_number // 100
+        
         try:
-            ws_stats = gs_stats.worksheet(interaction.user.name)
+            ws_stats = gs_stats.worksheet(f"{interaction.user.name}-{level_number}")
         except gspread.exceptions.WorksheetNotFound:
             ws_stats = gs_stats.add_worksheet(
-                title=interaction.user.name, rows=10_000, cols=4
+                title=f"{interaction.user.name}-{level_number}", rows=10_000, cols=4
             )
         session_numbers = ws_stats.col_values(4)
         if session_numbers:
@@ -632,7 +634,7 @@ class Language(commands.Cog):
         )
 
     @app_commands.command(name="zrvl")
-    async def zreview_vocab_listening(self, interaction):
+    async def zreview_vocab_listening(self, interaction, level_number: int = 1):
         #"""Start listening vocab exercise.
 
         #In the case of customized lesson, audio files will be loaded only
@@ -661,11 +663,17 @@ class Language(commands.Cog):
             g_sheet = g_credentials.open(spread_name)
             worksheet = g_sheet.worksheet(sheet_name)
             return worksheet
-        
-        vocab_g_ws = get_worksheet("Korea - Users stats", interaction.user.name)
-        score_g_ws = get_worksheet("Korea - Users stats", "score_monitor")
+
+        # TODO: update new sheet (has no header.. create it) (FFreezpmark-2)
+        # TODO: create score_monitor-2 automatically,,, its missing now
+        # TODO: review takes one less word into account bug..
+        vocab_g_ws = get_worksheet("Korea - Users stats", f"{interaction.user.name}-{level_number}")
+        score_g_ws = get_worksheet("Korea - Users stats", f"score_monitor-{level_number}")
+        score_g_ws2 = get_worksheet("Korea - Users stats", f"score_monitor-{level_number}-timed")
         score_g_ws.clear()
+        score_g_ws2.clear()
         score_list = []
+        score_list2 = []
 
         # get current_session_number
         session_numbers = vocab_g_ws.col_values(4)
@@ -688,6 +696,7 @@ class Language(commands.Cog):
         word_scores = {}
         new_word = ""
         debug_compute = []
+        new_word_time_penalty_total = 0
         new_word_score_total = 0
         new_word_counter = 0
         for row in df.itertuples():
@@ -707,6 +716,7 @@ class Language(commands.Cog):
 
                     # empty_fill = fmean(knowledge) * (10-new_word_counter)
                     word_score = new_word_score_total + empty_fill_sum
+                    word_score_time_penalized = word_score + new_word_time_penalty_total
                     word_scores[new_word] = word_score
                     score_list.append(
                         [
@@ -716,8 +726,17 @@ class Language(commands.Cog):
                             ", ".join(str(round(x,2)) for x in debug_compute)
                         ]
                     )
+                    score_list2.append(
+                        [
+                            new_word,
+                            word_score_time_penalized,
+                            "".join(knowledge_marks),
+                            ", ".join(str(round(x,2)) for x in debug_compute)
+                        ]
+                    )
                     new_word_score_total = 0
                     new_word_counter = 0
+                    new_word_time_penalty_total = 0
                     
                     debug_compute = []
                     knowledge = []
@@ -738,24 +757,28 @@ class Language(commands.Cog):
             knowledge.append(knowledge_multiplier)
             knowledge_marks.append(row.Knowledge)
 
-            # row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
-            # now_datetime = datetime_now
-            # days_diff = (now_datetime - row_datetime).days
-            # new_word_score_total += days_diff * 0.01
+            row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
+            now_datetime = datetime_now
+            days_diff = (now_datetime - row_datetime).days
+            new_word_time_penalty_total += days_diff * 0.001
 
         score_list = sorted(score_list, key=lambda x:x[1], reverse=True)
         score_g_ws.append_rows(score_list)
+        score_list2 = sorted(score_list2, key=lambda x:x[1], reverse=True)
+        score_g_ws2.append_rows(score_list2)
 
         sorted_word_score = sorted(word_scores.items(), key=lambda item: item[1], reverse=True)
-        sorted_words = [sorted_word_score[i][0] for i in range(100)]
+        number_of_words = len(score_list) if len(score_list) < 100 else 100
+        sorted_words = [sorted_word_score[i][0] for i in range(number_of_words)]
 
         # word, score, marks arranged
 
         # Use probability distribution to pick the most unknown words to known words
         # Create a list of probabilities that decrease linearly from left to right
-        weights = np.linspace(1, 0, 100)
+        size = number_of_words if number_of_words < 50 else 50
+        weights = np.linspace(1, 0, number_of_words)
         weights /= weights.sum()
-        nl = np.random.choice(sorted_words, p=weights, size=50, replace=False)
+        nl = np.random.choice(sorted_words, p=weights, size=size, replace=False)
 
         # nl2 = []
         # size = 10
