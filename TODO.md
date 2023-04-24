@@ -3,16 +3,16 @@
 ### In Progress
 
 - [ ] music.py
-  - [ ] Logs (use wrappers?)
-  - [ ] Polish Discord related stuff: Pylint, Document, Optimize code and Async
-  - [ ] Leaving the voice -> refresh still works.. polish that
+  - [ ] Polish Discord related stuff: Pylint, Document, Optimize code and Async, Logs (wrappers?)
+  - [ ] Bug: when the bot leaves the voice, refresh button still works..
 
 - [ ] korean.py
-  - [ ] Polish Discord related stuff: Pylint, Document, Optimize code
-  - [ ] update sheets when the session is over, not when it starts -> polish that whole function
-  - [ ] Maybe no need to use pandas, gspread has operations too! (research it)
+  - [ ] Polish Discord related stuff: Pylint, Document, Optimize code, and Async, Logs
+  - [ ] Update sheets when the session is over, not when it starts
+  - [ ] Consider using gspread ops instead of pandas (research it)
   - [ ] Bug: Have to be connected to turn on reading lesson
   - [ ] Bug: Error when long time no use.. zel
+  - [ ] Let user know which lessons are in the review, command to just start next one without needing to remember my last lesson
 
 - [ ] Apply ChatGPT opt. suggestions
 - [ ] Script that analyzes all python code, counts what and how many times i used certain methods along with their data struc.
