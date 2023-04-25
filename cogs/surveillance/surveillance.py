@@ -1,5 +1,5 @@
 """This module serves to run Python code through a message and surveillance
-system which tracks activity on all voice channels on the Discord server.
+system which tracks activity on all voice channels.
 """
 
 import contextlib
@@ -62,7 +62,7 @@ class Surveillance(commands.Cog):
             raise Exception(err_msg)
 
     def get_time(self):
-        """Gets current time based in Bratislava for logging.
+        """Gets current time with timezone that is set in config for logging.
 
         Returns:
             str: datetime in "Year-Month-Day Time" format
@@ -76,7 +76,7 @@ class Surveillance(commands.Cog):
     async def online_tracking(self):
         """Sends or updates a message about being online every 5 minutes.
 
-        This method was made for the purposes of tracking when the bot went
+        This method was made for the purposes of tracking when the bot goes
         offline.
         """
 

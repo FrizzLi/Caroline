@@ -12,7 +12,7 @@ class MusicPlayer:
     """A class which is assigned to each guild using the bot for Music.
     This class implements a queue and loop, which allows for different guilds
     to listen to different playlists simultaneously.
-    When the bot disconnects from the Voice it's instance will be destroyed.
+    When the bot disconnects from the Voice, it's instance will be destroyed.
     """
 
     def __init__(self, interaction, music):

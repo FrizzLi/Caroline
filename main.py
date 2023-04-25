@@ -102,7 +102,5 @@ bot_vars = load_essentials()
 bot = MyBot(bot_vars)
 bot.run(bot_vars["token"])
 
-# TODO surveillance: Look into "did something" part
-# TODO check docs + linting outside of music + korean cogs
-# opt ideas: yield, dict to namedtuple, # type: ignore (for mypy?) saw in rappt
-# stopped at music.py TODO: [::]
+# pylint: disable=<err_name> (pylint)
+# type: ignore (mypy)

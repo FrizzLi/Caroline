@@ -313,7 +313,6 @@ class Language(commands.Cog):
         from level that is set in the settings. TODO!!! find that are in custom
         """
 
-        print(lesson_number)  # debug gcloud issue..
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
