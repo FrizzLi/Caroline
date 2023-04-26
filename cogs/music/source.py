@@ -4,6 +4,7 @@ import os
 
 import discord
 import youtube_dl
+import yt_dlp
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ""
@@ -22,7 +23,7 @@ ytdlopts = {
     "source_address": "0.0.0.0",  # ipv6 addresses cause issues sometimes
 }
 
-ytdl = youtube_dl.YoutubeDL(ytdlopts)
+ytdl = yt_dlp.YoutubeDL(ytdlopts)
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
