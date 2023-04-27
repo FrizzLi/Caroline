@@ -60,7 +60,7 @@ class Music(commands.Cog):
         return player
 
     def get_ytb_data_from_old_cmd_req(self, msg):
-        """Gets data from song requesting commands for Groovy or Rythm.
+        """Gets youtube data from song requesting commands for Groovy or Rythm.
 
         Args:
             msg (discord.message.Message): discord's message in the chatroom
@@ -72,7 +72,7 @@ class Music(commands.Cog):
         search_expr = msg.content[6:]
         data = ytdl.extract_info(url=search_expr, download=False)
 
-        if "entries" in data:  # ! TODO: What if not? no return? (cant reproduce)
+        if "entries" in data:  # TODO: What if not? no return? (cant reproduce), (can remove this method as Groovy and Rythm are over)
             if len(data["entries"]) == 1:  # for single song search
                 data["title"] = data["entries"][0]["title"]
                 data["webpage_url"] = data["entries"][0]["webpage_url"]
@@ -88,38 +88,48 @@ class Music(commands.Cog):
 
         return datetime, author, title, webpage_url
 
-    def get_ytb_data_from_url(self, row_URL):
-        """Gets data from URL that is in dataframe's row.
+    def get_ytb_data_from_url(self, inquiry):
+        """Gets youtube data from inquiry.
 
         Args:
-            row_URL (str): URL link to the youtube video
+            inquiry (str): search term or URL link to the youtube video
 
         Returns:
             Tuple[str, str, str]: duration, views, categories
         """
 
-        data = ytdl.extract_info(url=row_URL, download=False)
-        if "entries" in data:  # TODO: what if it doesnt have?, fix above ! too
-            if len(data["entries"]) == 1:  # for single song search
-                data["duration"] = data["entries"][0]["duration"]
-                data["view_count"] = data["entries"][0]["view_count"]
-                data["categories"] = data["entries"][0]["categories"]
+        # NOTE: doing the mistake to go through helping methods first, without knowing whats happening outside, start with outside stuff
+        data = ytdl.extract_info(url=inquiry, download=False)
 
-        duration = (
-            get_readable_duration(data["duration"])
-            if "duration" in data
-            else ""
-        )
-        views = f"{data['view_count']:,}" if "view_count" in data else ""
-        categories = (
-            ", ".join(data["categories"]) if "categories" in data else ""
-        )
+        # YoutubeTab = playlist URL (has no duration, views nor categories data)
+        if data["extractor_key"] == "YoutubeTab":
+            return "", "", ""
 
+        # YoutubeSearch = search term (founds more songs, we want first one)
+        if data["extractor_key"] == "YoutubeSearch":
+            data["duration"] = data["entries"][0]["duration"]
+            data["view_count"] = data["entries"][0]["view_count"]
+            data["categories"] = data["entries"][0]["categories"]
+        
+        duration = get_readable_duration(data["duration"])
+        views = f"{data['view_count']:,}"
+        categories = ", ".join(data["categories"])
+
+        # yt_dlp.utils.DownloadError
         return duration, views, categories
 
     def get_ytb_data_from_bot_embed_msg(self, ctx, msg):
-        # pattern: Queued <song_name> [@<requester>]get_ytb_data_from_bot_embed_msg
+        """Gets youtube data from embedded message.
 
+        Args:
+            ctx (discord.ext.commands.context.Context): context (old commands)
+            msg (discord.message.Message): discord's message in the chatroom
+
+        Returns:
+            Tuple[str, str, str, str]: datetime, author_id, title, webpage_url
+        """
+
+        # pattern: Queued <song_name> [@<requester>]
         matching_expr = r"Queued \[(.+?)\]\((.+?)\) \[<@!?(\d+)>]"
         msg_descr = msg.embeds[0].description
         result = re.match(matching_expr, msg_descr)
@@ -129,7 +139,7 @@ class Music(commands.Cog):
             author_id = result[3]
 
         tz_aware_date = msg.created_at.astimezone(pytz.timezone(self.timezone))
-        datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")  # %Z%z
+        datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")
 
         rec = datetime, author_id, title, webpage_url
         return rec
