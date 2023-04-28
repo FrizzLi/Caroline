@@ -59,6 +59,7 @@ class Music(commands.Cog):
 
         return player
 
+    # TODO (remove)
     def get_ytb_data_from_old_cmd_req(self, msg):
         """Gets youtube data from song requesting commands for Groovy or Rythm.
 
@@ -115,7 +116,6 @@ class Music(commands.Cog):
         views = f"{data['view_count']:,}"
         categories = ", ".join(data["categories"])
 
-        # yt_dlp.utils.DownloadError
         return duration, views, categories
 
     def get_ytb_data_from_bot_embed_msg(self, ctx, msg):
@@ -142,6 +142,7 @@ class Music(commands.Cog):
         datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")
 
         rec = datetime, author_id, title, webpage_url
+
         return rec
 
     # Listeners
@@ -154,7 +155,7 @@ class Music(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-        """Leave the channel when all other members leave.
+        """Leave the channel when all the other members leave.
 
         Args:
             member (discord.member.Member): the bot
@@ -189,16 +190,18 @@ class Music(commands.Cog):
 
         table_rows = []
         i = 0
+        # TODO: add channel_id from config surv channel
         async for msg in ctx.channel.history(limit=limit):
 
             # stop searching upon starting message with ___ from bots
+            # TODO: bot's id instead of msg.author.name
             if msg.content.startswith("___") and (
                 msg.author.name in ("GLaDOS", "Caroline")
             ):
                 break
             i += 1
 
-            # retrieve data from basic command - old bots (Groovy, Rhytm)
+            # TODO (remove) retrieve data from basic command - old bots (Groovy, Rhytm)
             if msg.content.lower()[1:].startswith("play"):
                 try:
                     rec = self.get_ytb_data_from_old_cmd_req(msg)
