@@ -195,9 +195,7 @@ class Music(commands.Cog):
 
             # stop searching upon starting message with ___ from bots
             # TODO: bot's id instead of msg.author.name
-            if msg.content.startswith("___") and (
-                msg.author.name in ("GLaDOS", "Caroline")
-            ):
+            if msg.content.startswith("___") and msg.author.bot:
                 break
             i += 1
 
