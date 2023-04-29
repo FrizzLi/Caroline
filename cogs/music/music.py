@@ -59,36 +59,6 @@ class Music(commands.Cog):
 
         return player
 
-    # TODO (remove)
-    def get_ytb_data_from_old_cmd_req(self, msg):
-        """Gets youtube data from song requesting commands for Groovy or Rythm.
-
-        Args:
-            msg (discord.message.Message): discord's message in the chatroom
-
-        Returns:
-            Tuple[str, str, str, str]: datetime, author, title, webpage_url
-        """
-
-        search_expr = msg.content[6:]
-        data = ytdl.extract_info(url=search_expr, download=False)
-
-        if "entries" in data:  # TODO: What if not? no return? (cant reproduce), (can remove this method as Groovy and Rythm are over)
-            if len(data["entries"]) == 1:  # for single song search
-                data["title"] = data["entries"][0]["title"]
-                data["webpage_url"] = data["entries"][0]["webpage_url"]
-
-        data["title"] = data["title"].replace('"', "'")
-        data["webpage_url"] = data["webpage_url"].replace('"', "'")
-        tz_aware_date = msg.created_at.astimezone(pytz.timezone(self.timezone))
-
-        datetime = tz_aware_date.strftime("%Y-%m-%d %H:%M:%S")
-        author = msg.author.name
-        title = data["title"]
-        webpage_url = data["webpage_url"]
-
-        return datetime, author, title, webpage_url
-
     def get_ytb_data_from_url(self, inquiry):
         """Gets youtube data from inquiry.
 
@@ -190,39 +160,18 @@ class Music(commands.Cog):
 
         table_rows = []
         i = 0
-        # TODO: add channel_id from config surv channel
         async for msg in ctx.channel.history(limit=limit):
+            if msg.author.bot:
+                if msg.content.startswith("___"):
+                    break
 
-            # stop searching upon starting message with ___ from bots
-            # TODO: bot's id instead of msg.author.name
-            if msg.content.startswith("___") and msg.author.bot:
-                break
-            i += 1
-
-            # TODO (remove) retrieve data from basic command - old bots (Groovy, Rhytm)
-            if msg.content.lower()[1:].startswith("play"):
-                try:
-                    rec = self.get_ytb_data_from_old_cmd_req(msg)
-
-                # !unable to reproduce the problem to fix general exception
-                except Exception as err:
-                    print(f"{i}. Error: {err}. (command: {msg.content})")
-                    continue
-
-                table_rows.append(rec)
-                print(f"{i}. (old) downloaded: {rec}")
-
-            # retrieve data from slash command - new bot (GLaDOS)
-            elif (
-                msg.author.name in ("GLaDOS", "Caroline")
-                and msg.embeds
-                and msg.embeds[0].description.startswith("Queued")
-            ):
-                rec = self.get_ytb_data_from_bot_embed_msg(ctx, msg)
-                author_name = await ctx.guild.fetch_member(author_id).name
-                # TODO rec = rec[::] : 
-                table_rows.append(rec)
-                print(f"{i}. (new) downloaded: {rec}")
+                i += 1
+                if msg.embeds and msg.embeds[0].description.startswith("Que"):
+                    rec = self.get_ytb_data_from_bot_embed_msg(ctx, msg)
+                    author_name = await ctx.guild.fetch_member(author_id).name
+                    # TODO rec = rec[::] : 
+                    table_rows.append(rec)
+                    print(f"{i}. (new) downloaded: {rec}")
 
 
         # save to gsheets
