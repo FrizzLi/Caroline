@@ -88,7 +88,7 @@ class Music(commands.Cog):
 
         return duration, views, categories
 
-    def get_ytb_data_from_bot_embed_msg(self, ctx, msg):
+    async def get_ytb_data_from_embed_req(self, ctx, msg):
         """Gets youtube data from embedded message.
 
         Args:
@@ -96,7 +96,7 @@ class Music(commands.Cog):
             msg (discord.message.Message): discord's message in the chatroom
 
         Returns:
-            Tuple[str, str, str, str]: datetime, author_id, title, webpage_url
+            Tuple[str, str, str, str]: datetime, author_name, title, webpage_url
         """
 
         # pattern: Queued <song_name> [@<requester>]
@@ -107,11 +107,12 @@ class Music(commands.Cog):
             title = result[1].replace('"', "'")
             webpage_url = result[2].replace('"', "'")
             author_id = result[3]
+            author_name = await ctx.guild.fetch_member(author_id).name
 
         tz_aware_date = msg.created_at.astimezone(pytz.timezone(self.timezone))
         datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")
 
-        rec = datetime, author_id, title, webpage_url
+        rec = datetime, author_name, title, webpage_url
 
         return rec
 
@@ -150,8 +151,6 @@ class Music(commands.Cog):
     async def history(self, ctx, limit: int = 1000):
         """Saves history of songs into Google Sheets.
 
-        _extended_summary_
-
         Args:
             ctx (discord.ext.commands.context.Context): context (old commands)
             limit (int, optional): amount of messages to read.
@@ -167,13 +166,12 @@ class Music(commands.Cog):
 
                 i += 1
                 if msg.embeds and msg.embeds[0].description.startswith("Que"):
-                    rec = self.get_ytb_data_from_bot_embed_msg(ctx, msg)
-                    author_name = await ctx.guild.fetch_member(author_id).name
-                    # TODO rec = rec[::] : 
+                    rec = self.get_ytb_data_from_embed_req(ctx, msg)
                     table_rows.append(rec)
                     print(f"{i}. (new) downloaded: {rec}")
 
 
+        # TODO deal with all loadings in other files in the same time
         # save to gsheets
         credentials_dict_string = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_string)
