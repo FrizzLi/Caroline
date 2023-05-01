@@ -168,6 +168,7 @@ class Music(commands.Cog):
                 if msg.embeds and msg.embeds[0].description.startswith("Que"):
                     rec = self.get_ytb_data_from_embed_req(ctx, msg)
                     table_rows.append(rec)
+                    # TODO logs
                     print(f"{i}. (new) downloaded: {rec}")
 
 
@@ -187,22 +188,6 @@ class Music(commands.Cog):
         )
 
         await ctx.send("___Messages saved up to this point.___")
-
-    @commands.command(aliases=["dl"])
-    async def download(self, ctx, link):
-        plist = Playlist(ctx.current_argument)
-        src_dir = Path(__file__).parents[0]
-        playlist_dir = Path(f"{src_dir}/downloaded/{plist.title}")
-
-        for video in plist.videos:
-            print(video.title)
-            audio = video.streams.get_audio_only()
-            audio.download(playlist_dir)
-            # audio1 = video.streams.filter(only_audio=True)
-            # audio2 = video.streams.get_highest_resolution()
-            # video.streams.first().download()
-
-        await ctx.send(f"'{plist.title}' playlist has been downloaded!")
 
     @commands.command()
     async def create_stats(self, ctx):
