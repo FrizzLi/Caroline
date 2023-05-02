@@ -36,6 +36,8 @@ for row in raw_vocab_df.itertuples():
         index = row.Index - index_add
         arranged_vocab_df.at[index, "Korean"] = kr_en[0]
         arranged_vocab_df.at[index, "Book_English"] = kr_en[1]
+        arranged_vocab_df.at[index, "Book_Level"] = level
+        arranged_vocab_df.at[index, "Book_Lesson"] = lesson
         arranged_vocab_df.at[index, "Lesson"] = level + lesson.zfill(2)
     else:
         index_add += 1
@@ -74,12 +76,12 @@ for row in arranged_vocab_df.itertuples():
     lvl_1_2_df.at[row.Index, "Book_English"] = row.Book_English
     if row.Korean in freq:
         word = freq.pop(row.Korean)
-        lvl_1_2_df.at[row.Index, "Freq_English"] = word["freq_eng"]
-        lvl_1_2_df.at[row.Index, "Rank"] = word["rank"]
-        lvl_1_2_df.at[row.Index, "Example_KR"] = word["example_kr"]
+        lvl_1_2_df.at[row.Index, "Freq_English"] = row.Korean
         lvl_1_2_df.at[row.Index, "Example_EN"] = word["example_en"]
-        lvl_1_2_df.at[row.Index, "Romanization"] = word["romanization"]
+        lvl_1_2_df.at[row.Index, "Example_KR"] = word["example_kr"]
+        lvl_1_2_df.at[row.Index, "Rank"] = word["rank"]
         lvl_1_2_df.at[row.Index, "Type"] = word["type"]
+        lvl_1_2_df.at[row.Index, "Romanization"] = word["romanization"]
         lvl_1_2_df.at[row.Index, "Frequency"] = word["frequency"]
         lvl_1_2_df.at[row.Index, "Dispersion"] = word["disp"]
     if row.Korean in topi:
@@ -96,7 +98,7 @@ for row in freq:
         "Rank": freq[row]["rank"],
         "Romanization": freq[row]["romanization"],
         "Type": freq[row]["type"],
-        "Freq_English": freq[row]["freq_eng"],
+        "Freq_English": row,
         "Example_KR": freq[row]["example_kr"],
         "Example_EN": freq[row]["example_en"],
         "Frequency": freq[row]["frequency"],
