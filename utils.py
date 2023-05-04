@@ -35,7 +35,7 @@ def get_worksheets(gs_name, ws_names):
     return worksheets, worksheet_dfs
 
 
-def update_worksheet(worksheet_df, worksheet):
+def update_worksheet(worksheet, worksheet_df):
     """Updates google worksheet with dataframe.
 
     Args:
