@@ -1,4 +1,4 @@
-"""Takes and transforms sources' raw vocabulary text into json file."""
+"""Takes and transforms book's raw vocabulary text into json file."""
 
 import json
 from pathlib import Path
@@ -7,8 +7,8 @@ from pathlib import Path
 def create_freq_json():
     """Creates freq json vocabulary file out from raw text.
 
-    Takes and transforms raw text of freq vocabulary taken from book
-    into json file. Contents are stored data/vocab_sources folder.
+    Takes and transforms raw text of freq vocabulary into json file.
+    Contents are stored data/vocab_sources folder.
     """
 
     src_dir = Path(__file__).parents[0]
@@ -39,8 +39,8 @@ def create_freq_json():
                         rom = word_data[1]
                         type_ = word_data[2]
                         eng = " ".join(word_data[3:])
-                        word_data.clear()
 
+                        word_data.clear()
                         line_num = 2
 
                 # get examples in korean and english

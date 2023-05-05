@@ -1,3 +1,5 @@
+"""Here are utilities - functions that are being used in multiple cogs."""
+
 import json
 import os
 
@@ -10,7 +12,7 @@ def get_worksheets(gs_name, ws_names):
 
     Args:
         gs_name (str): name of the spreadsheet
-        ws_name (str): name of the worksheets (a tab of spreadsheet)
+        ws_names (List[str]): name of the worksheets (a tab of spreadsheet)
 
     Returns:
         List[gspread.worksheet.Worksheet, pandas.core.frame.DataFrame]: (
@@ -36,7 +38,7 @@ def get_worksheets(gs_name, ws_names):
 
 
 def update_worksheet(worksheet, worksheet_df):
-    """Updates google worksheet with dataframe.
+    """Updates worksheet with dataframe.
 
     Args:
         worksheet_df (pandas.core.frame.DataFrame): worksheet dataframe table

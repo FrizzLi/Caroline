@@ -193,12 +193,14 @@ class Music(commands.Cog):
     async def create_stats(self, ctx):
         """Saves history of songs into Google Sheets."""
 
+        # TODO deal with all loadings in other files in the same time
         # get pandas format
         credentials_dict_string = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_string)
         g_credendials = gspread.service_account_from_dict(credentials_dict)
         g_sheet = g_credendials.open("Discord Music Log")
         cmd_wks = g_sheet.worksheet("Commands Log")
+
         cmd_df = pd.DataFrame(cmd_wks.get_all_records())
         cmd_df["Date"] = pd.to_datetime(cmd_df["Date"])
         now = pd.Timestamp.now()

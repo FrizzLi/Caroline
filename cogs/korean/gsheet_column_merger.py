@@ -4,10 +4,6 @@ into one (Lesson) in "Korea - Vocabulary" Google Spreadsheet"""
 import sys
 from pathlib import Path
 
-src_dir = Path(__file__).parents[2]
-sys.path.append(str(src_dir))
-import utils
-
 
 def _update_df(worksheet_df):
     """Merges columns Book_Lesson and Book_Level into one -> Book_Level
@@ -28,9 +24,12 @@ def _update_df(worksheet_df):
         elif isinstance(row.Book_Level, str):
             print("Level string bug:", row.Book_Level)
             continue
-        worksheet_df.at[row.Index, "Book_Level"] = row.Book_Level * 100 + row.Book_Lesson
+        worksheet_df.at[row.Index, "Book_Level"] = (
+            row.Book_Level * 100 + row.Book_Lesson
+        )
 
     return [worksheet_df]
+
 
 def merge(gs_name, ws_names):
     """Merges columns of worksheet according to _create_df method
@@ -46,6 +45,9 @@ def merge(gs_name, ws_names):
 
 
 if __name__ == "__main__":
+    sys.path.append(str(Path(__file__).parents[2]))
+    import utils
+
     GOOGLE_SHEET_NAME = "Korea - Vocabulary"
     GOOGLE_WORKSHEET_NAMES = ["Level 1-2 (modified)2"]
 
