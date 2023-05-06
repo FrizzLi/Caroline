@@ -1,5 +1,6 @@
-"""This script served to convert two tabs (Book_Level, Book_Lesson)
-into one (Lesson) in "Korea - Vocabulary" Google Spreadsheet"""
+"""This script serves to convert two tabs (Book_Level, Book_Lesson)
+into one (Lesson) in "Korea - Vocabulary" Spreadsheet
+ - NOTE that this is already included in gsheet2, therefore useless"""
 
 import sys
 from pathlib import Path
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     sys.path.append(str(Path(__file__).parents[2]))
     import utils
 
-    GOOGLE_SHEET_NAME = "Korea - Vocabulary"
-    GOOGLE_WORKSHEET_NAMES = ["Level 1-2 (modified)2"]
+    SPREADSHEET_NAME = "Korea - Vocabulary"
+    WORKSHEET_NAMES = ("Level 1-2 (modified)",)
 
-    merge(GOOGLE_SHEET_NAME, GOOGLE_WORKSHEET_NAMES)
+    merge(SPREADSHEET_NAME, WORKSHEET_NAMES)
