@@ -145,5 +145,3 @@ if __name__ == "__main__":
 
     create_arranged_vocab()
     create_level_vocab()
-
-# TODO: remove + sign in file name
