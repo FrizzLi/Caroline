@@ -1005,3 +1005,11 @@ async def setup(bot):
 # NOTE
 # MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
 # Refresh scoring after 10 attempts
+
+# Korean.py
+#  - look into thr time of the last usage a lot only(?), Review number take into consideration... Only?
+#  - Make rewarding graphs
+#  - Spread the picking of words more (take more words into account, higher randomization,, or take time i to account somehow)
+#  - research about 2000 words -> how much % can u usually understand in general
+#  - research bot capabilities inside the chat
+#  - include grammar, sentence generation -> if doesnt know,, refer the lessons and explain them briefly + reference them
