@@ -3,7 +3,7 @@
 ### In Progress
 
 - [ ] music.py
-  - [ ] Polish Discord related stuff: Pylint, Document, Optimize code and Async, Logs (wrappers?)
+  - [ ] Polish Discord related stuff: Pylint, Document, Optimize code and Async, Logs instead of prints (+wrappers?)
   - [ ] Check other peoples' music bots to get inspirated
   - [ ] Bug: when the bot leaves the voice, refresh button still works..
 - [ ] Apply ChatGPT opt. suggestions
