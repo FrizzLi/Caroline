@@ -34,19 +34,20 @@ def _df_row_insert(row_num, old_df, row_val):
     return new_df
 
 
-def _fill_lvl_df(freq, lvl_df):
+def _fill_lvl_df(freq, ws_lvl_df):
     """Fills up lvl dataframe with homonyms below base word.
 
     Args:
         freq (Dict[str, Dict[str, str]]): freq source
-        lvl_df (pandas.core.frame.DataFrame): dataframe to be filled
+        ws_lvl_df (pandas.core.frame.DataFrame): worksheet dataframe table
+            to be filled
 
     Returns:
         pandas.core.frame.DataFrame: filled dataframe
     """
 
     added_num = 0
-    for row in lvl_df.itertuples():
+    for row in ws_lvl_df.itertuples():
         for num in range(1, 6):
             if not row.Korean:
                 continue
@@ -77,9 +78,9 @@ def _fill_lvl_df(freq, lvl_df):
                     "",
                 ]
                 index = row.Index + added_num
-                lvl_df = _df_row_insert(index, lvl_df, row_value)
+                ws_lvl_df = _df_row_insert(index, ws_lvl_df, row_value)
 
-    return lvl_df
+    return ws_lvl_df
 
 
 def add_homonyms_below_base_word():
@@ -90,14 +91,14 @@ def add_homonyms_below_base_word():
     with open(fre_json, encoding="utf-8") as fre:
         freq = json.load(fre)
 
-    worksheets, worksheets_df = utils.get_worksheets(
+    wss, ws_dfs = utils.get_worksheets(
         "Korea - Vocabulary", ("Level 1-2 (raw)",)
     )
-    lvl_worksheet, lvl_df = worksheets[0], worksheets_df[0]
+    ws_lvl, ws_lvl_df = wss[0], ws_dfs[0]
 
-    lvl_df = _fill_lvl_df(freq, lvl_df)
+    ws_lvl_df = _fill_lvl_df(freq, ws_lvl_df)
 
-    utils.update_worksheet(lvl_worksheet, lvl_df)
+    utils.update_worksheet(ws_lvl, ws_lvl_df)
 
 
 if __name__ == "__main__":
