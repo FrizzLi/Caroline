@@ -15,7 +15,7 @@ ytdlopts = {
     "restrictfilenames": True,
     "noplaylist": True,
     "nocheckcertificate": True,
-    "ignoreerrors": False,
+    "ignoreerrors": True,  # False
     "logtostderr": False,
     "quiet": True,
     "no_warnings": True,
