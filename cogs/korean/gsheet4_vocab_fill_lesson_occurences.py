@@ -1,20 +1,32 @@
 """
-"Korea - Vocabulary" Google Spreadsheet:
- - fills up Listening/Reading _Used column for words that are in chosen lesson
- - adds row in listening/reading occurences tab for each word in chosen lesson
+"Korea - Vocabulary" Spreadsheet:
+ - fills up "Listening/Reading _Used" column for words that are in chosen lesson
+ - adds row in "listening/reading occurences" tab for each word in chosen lesson
+ - NOTE that this got discarded as it was too time consuming. Could take
+   advantage of ChatGPT instead.
 """
 
-import json
-import os
+import sys
 from collections import defaultdict
 from pathlib import Path
 
-import gspread
 import pandas as pd
 from konlpy.tag import Okt
 
+sys.path.append(str(Path(__file__).parents[2]))
+import utils
+
 
 def tokenize_text(f_path):
+    """Parses through the text in the text file creates list of single words.
+
+    Args:
+        f_path (pathlib.WindowsPath): path to the text file
+
+    Returns:
+        List[Tuple[str, str]]: list of words with their type (E.g. noun)
+    """
+
     print("Tokenizing Korean text... ", end="")
     okt = Okt()
     try:
@@ -29,20 +41,32 @@ def tokenize_text(f_path):
     return tokenized_text
 
 
-def group_by_count(tokenized_text):
+def group_by_count(tokens):
+    """Counts occurences for each word (token).
+
+    Args:
+        tokens (List[Tuple[str, str]]): list of words and their type
+
+    Returns:
+        Tuple[collections.defaultdict[str, int], Dict[str, str]]: (
+            word: occurences
+            word: type (E.g. noun)
+        )
+    """
+
     print("Grouping into occurs count and finding duplicates... ", end="")
     occurs = defaultdict(int)
     occurs_check = defaultdict(int)
     word_types = {}
 
     log_file.write("Detailed tokenization cuz of grouping chaos.\n")
-    for token in tokenized_text:
+    for token in tokens:
         try:
             if token[1] == "Punctuation" or token[1] == "Foreign":
                 log_file.write(f"Skipping garbage... ({token}\n")
                 continue
-        except Exception as e:
-            log_file.write(f"Error skipping token: {e} \n")
+        except Exception as err:
+            log_file.write(f"Error skipping token: {err} \n")
         occurs[(token[0])] += 1
         occurs_check[((token[0]), token[1])] += 1  # dup check
         word_types[token[0]] = token[1]
@@ -64,7 +88,7 @@ def group_by_count(tokenized_text):
     return occurs, word_types
 
 
-def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
+def create_df(vocab_df, occurs_df, occurs, word_types, text_type, lesson):
     def write_line_msg(portion, word, occurs, word_types, vocab_base_word):
         head = f"Out of {portion}:"
         occur = str(occurs[vocab_base_word])
@@ -73,84 +97,43 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
 
         log_file.write(str_ + "\n")
 
-    vocab_df = pd.DataFrame(vocab_g_ws.get_all_records())
-    occurs_df = pd.DataFrame(occurs_g_ws.get_all_records())
-
     missing_vocab_set = set()
     log_file.write("\n")
-    if text_type == "reading":
-        for row in vocab_df.itertuples():
-            w = row.Korean
-            vocab_base_word = w[:-1] if w[-1].isdigit() else w
-            if vocab_base_word in occurs:
-                if not row.Lesson or row.Lesson > int(lesson):
-                    missing_vocab_set.add(vocab_base_word)
-                    write_line_msg(
-                        "lesson (in next)", w, occurs, word_types, vocab_base_word
-                    )
-                elif row.Lesson < int(lesson):
-                    if row.Reading_Used:
-                        missing_vocab_set.add(vocab_base_word)
-                        write_line_msg(
-                            "lesson (in previous)",
-                            w,
-                            occurs,
-                            word_types,
-                            vocab_base_word,
-                        )
-                    else:
-                        log_file.write(
-                            f"Going to fill {row.Korean} from {row.Lesson} Lesson!\n"
-                        )
-                        vocab_df.at[row.Index, "Reading_Used"] = lesson
-                else:
-                    vocab_df.at[row.Index, "Reading_Used"] = lesson
-                    log_file.write(f"Fill {row.Korean}!\n")
 
-                # update occurances
-                count = occurs.pop(vocab_base_word)
-                row_dict = {"Word": w, f"Read_{str(int(lesson[-2:]))}": count}
-                df = pd.DataFrame(row_dict, columns=occurs_df.columns, index=[0])
-                occurs_df = pd.concat([occurs_df, df])
-    elif text_type == "listening":
-        for row in vocab_df.itertuples():
-            w = row.Korean
-            vocab_base_word = w[:-1] if w[-1].isdigit() else w
-            if vocab_base_word in occurs:
-                if not row.Lesson or row.Lesson > int(lesson):  # lesson is GLOBAL!!
+    for row in vocab_df.itertuples():
+        w = row.Korean
+        vocab_base_word = w[:-1] if w[-1].isdigit() else w
+        if vocab_base_word in occurs:
+            if not row.Lesson or row.Lesson > int(lesson):
+                missing_vocab_set.add(vocab_base_word)
+                write_line_msg(
+                    "lesson (in next)", w, occurs, word_types, vocab_base_word
+                )
+            elif row.Lesson < int(lesson):
+                listen_read_used = row.Reading_Used if text_type == "Read" else row.Listening_Used
+                if listen_read_used:
                     missing_vocab_set.add(vocab_base_word)
                     write_line_msg(
-                        "lesson (in next)", w, occurs, word_types, vocab_base_word
+                        "lesson (in previous)",
+                        w,
+                        occurs,
+                        word_types,
+                        vocab_base_word,
                     )
-                elif row.Lesson < int(lesson):
-                    if row.Listening_Used:
-                        missing_vocab_set.add(vocab_base_word)
-                        write_line_msg(
-                            "lesson (in previous)",
-                            w,
-                            occurs,
-                            word_types,
-                            vocab_base_word,
-                        )
-                    else:
-                        log_file.write(
-                            f"Going to fill {row.Korean} from {row.Lesson} Lesson!\n"
-                        )
-                        vocab_df.at[row.Index, "Listening_Used"] = lesson
                 else:
-                    vocab_df.at[row.Index, "Listening_Used"] = lesson
                     log_file.write(
-                        f"Fill {row.Korean}!\n"
+                        f"Going to fill {row.Korean} from {row.Lesson} Lesson!\n"
                     )
+                    vocab_df.at[row.Index, f"{text_type}ing_Used"] = lesson
+            else:
+                vocab_df.at[row.Index, f"{text_type}ing_Used"] = lesson
+                log_file.write(f"Fill {row.Korean}!\n")
 
-                # update occurances
-                count = occurs.pop(vocab_base_word)
-                row_dict = {"Word": w, f"Listen_{str(int(lesson[-2:]))}": count}
-                df = pd.DataFrame(row_dict, columns=occurs_df.columns, index=[0])
-                occurs_df = pd.concat([occurs_df, df])
-    else:
-        print("Wrong text type setted!")
-        exit()
+            # update occurances
+            count = occurs.pop(vocab_base_word)
+            row_dict = {"Word": w, f"{text_type}_{str(int(lesson[-2:]))}": count}
+            df = pd.DataFrame(row_dict, columns=occurs_df.columns, index=[0])
+            occurs_df = pd.concat([occurs_df, df])
 
     log_file.write("\n")
     for leftover in occurs:
@@ -163,56 +146,43 @@ def create_df(vocab_g_ws, occurs_g_ws, occurs, word_types):
     return vocab_df, occurs_df
 
 
-def get_worksheet(ws_name):
-    credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
-    credentials_dict = json.loads(credentials_dict_str)
-    g_credentials = gspread.service_account_from_dict(credentials_dict)
-    g_sheet = g_credentials.open("Korea - Vocabulary")
-    worksheet = g_sheet.worksheet(ws_name)
-
-    return worksheet
-
-
-def update_worksheet(dataframe, worksheet):
-    dataframe = dataframe.fillna("")
-    df_list = [dataframe.columns.values.tolist()]
-    df_list += dataframe.values.tolist()
-    worksheet.update(df_list, value_input_option="USER_ENTERED")
-
-
 lesson = input("Enter lesson in 3 digits: ")
 final = input("Press ENTER if you don't want to update sheets.")
 text_type = input("Press ENTER for listening_text, else reading text.")
+text_type = "Read" if text_type else "Listen"
 
 src_dir = Path(__file__).parents[0]
 lesson_dir = f"{src_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}"
-text_type = "reading" if text_type else "listening"
+path_str = f"{lesson_dir}/{text_type.lower()}ing_text.txt"
+explo_path_str = f"{lesson_dir}/{text_type.lower()}ing_explo.txt"
 
-path_str = f"{lesson_dir}/{text_type}_text.txt"
-explo_path_str = f"{lesson_dir}/{text_type}_explo.txt"
 f_path = Path(path_str)
 f_explo_path = Path(explo_path_str)
 
 # parsing the text into single words
-tokenized_text = tokenize_text(f_path)
+tokenized = tokenize_text(f_path)
 
 # count grouping word occurences and finding duplicates
 log_file = open(f_explo_path, "w", encoding="utf-8")
-occurs, word_types = group_by_count(tokenized_text)
+occurs, word_types = group_by_count(tokenized)
 
 # updating google sheets
 print("Updating google sheets... ", end="")
 
-vocab_g_ws = get_worksheet("Level 1-2 (modified)")
-occurs_g_ws = get_worksheet(f"{text_type} occurences")
+wss, ws_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)", f"{text_type.lower()}ing occurences"))
+lvl_ws, occurs_ws = wss[0], wss[1]
+lvl_df, occurs_df = ws_dfs[0], ws_dfs[1]
 
-vocab_df, occurs_df = create_df(vocab_g_ws, occurs_g_ws, occurs, word_types)
+
+lvl_df, occurs_df = create_df(lvl_df, occurs_df, occurs, word_types, text_type, lesson)
 log_file.close()
 
 if final:
-    update_worksheet(vocab_df, vocab_g_ws)
-    update_worksheet(occurs_df, occurs_g_ws)
+    utils.update_worksheet(lvl_ws, lvl_df)
+    utils.update_worksheet(occurs_ws, occurs_df)
 
 print("Done!")
 
-# TODO: USE prompt engineering?!
+# TODO: format.. and polish even further
+# if __name__ == "__main__":
+#     add_homonyms_below_base_word()
