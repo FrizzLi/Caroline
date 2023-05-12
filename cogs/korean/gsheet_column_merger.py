@@ -6,17 +6,17 @@ import sys
 from pathlib import Path
 
 
-def _update_df(worksheet_df):
+def _update_df(ws_df):
     """Merges columns Book_Lesson and Book_Level into one -> Book_Level
 
     Args:
-        worksheet (pandas.core.frame.DataFrame): dataframe table
+        ws_df (pandas.core.frame.DataFrame): worksheet dataframe table
 
     Returns:
         pandas.core.frame.DataFrame: updated dataframe table
     """
 
-    for row in worksheet_df.itertuples():
+    for row in ws_df.itertuples():
         if not row.Book_Lesson:
             continue
         if isinstance(row.Book_Lesson, str):
@@ -25,11 +25,11 @@ def _update_df(worksheet_df):
         elif isinstance(row.Book_Level, str):
             print("Level string bug:", row.Book_Level)
             continue
-        worksheet_df.at[row.Index, "Book_Level"] = (
+        ws_df.at[row.Index, "Book_Level"] = (
             row.Book_Level * 100 + row.Book_Lesson
         )
 
-    return [worksheet_df]
+    return [ws_df]
 
 
 def merge(gs_name, ws_names):
@@ -40,9 +40,9 @@ def merge(gs_name, ws_names):
         ws_name (str): name of the worksheet (a tab of spreadsheet)
     """
 
-    worksheet, worksheet_df = utils.get_worksheets(gs_name, ws_names)
-    worksheet_df = _update_df(worksheet_df[0])
-    utils.update_worksheet(worksheet[0], worksheet_df[0])
+    wss, ws_dfs = utils.get_worksheets(gs_name, ws_names)
+    ws_df = _update_df(ws_dfs[0])
+    utils.update_worksheet(wss[0], ws_df)
 
 
 if __name__ == "__main__":

@@ -42,15 +42,15 @@ def _fill_arranged_df(raw_df, arranged_df):
 def create_arranged_vocab():
     """Fills up "arranged" vocab tab by using the "raw" tab."""
 
-    worksheets, worksheets_df = utils.get_worksheets(
+    wss, ws_dfs = utils.get_worksheets(
         "Korea - Vocabulary (raw)", ("raw", "arranged")
     )
-    raw_df, arranged_df = worksheets_df[0], worksheets_df[1]
+    raw_df, arranged_df = ws_dfs[0], ws_dfs[1]
 
     _fill_arranged_df(raw_df, arranged_df)
 
-    arranged_worksheet = worksheets[1]
-    utils.update_worksheet(arranged_worksheet, arranged_df)
+    arranged_ws = wss[1]
+    utils.update_worksheet(arranged_ws, arranged_df)
     print("Created arranged vocab")
 
 
@@ -71,14 +71,14 @@ def create_level_vocab():
     with open(top_json, encoding="utf-8") as top:
         topi = json.load(top)
 
-    _, worksheets_raw_df = utils.get_worksheets(
+    _, ws_raw_dfs = utils.get_worksheets(
         "Korea - Vocabulary (raw)", ("arranged",)
     )
-    worksheets_lvl, worksheets_lvl_df = utils.get_worksheets(
+    wss_lvl, ws_lvl_dfs = utils.get_worksheets(
         "Korea - Vocabulary", ("Level 1-2 (raw)",)
     )
-    arranged_df = worksheets_raw_df[0]
-    lvl_worksheet, lvl_df = worksheets_lvl[0], worksheets_lvl_df[0]
+    arranged_df = ws_raw_dfs[0]
+    ws_lvl, lvl_df = wss_lvl[0], ws_lvl_dfs[0]
 
     # add arranged + freq + topi
     for row in arranged_df.itertuples():
@@ -136,7 +136,7 @@ def create_level_vocab():
 
     print("Created vocab from topi, last topi word:", row)
 
-    utils.update_worksheet(lvl_worksheet, lvl_df)
+    utils.update_worksheet(ws_lvl, lvl_df)
 
 
 if __name__ == "__main__":
