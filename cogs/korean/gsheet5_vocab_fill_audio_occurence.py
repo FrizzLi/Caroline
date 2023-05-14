@@ -1,45 +1,61 @@
-import json
-import os
+"""
+"Korea - Vocabulary" Spreadsheet:
+ - fills up "Naver_Audio" column in "Level 1-2 (raw)" tab with TRUE value
+   if we have audio for that word, otherwise leave it empty
+"""
+
+import sys
 from glob import glob
 from pathlib import Path
 
-import gspread
-import pandas as pd
+
+def fill_df(audio_words, lesson, ws_lvl_df):
+    """Fills dataframe's Audio_Naver according to presence of audio files.
+
+    Args:
+        audio_words (List[str]): words that have audio files
+        lesson (int): number of lesson we're choosing the words from
+        ws_lvl_df (pandas.core.frame.DataFrame): worksheet dataframe to be filled
+
+    Returns:
+        pandas.core.frame.DataFrame: filled worksheet dataframe
+    """
+
+    for row in ws_lvl_df.itertuples():
+        if not row.Lesson:
+            continue
+        if row.Lesson > lesson:
+            break
+        w = row.Korean
+        vocab_base_word = w[:-1] if w[-1].isdigit() else w
+        if vocab_base_word in audio_words:
+            ws_lvl_df.at[row.Index, "Naver_Audio"] = True
+
+    return ws_lvl_df
 
 
-def get_worksheet(ws_name):
-    credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
-    credentials_dict = json.loads(credentials_dict_str)
-    g_credentials = gspread.service_account_from_dict(credentials_dict)
-    g_sheet = g_credentials.open("Korea - Vocabulary")
-    worksheet = g_sheet.worksheet(ws_name)
+def fill_audio_occurences():
+    """Fills Naver_Audio occurences in Level 1-2 (raw) worksheet."""
 
-    return worksheet
+    wss, ws_dfs = utils.get_worksheets(
+        "Korea - Vocabulary", ("Level 1-2 (raw)",)
+    )
+    ws_lvl, ws_lvl_df = wss[0], ws_dfs[0]
+
+    lesson = input("Enter lesson in 3 digits: ")
+    src_dir = Path(__file__).parents[0]
+    data_path = f"{src_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}"
+    audio_paths = glob(f"{data_path}/vocabulary_audio/*")
+
+    audio_words = [Path(audio_path).stem for audio_path in audio_paths]
+    lesson = int(lesson)
+    ws_lvl_df = fill_df(audio_words, lesson, ws_lvl_df)
+
+    utils.update_worksheet(ws_lvl, ws_lvl_df)
 
 
-def update_worksheet(dataframe, worksheet):
-    dataframe = dataframe.fillna("")
-    df_list = [dataframe.columns.values.tolist()]
-    df_list += dataframe.values.tolist()
-    worksheet.update(df_list, value_input_option="USER_ENTERED")
+if __name__ == "__main__":
+    sys.path.append(str(Path(__file__).parents[2]))
+    import utils
 
-
-vocab_g_ws = get_worksheet("Level 1-2 (modified)")
-vocab_df = pd.DataFrame(vocab_g_ws.get_all_records())
-
-lesson = input("Enter lesson in 3 digits: ")
-src_dir = Path(__file__).parents[0]
-data_path = f"{src_dir}/data/level_{lesson[0]}/lesson_{int(lesson[-2:])}"
-audio_paths = glob(f"{data_path}/vocabulary_audio/*")
-audio_words = [Path(audio_path).stem for audio_path in audio_paths]
-lesson = int(lesson)
-
-for row in vocab_df.itertuples():
-    if row.Lesson > lesson:
-        break
-    w = row.Korean
-    vocab_base_word = w[:-1] if w[-1].isdigit() else w
-    if vocab_base_word in audio_words:
-        vocab_df.at[row.Index, "Naver_Audio"] = True
-
-update_worksheet(vocab_df, vocab_g_ws)
+    fill_audio_occurences()
