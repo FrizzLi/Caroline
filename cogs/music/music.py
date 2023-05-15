@@ -1,24 +1,36 @@
+import asyncio
+import functools
 import json
 import os
 import re
-from pathlib import Path
 
 import discord
-import gspread
 import pandas as pd
 import pytz
 import youtube_dl
 from discord import app_commands
 from discord.ext import commands
-from discord.utils import get
-from pytube import Playlist
 
+import utils
 from cogs.music.player import MusicPlayer
 from cogs.music.player_view import SearchView, get_readable_duration
 from cogs.music.source import YTDLSource, ytdl
 
 
+def to_thread(func):
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        wrapped = functools.partial(func, *args, **kwargs)
+        return await loop.run_in_executor(None, wrapped)
+    return wrapper
+
 class Music(commands.Cog):
+    # music = controller
+    # player_view = view in discord
+    # player = controls the flow of songs being played
+    # source = a song
+
     def __init__(self, bot):
         self.bot = bot
         self.players = {}
@@ -59,6 +71,7 @@ class Music(commands.Cog):
 
         return player
 
+    @to_thread
     def get_ytb_data_from_url(self, inquiry):
         """Gets youtube data from inquiry.
 
@@ -69,19 +82,22 @@ class Music(commands.Cog):
             Tuple[str, str, str]: duration, views, categories
         """
 
-        # NOTE: doing the mistake to go through helping methods first, without knowing whats happening outside, start with outside stuff
         data = ytdl.extract_info(url=inquiry, download=False)
 
-        # YoutubeTab = playlist URL (has no duration, views nor categories data)
+        # Video/Stream unavailable (uploader/video does not exist, private etc)
+        if not data:
+            return "", "", ""
+
+        # YoutubeTab = playlist URL (has no duration, views, categories)
         if data["extractor_key"] == "YoutubeTab":
             return "", "", ""
 
-        # YoutubeSearch = search term (founds more songs, we want first one)
+        # YoutubeSearch = search term (found more songs, we want first one)
         if data["extractor_key"] == "YoutubeSearch":
             data["duration"] = data["entries"][0]["duration"]
             data["view_count"] = data["entries"][0]["view_count"]
             data["categories"] = data["entries"][0]["categories"]
-        
+
         duration = get_readable_duration(data["duration"])
         views = f"{data['view_count']:,}"
         categories = ", ".join(data["categories"])
@@ -103,11 +119,15 @@ class Music(commands.Cog):
         matching_expr = r"Queued \[(.+?)\]\((.+?)\) \[<@!?(\d+)>]"
         msg_descr = msg.embeds[0].description
         result = re.match(matching_expr, msg_descr)
-        if result:  # TODO: why is there IF?
-            title = result[1].replace('"', "'")
-            webpage_url = result[2].replace('"', "'")
-            author_id = result[3]
-            author_name = await ctx.guild.fetch_member(author_id).name
+
+        title = result[1].replace('"', "'")
+        webpage_url = result[2].replace('"', "'")
+        author_id = result[3]
+        try:
+            author = await ctx.guild.fetch_member(author_id)
+            author_name = author.name
+        except discord.errors.NotFound:
+            author_name = "UNKNOWN"
 
         tz_aware_date = msg.created_at.astimezone(pytz.timezone(self.timezone))
         datetime = tz_aware_date.strftime("%Y-%m-%d %#H:%M:%S")
