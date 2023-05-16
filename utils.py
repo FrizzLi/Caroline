@@ -26,6 +26,8 @@ def get_worksheets(gs_name, ws_names, create=False):
         )
     """
 
+    print("Getting worksheets... ", end="")
+
     credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
     credentials_dict = json.loads(credentials_dict_str)
     google_credentials = gspread.service_account_from_dict(credentials_dict)
@@ -61,6 +63,8 @@ def get_worksheets(gs_name, ws_names, create=False):
         else:
             raise err
 
+    print("Done!")
+
     return worksheets, worksheet_dfs
 
 
@@ -72,7 +76,11 @@ def update_worksheet(ws, ws_df):
         ws (gspread.worksheet.Worksheet): worksheet table
     """
 
+    print("Updating worksheets... ", end="")
+
     ws_df = ws_df.fillna("")
     df_list = [ws_df.columns.values.tolist()]
     df_list += ws_df.values.tolist()
     ws.update(df_list, value_input_option="USER_ENTERED")
+
+    print("Done!")

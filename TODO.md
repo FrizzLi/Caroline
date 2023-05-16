@@ -2,20 +2,20 @@
 
 ### In Progress
 
-- [ ] music.py
-  - [ ] Polish Discord related stuff: Pylint, Document, Optimize code and Async, Logs instead of prints (+wrappers?)
-  - [ ] Check other peoples' music bots to get inspirated
-  - [ ] Bug: when the bot leaves the voice, refresh button still works..
 - [ ] Apply ChatGPT opt. suggestions
 - [ ] Script that analyzes all libraries used, data structs.
+- [ ] Create Readme for each cog, how to install and stuff like that
 
 ### Todo
 
 - [ ] Pylint - resolve all errors
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
-- [ ] check other bots for inspiration
-- [ ] music.py: Create radio (automatically picks songs)
 - [ ] surveillance.py: Voice stats graphs, Process old logs
+- [ ] music.py: 
+  - [ ] Create radio (automatically picks songs)
+  - [ ] Do deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
+  - [ ] Bug: when the bot leaves the voice, refresh button still works..
+
 - [ ] korean.py
   - [ ] Polish Discord related stuff: Pylint, Document, Optimize code, and Async, Logs
   - [ ] Update sheets when the session is over, not when it starts
