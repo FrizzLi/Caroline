@@ -11,12 +11,13 @@ class WorksheetNameNotInList(Exception):
     """Exception for Worksheet variable type: only lists are allowed."""
 
 
-def get_worksheets(gs_name, ws_names):
+def get_worksheets(gs_name, ws_names, create=False):
     """Gets worksheets of spreadsheet.
 
     Args:
-        gs_name (str): name of the spreadsheet
-        ws_names (Tuple[str]): name of the worksheets (a tab of spreadsheet)
+        gs_name (str): google spreadsheet name
+        ws_names (Tuple[str]): worksheet names (a tab of spreadsheet)
+        create (bool): create new spreadsheet/worksheet if it doesn't exist
 
     Returns:
         List[gspread.worksheet.Worksheet, pandas.core.frame.DataFrame]: (
@@ -28,8 +29,13 @@ def get_worksheets(gs_name, ws_names):
     credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
     credentials_dict = json.loads(credentials_dict_str)
     google_credentials = gspread.service_account_from_dict(credentials_dict)
-    spreadsheet = google_credentials.open(gs_name)
-    # TODO cr: g_sheet.add_worksheet("Commands Log", df.shape[0], df.shape[1])
+    try:
+        spreadsheet = google_credentials.open(gs_name)
+    except gspread.exceptions.SpreadsheetNotFound as err:
+        if create:
+            spreadsheet = google_credentials.create(gs_name)
+        else:
+            raise err
 
     worksheets = []
     worksheet_dfs = []
@@ -43,6 +49,15 @@ def get_worksheets(gs_name, ws_names):
         if len(ws_name) == 1 and ws_names.startswith(ws_name):
             message = "You probably haven't put your worksheets into the list!"
             raise WorksheetNameNotInList(message) from err
+        elif create:
+            assert len(ws_names) < 5, "You're creating too many worksheets!"
+            for ws_name in ws_names:
+                worksheet = spreadsheet.add_worksheet(
+                    ws_name, rows="10000", cols="20"
+                )
+                worksheets.append(worksheet)
+                worksheet_df = pd.DataFrame(worksheet.get_all_records())
+                worksheet_dfs.append(worksheet_df)
         else:
             raise err
 
