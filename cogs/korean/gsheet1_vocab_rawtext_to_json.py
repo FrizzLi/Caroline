@@ -1,15 +1,17 @@
-"""Takes and transforms book's raw vocabulary text into json file."""
+"""Transforms vocabulary raw contents into json file.
+
+Uses (Contents are stored data/vocab_sources folder):
+ - frequency vocabulary book's raw content
+ - topik vocabulary raw's content
+   (https://learning-korean.com/elementary/20210101-10466/)
+"""
 
 import json
 from pathlib import Path
 
 
 def create_freq_json():
-    """Creates freq json vocabulary file out from raw text.
-
-    Takes and transforms raw text of freq vocabulary into json file.
-    Contents are stored data/vocab_sources folder.
-    """
+    """Creates freq json vocabulary file out from file with raw text."""
 
     src_dir = Path(__file__).parents[0]
     freq_text_file = Path(f"{src_dir}/data/vocab_sources/freq_dict_kor.txt")
@@ -77,11 +79,7 @@ def create_freq_json():
 
 
 def create_topi_json():
-    """Creates topi json vocabulary file out from raw text.
-
-    Takes and transforms raw text of topi vocabulary into json file.
-    Contents are stored data/vocab_sources folder.
-    """
+    """Creates topi json vocabulary file out from file with raw text."""
 
     src_dir = Path(__file__).parents[0]
     topi_text_file = Path(f"{src_dir}/data/vocab_sources/topik_vocab.txt")

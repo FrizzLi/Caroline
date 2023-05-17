@@ -1,6 +1,9 @@
-"""This script serves to convert two tabs (Book_Level, Book_Lesson)
-into one (Lesson) in "Korea - Vocabulary" Spreadsheet
- - NOTE that this is already included in gsheet2, therefore useless"""
+"""
+"Korea - Vocabulary" Spreadsheet:
+ - serves to convert two tabs (Book_Level, Book_Lesson) into one (Lesson)
+   in "Level 1-2 (modified)"
+ - NOTE this is already included in gsheet2, therefore useless
+"""
 
 import sys
 from pathlib import Path
@@ -33,11 +36,11 @@ def _update_df(ws_df):
 
 
 def merge(gs_name, ws_names):
-    """Merges columns of worksheet according to _create_df method
+    """Loads, merges columns according to _create_df method and updates the ws
 
     Args:
-        gs_name (str): name of the spreadsheet
-        ws_name (str): name of the worksheet (a tab of spreadsheet)
+        gs_name (str): google spreadsheet name
+        ws_name (str): worksheet name
     """
 
     wss, ws_dfs = utils.get_worksheets(gs_name, ws_names)
