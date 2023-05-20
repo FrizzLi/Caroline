@@ -28,8 +28,8 @@ def _fill_arranged_df(raw_df, arranged_df):
     """Fills the arranged dataframe with the raw dataframe.
 
     Args:
-        raw_df (_type_): raw dataframe
-        arranged_df (_type_): arranged_dataframe to be filled
+        raw_df (pandas.core.frame.DataFrame): raw dataframe
+        arranged_df (pandas.core.frame.DataFrame): arranged_dataframe to be filled
     """
 
     print("Creating arranged vocab... ", end="")
@@ -195,6 +195,3 @@ if __name__ == "__main__":
         LEVEL_SPREADSHEET_NAME,
         LEVEL_WORKSHEET_NAMES,
     )
-
-# TODO: rename to vocab_create_worksheet
-# TODO: documentation (how to set up gspread sheets, token, how to use this, what does this all mean)

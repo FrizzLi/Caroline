@@ -2,6 +2,7 @@
 
 ### In Progress
 
+- [ ] Documentation of korean.py (gsheet modules - how to set up gspread sheets, token, what does this all mean)
 - [ ] Apply ChatGPT opt. suggestions
 - [ ] Script that analyzes all libraries used, data structs.
 - [ ] Create Readme for each cog, how to install and stuff like that
