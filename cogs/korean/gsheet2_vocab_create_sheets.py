@@ -29,7 +29,7 @@ def _fill_arranged_df(raw_df, arranged_df):
 
     Args:
         raw_df (pandas.core.frame.DataFrame): raw dataframe
-        arranged_df (pandas.core.frame.DataFrame): arranged_dataframe to be filled
+        arranged_df (pandas.core.frame.DataFrame): arranged_df to be filled
     """
 
     print("Creating arranged vocab... ", end="")

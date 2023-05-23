@@ -157,7 +157,7 @@ def _fill_df(lvl_df, occurs_df, occurs, word_types, text, lesson, log_file):
                     )
                     log_file.write(msg + "\n")
                 else:
-                    msg = f"Going to fill {row.Korean} from {row.Lesson} Lesson!\n"
+                    msg = f"Going to fill {row.Korean} from {row.Lesson}!\n"
                     log_file.write(msg)
                     lvl_df.at[row.Index, f"{text}ing_Used"] = lesson
             else:
@@ -246,6 +246,3 @@ if __name__ == "__main__":
     fill_lesson_occurences(
         SPREADSHEET_NAME, WORKSHEET_NAMES, LESSON, TEXT, UPDATE
     )
-
-# TODO: remove "4"
-# TODO: format.. and polish even further
