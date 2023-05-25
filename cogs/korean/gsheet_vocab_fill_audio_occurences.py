@@ -66,5 +66,3 @@ if __name__ == "__main__":
     WORKSHEET_NAMES = ("Level 1-2 (raw)",)
 
     fill_audio_occurences(SPREADSHEET_NAME, WORKSHEET_NAMES)
-
-# TODO: remove 5, add occurence(S!)
