@@ -23,7 +23,9 @@ def to_thread(func):
         loop = asyncio.get_event_loop()
         wrapped = functools.partial(func, *args, **kwargs)
         return await loop.run_in_executor(None, wrapped)
+
     return wrapper
+
 
 class Music(commands.Cog):
     # music = controller
@@ -166,10 +168,10 @@ class Music(commands.Cog):
         if voice_state is not None and members_amount == 1:
             await self.cleanup(member.guild)
 
-    # General commands (with no slash)
+    # General commands (with no slash)  [!beware to have enough rows!!!]
     @commands.command()
     async def history(self, ctx, limit: int = 1000):
-        """Saves history of songs into Google Sheets.
+        """Saves song request commands information into Google Sheets.
 
         Args:
             ctx (discord.ext.commands.context.Context): context (old commands)
@@ -177,38 +179,28 @@ class Music(commands.Cog):
                 Defaults to 1000.
         """
 
-        table_rows = []
+        ws_records = []
         i = 0
         async for msg in ctx.channel.history(limit=limit):
-            if msg.author.bot:
+            if msg.author.bot and msg.author.name in ("GLaDOS", "Caroline"):
                 if msg.content.startswith("___"):
+                    print("Found saving breakpoint.")
                     break
 
                 i += 1
-                if msg.embeds and msg.embeds[0].description.startswith("Que"):
-                    rec = self.get_ytb_data_from_embed_req(ctx, msg)
-                    table_rows.append(rec)
-                    # TODO logs
-                    print(f"{i}. (new) downloaded: {rec}")
+                if msg.embeds and msg.embeds[0].description:
+                    if msg.embeds[0].description.startswith("Queued ["):
+                        rec = await self.get_ytb_data_from_embed_req(ctx, msg)
+                        ws_records.append(rec)
+                        print(f"{i}. (new) downloaded: {rec}")
 
-
-        # TODO deal with all loadings in other files in the same time
-        # save to gsheets
-        credentials_dict_string = os.environ["GOOGLE_CREDENTIALS"]
-        credentials_dict = json.loads(credentials_dict_string)
-        g_credentials = gspread.service_account_from_dict(credentials_dict)
-        g_sheet = g_credentials.open("Discord Music Log")
-
-        # cr: g_sheet.add_worksheet("Commands Log", df.shape[0], df.shape[1])
-        g_work_sheet = g_sheet.worksheet("Commands Log")
-        df = pd.DataFrame(table_rows, index=None)
-        wks_formatted_rows = df.values.tolist()
-        g_work_sheet.append_rows(
-            wks_formatted_rows, value_input_option="USER_ENTERED"
-        )
+        wss, _ = utils.get_worksheets("Discord Music Log", ("Commands Log",))
+        log_ws = wss[0]
+        log_ws.append_rows(ws_records, value_input_option="USER_ENTERED")
 
         await ctx.send("___Messages saved up to this point.___")
 
+    # ! TODO commit till this line!
     @commands.command()
     async def create_stats(self, ctx):
         """Saves history of songs into Google Sheets."""
