@@ -203,50 +203,60 @@ class Music(commands.Cog):
     # ! TODO commit till this line!
     @commands.command()
     async def create_stats(self, ctx):
-        """Saves history of songs into Google Sheets."""
+        """Creates track log stats from commands log created by "history" cmd.
 
-        # TODO deal with all loadings in other files in the same time
-        # get pandas format
-        credentials_dict_string = os.environ["GOOGLE_CREDENTIALS"]
-        credentials_dict = json.loads(credentials_dict_string)
-        g_credendials = gspread.service_account_from_dict(credentials_dict)
-        g_sheet = g_credendials.open("Discord Music Log")
-        cmd_wks = g_sheet.worksheet("Commands Log")
+        Args:
+            ctx (discord.ext.commands.context.Context): context (old commands)
+        """
 
-        cmd_df = pd.DataFrame(cmd_wks.get_all_records())
-        cmd_df["Date"] = pd.to_datetime(cmd_df["Date"])
-        now = pd.Timestamp.now()
-
-        # preparation
-        name_offset_dict = {
+        ws_data_opts = {
+            "Commands Log": False,
             "Track Log (Lifetime)": False,
             "Track Log (Year)": pd.DateOffset(years=1),
-            "Track Log (3 Months)": pd.DateOffset(months=3),
             "Track Log (Month)": pd.DateOffset(months=1),
             "Track Log (Week)": pd.DateOffset(weeks=1),
         }
 
-        for sheet_name, offset in name_offset_dict.items():
-            print(sheet_name, "-----BEGINS-----")
-            track_wks = g_sheet.worksheet(sheet_name)
-            track_df = pd.DataFrame(track_wks.get_all_records())
-            if track_df.empty:
-                track_df = pd.DataFrame(
-                    columns=[
-                        "First time requested",
-                        "Last time requested",
-                        "Requests",
-                        "Title",
-                        "URL",
-                        "Duration",
-                        "Views",
-                        "Categories",
-                    ]
-                )
+        header = [
+            "First time requested",
+            "Last time requested",
+            "Requests",
+            "Title",
+            "URL",
+            "Duration",
+            "Views",
+            "Categories",
+        ]
+        columns_to_drop = header[:4]
 
-            # filter months
-            if offset:
-                timestamp = now - offset
+        function_list = [
+            ("First time requested", "min"),
+            ("Last time requested", "max"),
+            ("Requests", "count"),
+        ]
+
+        ws_names = tuple(ws_data_opts.keys())
+        date_offsets = tuple(ws_data_opts.values())[1:]
+        wss, ws_dfs = utils.get_worksheets("Discord Music Log", ws_names)
+        ws_logs, ws_log_dfs = wss[1:], ws_dfs[1:]
+
+        track_data = (ws_logs, ws_log_dfs, date_offsets)
+        cmd_df = ws_dfs[0]
+        cmd_df["Date"] = pd.to_datetime(cmd_df["Date"])  # ? try without convert to proper datetime type
+        now = pd.Timestamp.now()
+
+        for ws_log, ws_log_df, date_offset in zip(
+            ws_logs, ws_log_dfs, date_offsets
+        ):
+            print(ws_log.title, "-----BEGINS-----")
+
+            # create header if it's empty inside the worksheet
+            if ws_log_df.empty:
+                ws_log_df = pd.DataFrame(columns=header)
+
+            # filter records according to timestamp that we got with date_offset
+            if date_offset:
+                timestamp = now - date_offset
                 filter_ = cmd_df["Date"] >= timestamp
                 filtered_cmd_df = cmd_df[filter_]
             else:
@@ -254,38 +264,16 @@ class Music(commands.Cog):
 
             # groupby titles
             grouped_cmd_df = filtered_cmd_df.groupby(["URL", "Title"])["Date"]
-            function_list = [
-                ("First time requested", "min"),
-                ("Last time requested", "max"),
-                ("Requests", "count"),
-            ]
             grouped_cmd_df = grouped_cmd_df.agg(function_list).reset_index()
 
-            # merge with track_df, rearrange, clean data
-            track_df = track_df.drop(
-                labels=[
-                    "First time requested",
-                    "Last time requested",
-                    "Requests",
-                    "Title",
-                ],
-                axis=1,
-            )
+            # merge with grouped cmd log with track log
+            ws_log_df = ws_log_df.drop(labels=columns_to_drop, axis=1)  # ?
             merged_df = pd.merge(
-                grouped_cmd_df, track_df, on="URL", how="left"
+                grouped_cmd_df, ws_log_df, on="URL", how="left"
             )
-            merged_df = merged_df[
-                [
-                    "First time requested",
-                    "Last time requested",
-                    "Requests",
-                    "Title",
-                    "URL",
-                    "Duration",
-                    "Views",
-                    "Categories",
-                ]
-            ]
+            merged_df = merged_df[header]
+
+            # clean data
             merged_df["First time requested"] = merged_df[
                 "First time requested"
             ].astype(str)
@@ -304,7 +292,7 @@ class Music(commands.Cog):
                             duration,
                             views,
                             categories,
-                        ) = self.get_ytb_data_from_url(row.URL)
+                        ) = await self.get_ytb_data_from_url(row.URL)
                     except Exception as err:
                         print(f"{i}. error: {err}. (row: {row})")
                         continue
@@ -317,15 +305,14 @@ class Music(commands.Cog):
                     msg = f"({duration}, {views}, {categories}) -- {row.Title}"
                     print(f"Updated {i} row. {msg}")
 
-            # save to gsheets
-            listed_table_result = [merged_df.columns.values.tolist()]  # header
-            listed_table_result += merged_df.values.tolist()
+            utils.update_worksheet(ws_log, merged_df)
 
-            track_wks.update(
-                listed_table_result, value_input_option="USER_ENTERED"
-            )  # value_input_option='USER_ENTERED' / 'RAW'
+        await ctx.send("___Track logging updated up to this point.___")
 
-        await ctx.send("___Stats updated up to this point.___")
+        # IN NEXT COMMITS
+        # TODO: use Track info tab and copy track info from there to other tabs
+        # TODO: function at the end of this function to search for newly found songs
+        # TODO: Commands Log, Track Info, User req count, Track Log (Lifetime, Year, Month, Week)
 
     # Slash commands, the main command
     @app_commands.command(name="play")
