@@ -332,22 +332,24 @@ class Music(commands.Cog):
         await self.play(interaction, search)
 
     async def play(self, interaction, search):
-
-        # music = controller
-        # player_view = view in discord
-        # player = controls the flow of songs being played
-        # source = a song
+        # TODO: Why we have two play functions? Explain
+        # TODO: Pylint, Documentation
 
         # making sure interaction timeout does not expire
-        await interaction.response.send_message(
-            "...Looking for song(s)... wait..."
-        )
+        msg = "...Looking for song(s)... wait..."
+        await interaction.response.send_message(msg)
 
-        # check if we're in channel, if not, join the one we are currently in
+        # voice channel check and connect
         vc = interaction.guild.voice_client
         if not vc:
-            channel = interaction.user.voice.channel
-            await channel.connect()  # simplified cuz cannot invoke connect f.
+            try:
+                user_channel = interaction.user.voice.channel
+            except AttributeError:
+                msg = "Neither bot or you are connected to voice channel."
+                await interaction.followup.send(msg)
+                return
+
+            await user_channel.connect()
 
         # getting source entries ready to be played
         try:
@@ -372,9 +374,9 @@ class Music(commands.Cog):
             player.queue.append(source)
 
         if send_signal:
-            print("SIGNAL FROM MUSIC.PY")
+            # print("SIGNAL FROM MUSIC.PY")
             player.next.set()
-            print("SIGNALED FROM MUSIC.PY")
+            # print("SIGNALED FROM MUSIC.PY")
         elif player.np_msg:
             player.view.update_msg()
             await player.update_player_status_message()
@@ -429,7 +431,7 @@ class Music(commands.Cog):
             try:
                 channel = interaction.user.voice.channel
             except AttributeError:
-                msg = "No channel to join. Specify valid channel or join one."
+                msg = "Specify voice channel or join one first."
                 return await interaction.response.send_message(msg)
 
         vc = interaction.guild.voice_client
@@ -465,7 +467,9 @@ class Music(commands.Cog):
         voice.
         """
 
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        voice = discord.utils.get(
+            self.bot.voice_clients, guild=interaction.guild
+        )
         # vc = interaction.guild.voice_client
         if not voice:
             msg = "I'm not connected to a voice channel."

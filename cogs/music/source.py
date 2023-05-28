@@ -47,7 +47,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
         cls, interaction, search: str, *, loop, playlist=False
     ):
         loop = loop or asyncio.get_event_loop()
-
         to_run = functools.partial(
             ytdl.extract_info, url=search, download=False
         )
@@ -68,17 +67,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 title="", description=description, color=discord.Color.green()
             )
             await interaction.followup.send(embed=embed)
-
-        return data["entries"]
-
-    @classmethod
-    async def search_source(cls, search: str, *, loop):
-        loop = loop or asyncio.get_event_loop()
-
-        to_run = functools.partial(
-            ytdl.extract_info, url="ytsearch10: " + search, download=False
-        )
-        data = await loop.run_in_executor(None, to_run)
 
         return data["entries"]
 
@@ -117,3 +105,14 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data=data,
             requester=requester,
         )
+
+    @classmethod
+    async def search_source(cls, search: str, *, loop):
+        loop = loop or asyncio.get_event_loop()
+
+        to_run = functools.partial(
+            ytdl.extract_info, url="ytsearch10: " + search, download=False
+        )
+        data = await loop.run_in_executor(None, to_run)
+
+        return data["entries"]
