@@ -18,12 +18,17 @@
   - [ ] Bug: when the bot leaves the voice, refresh button still works..
 
 - [ ] korean.py
+  - [ ] Disable buttons during mp3 play
+  - [ ] Disable listening.. cannot cancel once played
+  - [ ] Add time scoring, apply visualization on worksheet too (only the 10 hardest words, 50 randomize, time take into account, or just all again)
   - [ ] Polish Discord related stuff: Pylint, Document, Optimize code, and Async, Logs
   - [ ] Update sheets when the session is over, not when it starts
-  - [ ] Consider using gspread ops instead of pandas (research it)
   - [ ] Bug: Have to be connected to turn on reading lesson
   - [ ] Bug: Error when long time no use.. zel
   - [ ] Let user know which lessons are in the review, command to just start next one without needing to remember my last lesson
+  - [ ] Stop if too many unknown words already...!
+  - [ ] Streak play, daily q
+  - [ ] Fix word counter
 
   - [ ] Download sound for all? (current script is published in memo bookmark), also need to force pickle save
   - [ ] Ending session stats?: Stats Graph, sort hardest from easiest words!
