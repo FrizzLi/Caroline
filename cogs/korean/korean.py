@@ -915,6 +915,8 @@ class Language(commands.Cog):
                 except discord.errors.HTTPException as err:
                     print(err)
                     vocab_g_ws.append_rows(stats_list)
+                    msg = await interaction.followup.send(content)
+                    await msg.edit(content=content, view=view)
                     break
                 vocab_g_ws.append_rows(stats_list)
                 break
