@@ -18,6 +18,9 @@
   - [ ] Bug: when the bot leaves the voice, refresh button still works..
 
 - [ ] korean.py
+  - [ ] Elastic search for gsheet data for all users?
+  - [ ] Chatgpt vocab korean.py, similar meaning/spelling
+  - [ ] Know the differences, word vs word
   - [ ] Disable buttons during mp3 play
   - [ ] Disable listening.. cannot cancel once played
   - [ ] Add time scoring, apply visualization on worksheet too (only the 10 hardest words, 50 randomize, time take into account, or just all again)
@@ -29,6 +32,7 @@
   - [ ] Stop if too many unknown words already...!
   - [ ] Streak play, daily q
   - [ ] Fix word counter
+  - [ ] Pause for listening -> back 10s
 
   - [ ] Download sound for all? (current script is published in memo bookmark), also need to force pickle save
   - [ ] Ending session stats?: Stats Graph, sort hardest from easiest words!
