@@ -779,6 +779,24 @@ class Language(commands.Cog):
         weights /= weights.sum()
         nl = np.random.choice(sorted_words, p=weights, size=size, replace=False)
 
+        # IPYNB #######################################
+        # import numpy as np
+        # import matplotlib.pyplot as plt
+
+        # # Set up the range of values to sample from
+        # values = np.arange(100)
+
+        # weights = np.linspace(1, 0, 100)
+        # weights /= weights.sum()
+        # sampled_value = np.random.choice(values, p=weights, size=50, replace=False)
+
+        # plt.hist(sampled_value, bins=20, density=True)  # , , density=True
+        # plt.show()
+        # print(sum(sampled_value[:25]))
+        # print(sum(sampled_value[25:]))
+        # sampled_value
+        # IPYNB #######################################
+
         # nl2 = []
         # size = 10
         # for i in range(0, len(sorted_word_score), size):
