@@ -2,13 +2,11 @@
 
 ### In Progress
 
-- [ ] Documentation of korean.py (gsheet modules - how to set up gspread sheets, token, what does this all mean)
-- [ ] Apply ChatGPT opt. suggestions
-- [ ] Script that analyzes all libraries used, data structs.
-- [ ] Create Readme for each cog, how to install and stuff like that
+- [ ]
 
 ### Todo
 
+- [ ] Integrate ChatGPT with my Discord server
 - [ ] Pylint - resolve all errors
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
 - [ ] surveillance.py: Voice stats graphs, Process old logs
@@ -18,6 +16,13 @@
   - [ ] Bug: when the bot leaves the voice, refresh button still works..
 
 - [ ] korean.py
+  - [ ] Take into account only the first guesses in one session!
+  - [ ] Take into account time/session number
+  - [ ] Words checked out of... (instead of missing to guess words instead)
+  - [ ] Once know all in one session, pick the hardest ones to test again, or just display them
+  - [ ] Listening, Reading: Click which sentence you want to explore in detail -> grammar points, vocab, translation
+  - [ ] Display top 5 hardest words after the session
+  - [ ] Similar words, fill in what is more appropriate... like in books
   - [ ] Elastic search for gsheet data for all users?
   - [ ] Chatgpt vocab korean.py, similar meaning/spelling
   - [ ] Know the differences, word vs word
@@ -29,9 +34,8 @@
   - [ ] Bug: Have to be connected to turn on reading lesson
   - [ ] Bug: Error when long time no use.. zel
   - [ ] Let user know which lessons are in the review, command to just start next one without needing to remember my last lesson
-  - [ ] Stop if too many unknown words already...!
-  - [ ] Streak play, daily q
-  - [ ] Fix word counter
+  - [ ] Streak play, daily q (create a graph of practice intensity similarly as its on github)
+  - [ ] Fix word counter (it is going up to just 50)
   - [ ] Pause for listening -> back 10s
 
   - [ ] Download sound for all? (current script is published in memo bookmark), also need to force pickle save
