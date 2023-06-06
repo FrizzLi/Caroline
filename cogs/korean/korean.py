@@ -23,8 +23,8 @@ from cogs.korean.vocab_audio_search import dl_vocab
 
 class Language(commands.Cog):
     def __init__(self, bot):
-        self.vocab_audio_paths = self.get_vocab_paths()
-        self.vocab_df = self.get_vocab()
+        self.vocab_audio_paths = self.get_vocab_audio_paths()
+        self.vocab_df = self.get_vocab_table()
         self.bot = bot
         self.korean_config = self.load_korean_config()
         self.ffmpeg_path = (
@@ -33,16 +33,20 @@ class Language(commands.Cog):
         self.timezone = ""
 
     # These parameters doesn't need to be in config, they're not so usable
-    personalization = True  # NotImplemented
-    show_eng_word = 1  # works for writing exercise
+    personalization = True  # NotImplemented  # !
+    show_eng_word = 1  # works for writing exercise  # !
 
-    def get_vocab(self):
-        credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
-        credentials_dict = json.loads(credentials_dict_str)
-        g_credentials = gspread.service_account_from_dict(credentials_dict)
-        gs_vocab = g_credentials.open("Korea - Vocabulary")
-        ws_vocab = gs_vocab.worksheet("Level 1-2 (modified)")
-        df = pd.DataFrame(ws_vocab.get_all_records())
+    def get_vocab_table(self):
+        """Gets the whole vocabulary table dataframed from google spreadsheet.
+
+        Returns:
+            pandas.core.frame.DataFrame: worksheet dataframe table
+        """
+
+        _, ws_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
+
+        # ignore rows with no Lesson cell filled (duplicates)
+        df = ws_dfs[0]
         df["Lesson"].replace("", np.nan, inplace=True)
         df.dropna(subset=["Lesson"], inplace=True)
 
@@ -1025,11 +1029,3 @@ async def setup(bot):
 # NOTE
 # MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
 # Refresh scoring after 10 attempts
-
-# Korean.py
-#  - look into thr time of the last usage a lot only(?), Review number take into consideration... Only?
-#  - Make rewarding graphs
-#  - Spread the picking of words more (take more words into account, higher randomization,, or take time i to account somehow)
-#  - research about 2000 words -> how much % can u usually understand in general
-#  - research bot capabilities inside the chat
-#  - include grammar, sentence generation -> if doesnt know,, refer the lessons and explain them briefly + reference them
