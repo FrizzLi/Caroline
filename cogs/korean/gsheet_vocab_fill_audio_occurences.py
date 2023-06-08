@@ -39,7 +39,7 @@ def fill_audio_occurences(gs_name, ws_names):
 
     Args:
         gs_name (str): google spreadsheet name
-        ws_names (str): names of the worksheet
+        ws_names (Tuple[str]): worksheet names
     """
 
     wss, ws_dfs = utils.get_worksheets(gs_name, ws_names)

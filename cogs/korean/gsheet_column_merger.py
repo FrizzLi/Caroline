@@ -40,7 +40,7 @@ def merge(gs_name, ws_names):
 
     Args:
         gs_name (str): google spreadsheet name
-        ws_name (str): worksheet name
+        ws_names (Tuple[str]): worksheet names
     """
 
     wss, ws_dfs = utils.get_worksheets(gs_name, ws_names)

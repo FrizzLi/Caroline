@@ -49,7 +49,7 @@ def get_worksheets(gs_name, ws_names, create=False):
             worksheet_dfs.append(worksheet_df)
     except gspread.exceptions.WorksheetNotFound as err:
         if len(ws_name) == 1 and ws_names.startswith(ws_name):
-            message = "You probably haven't put your worksheets into the list!"
+            message = "You probably havent put your worksheets into the tuple!"
             raise WorksheetNameNotInList(message) from err
         elif create:
             assert len(ws_names) < 5, "You're creating too many worksheets!"

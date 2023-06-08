@@ -16,6 +16,8 @@
   - [ ] Bug: when the bot leaves the voice, refresh button still works..
 
 - [ ] korean.py
+  - [ ] Spread the picking of words more (take more words into account, higher randomization, or take time into account)
+  - [ ] Research bot capabilities inside the chat
   - [ ] Take into account only the first guesses in one session!
   - [ ] Take into account time/session number
   - [ ] Words checked out of... (instead of missing to guess words instead)
