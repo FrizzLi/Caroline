@@ -17,8 +17,9 @@ from discord import app_commands
 from discord.ext import commands
 from discord.utils import get
 
+import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
-from cogs.korean.vocab_audio_search import dl_vocab
+# from cogs.korean.vocab_audio_search import dl_vocab  # !
 
 
 class Language(commands.Cog):
@@ -26,7 +27,7 @@ class Language(commands.Cog):
         self.vocab_audio_paths = self.get_vocab_audio_paths()
         self.vocab_df = self.get_vocab_table()
         self.bot = bot
-        self.korean_config = self.load_korean_config()
+        self.korean_config = self.load_korean_config()  # !
         self.ffmpeg_path = (
             "C:/ffmpeg/ffmpeg.exe" if os.name == "nt" else "/usr/bin/ffmpeg"
         )
@@ -52,14 +53,24 @@ class Language(commands.Cog):
 
         return df
 
-    def get_vocab_paths(self):
+    def get_vocab_audio_paths(self):
+        """Gets vocab's local audio paths of all levels.
+
+        Not all words have audio file, it will load only the ones that are
+        present in vocabulary_audio directory that are in each of the lessons.
+        Just so we dont have to read through all the lessons every time this
+        module is loaded, the audio paths are stored in pickle file. (cache)
+
+        Returns:
+            Dict[str, str]: words and their audio paths (word being the key)
+        """
+
         src_dir = Path(__file__).parents[0]
         pickle_path = f"{src_dir}/data/vocab_audio_path.pickle"
         if os.path.isfile(pickle_path):
             with open(pickle_path, "rb") as handle:
                 audio_paths_labelled = pickle.loads(handle.read())
         else:
-            print("korean: Creating pickle file for vocab audio paths...", end=" ")
             audio_paths = glob(f"{src_dir}/data/*/*/vocabulary_audio/*")
             audio_paths_labelled = {}
             for audio_path in audio_paths:
@@ -68,10 +79,10 @@ class Language(commands.Cog):
 
             with open(pickle_path, "wb") as file:
                 pickle.dump(audio_paths_labelled, file)
-            print("Done!")
-        
+
         return audio_paths_labelled
 
+    ### ! USELESS IN THIS NEW VER ### (deal with writing part later)
     def load_korean_config(self):
         src_dir = Path(__file__).parents[0]
         config_path = Path(f"{src_dir}/config.json")
@@ -188,11 +199,15 @@ class Language(commands.Cog):
     #     await interaction.response.send_message(msg)
     #     dl_vocab(self.level, lesson, text_only)
     #     await interaction.followup.send("Vocab has been created!")
+    ### ! USELESS IN THIS NEW VER ###
 
-    # Listeners
     @commands.Cog.listener()
     async def on_ready(self):
-        """Executes when the cog is loaded and inits timezone."""
+        """Executes when the cog is loaded and inits timezone.
+
+        This could have been initialized in __init__ method, but to make it
+        consistent with all cogs, on_ready is being used for config loading.
+        Surveillance module needs to load it there."""
 
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
