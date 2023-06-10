@@ -141,7 +141,11 @@ class Music(commands.Cog):
     # Listeners
     @commands.Cog.listener()
     async def on_ready(self):
-        """Executes when the cog is loaded and inits timezone string."""
+        """Executes when the cog is loaded, it initializes timezone.
+
+        This could have been initialized in __init__ method, but to make it
+        consistent with all cogs, on_ready is being used for config loading.
+        Surveillance module needs to load it there."""
 
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]

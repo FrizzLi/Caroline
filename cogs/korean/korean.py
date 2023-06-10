@@ -59,7 +59,8 @@ class Language(commands.Cog):
         Not all words have audio file, it will load only the ones that are
         present in vocabulary_audio directory that are in each of the lessons.
         Just so we dont have to read through all the lessons every time this
-        module is loaded, the audio paths are stored in pickle file. (cache)
+        module is loaded, the audio paths are stored in pickle file. (cached)
+        Audio files are located in data/level_x/lesson_x/vocabulary_audio dir.
 
         Returns:
             Dict[str, str]: words and their audio paths (word being the key)
@@ -81,6 +82,17 @@ class Language(commands.Cog):
                 pickle.dump(audio_paths_labelled, file)
 
         return audio_paths_labelled
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Executes when the cog is loaded, it initializes timezone.
+
+        This could have been initialized in __init__ method, but to make it
+        consistent with all cogs, on_ready is being used for config loading.
+        Surveillance module needs to load it there."""
+
+        with open("config.json", encoding="utf-8") as file:
+            self.timezone = json.load(file)["timezone"]
 
     ### ! USELESS IN THIS NEW VER ### (deal with writing part later)
     def load_korean_config(self):
@@ -199,18 +211,6 @@ class Language(commands.Cog):
     #     await interaction.response.send_message(msg)
     #     dl_vocab(self.level, lesson, text_only)
     #     await interaction.followup.send("Vocab has been created!")
-    ### ! USELESS IN THIS NEW VER ###
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """Executes when the cog is loaded and inits timezone.
-
-        This could have been initialized in __init__ method, but to make it
-        consistent with all cogs, on_ready is being used for config loading.
-        Surveillance module needs to load it there."""
-
-        with open("config.json", encoding="utf-8") as file:
-            self.timezone = json.load(file)["timezone"]
 
     @app_commands.command(name="zev")
     async def zexercise_vocab(self, interaction):
@@ -323,14 +323,11 @@ class Language(commands.Cog):
             await interaction.followup.send("Score has been saved.")
 
         await interaction.followup.send(f"Exiting {self.lesson} exercise..")
+    ### ! USELESS IN THIS NEW VER ###
 
     @app_commands.command(name="zevl")
     async def zexercise_vocab_listening(self, interaction, lesson_number: int):
-        """Start listening vocab exercise.
-
-        In the case of customized lesson, audio files will be loaded only
-        from level that is set in the settings. TODO!!! find that are in custom
-        """
+        """Start listening vocab exercise."""
 
         await interaction.response.send_message(
             "...Setting up listening session..."
@@ -354,7 +351,7 @@ class Language(commands.Cog):
 
         gs_stats = g_credentials.open("Korea - Users stats")
         level_number = lesson_number // 100
-        
+
         try:
             ws_stats = gs_stats.worksheet(f"{interaction.user.name}-{level_number}")
         except gspread.exceptions.WorksheetNotFound:
@@ -368,7 +365,7 @@ class Language(commands.Cog):
         else:
             current_session_number = 1
 
-        
+
         vocab = []
 
         for row in self.vocab_df.itertuples():
@@ -515,14 +512,9 @@ class Language(commands.Cog):
             status=discord.Status.online,
         )
 
-
     @app_commands.command(name="zel")
     async def zexercise_listening(self, interaction, lesson_number: int = 102):
-        """Start listening vocab exercise.
-
-        In the case of customized lesson, audio files will be loaded only
-        from level that is set in the settings. TODO!!! find that are in custom
-        """
+        """Start listening vocab exercise."""
 
         await interaction.response.send_message(
             "...Setting up listening session..."
@@ -653,11 +645,7 @@ class Language(commands.Cog):
 
     @app_commands.command(name="zrvl")
     async def zreview_vocab_listening(self, interaction, level_number: int = 1):
-        #"""Start listening vocab exercise.
-
-        #In the case of customized lesson, audio files will be loaded only
-        #from level that is set in the settings. TODO!!! find that are in custom
-        #"""
+        """Start listening vocab exercise."""
 
         await interaction.response.send_message(
             "...Setting up listening session..."
@@ -700,7 +688,7 @@ class Language(commands.Cog):
             current_session_number = last_session_number + 1
         else:
             current_session_number = 1
-        
+
         # get 50 sorted word scores
         df = pd.DataFrame(vocab_g_ws.get_all_records())
         df.sort_values(["Word", "Date"], ascending=[True, False], inplace=True)
@@ -755,7 +743,7 @@ class Language(commands.Cog):
                     new_word_score_total = 0
                     new_word_counter = 0
                     new_word_time_penalty_total = 0
-                    
+
                     debug_compute = []
                     knowledge = []
                     knowledge_marks = []
@@ -768,7 +756,7 @@ class Language(commands.Cog):
             elif row.Knowledge == "❌":
                 knowledge_multiplier = 4
             # new_word_score.append(f"{knowledge_multiplier}*{scores[new_word_counter]}")
-            
+
             new_word_score = knowledge_multiplier * scores[new_word_counter]
             debug_compute.append(new_word_score)
             new_word_score_total += new_word_score

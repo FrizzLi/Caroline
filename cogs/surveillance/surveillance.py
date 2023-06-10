@@ -91,8 +91,9 @@ class Surveillance(commands.Cog):
     async def on_ready(self):
         """Executes when the cog is loaded and prepares surveillance tracking.
 
-        Gets surveillance text channel and calls method for online tracking.
-        """
+        It initializes timezone, and calls method of online tracking.
+        It also gets surveillance text channel which could not be initialized
+        in __init__ method."""
 
         with open("config.json", encoding="utf-8") as file:
             config_json = json.load(file)
