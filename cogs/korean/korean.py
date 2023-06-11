@@ -354,22 +354,18 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocab listening")
         )
 
-        # get vocab words
-        # _, ws_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
+        columns = 4
 
-        credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
-        credentials_dict = json.loads(credentials_dict_str)
-        g_credentials = gspread.service_account_from_dict(credentials_dict)
-
-        gs_stats = g_credentials.open("Korea - Users stats")
+        # get user word log
         level_number = lesson_number // 100
+        ws_statss, _ = utils.get_worksheets(
+            "Korea - Users stats",
+            (f"{interaction.user.name}-{level_number}",),
+            create=True,
+            size=(10_000, columns)
+        )
+        ws_stats = ws_statss[0]  # TODO: rename ws_stats
 
-        try:
-            ws_stats = gs_stats.worksheet(f"{interaction.user.name}-{level_number}")
-        except gspread.exceptions.WorksheetNotFound:
-            ws_stats = gs_stats.add_worksheet(
-                title=f"{interaction.user.name}-{level_number}", rows=10_000, cols=4
-            )
         session_numbers = ws_stats.col_values(4)
         if session_numbers:
             last_session_number = max(map(int, session_numbers[1:]))
