@@ -83,6 +83,23 @@ class Language(commands.Cog):
 
         return audio_paths_labelled
 
+    def get_voice(self):
+        """Connects to a voice channel before doing voice related commands.
+
+        Returns:
+            _type_: _description_
+        """
+
+        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        user_voice = interaction.user.voice
+        if not voice and not user_voice:
+            await interaction.followup.send("No bot nor you is connected.")
+        elif not voice:
+            await user_voice.channel.connect()
+        voice = get(self.bot.voice_clients, guild=interaction.guild)
+
+        return voice
+
     @commands.Cog.listener()
     async def on_ready(self):
         """Executes when the cog is loaded, it initializes timezone.
@@ -332,19 +349,14 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
-        user_voice = interaction.user.voice
-        if not voice and not user_voice:
-            await interaction.followup.send("No bot nor you is connected.")
-        elif not voice:
-            await user_voice.channel.connect()
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
-
+        voice = self.get_voice()
         await self.bot.change_presence(
             activity=discord.Game(name="Vocab listening")
         )
 
         # get vocab words
+        # _, ws_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
+
         credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
         credentials_dict = json.loads(credentials_dict_str)
         g_credentials = gspread.service_account_from_dict(credentials_dict)
@@ -519,16 +531,7 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
-        user_voice = interaction.user.voice
-        if not voice and not user_voice:
-            raise commands.CommandError("No bot nor you is connected.")
-        elif not voice:
-            await user_voice.channel.connect()
-        voice = discord.utils.get(
-            self.bot.voice_clients, guild=interaction.guild
-        )
-
+        voice = self.get_voice()
         await self.bot.change_presence(
             activity=discord.Game(name="Listening exercise")
         )
@@ -650,17 +653,7 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
-
-        # get voice
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
-        user_voice = interaction.user.voice
-        if not voice and not user_voice:
-            raise commands.CommandError("No bot nor you is connected.")
-        elif not voice:
-            await user_voice.channel.connect()
-        voice = discord.utils.get(
-            self.bot.voice_clients, guild=interaction.guild
-        )
+        voice = self.get_voice()
 
         def get_worksheet(spread_name, sheet_name):
             credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
