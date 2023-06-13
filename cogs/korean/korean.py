@@ -99,6 +99,38 @@ class Language(commands.Cog):
         voice = get(self.bot.voice_clients, guild=interaction.guild)
 
         return voice
+   
+    def get_session_number(self, ws_stats, columns: int):
+        session_numbers = ws_stats.col_values(columns)
+        if session_numbers:
+            last_session_number = max(map(int, session_numbers[1:]))
+            session_number = last_session_number + 1
+        else:
+            session_number = 1
+       
+        return session_number
+
+    def get_vocab(self, lesson_number):
+        vocab = []
+        for row in self.vocab_df.itertuples():
+            if not row.Lesson:
+                continue
+            if row.Lesson > lesson_number:
+                break
+            if row.Lesson == lesson_number:
+                vocab.append((row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)))
+
+        random.shuffle(vocab)
+
+        return vocab
+   
+    def compute_percentages(self, easy_c, medium_c, hard_c):
+        total_c = easy_c + medium_c + hard_c
+        return (
+            round(easy_c * 100 / total_c, 1),
+            round(medium_c * 100 / total_c, 1),
+            round(hard_c * 100 / total_c, 1),
+        )
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -366,47 +398,27 @@ class Language(commands.Cog):
         )
         ws_stats = ws_statss[0]  # TODO: rename ws_stats
 
-        session_numbers = ws_stats.col_values(4)
-        if session_numbers:
-            last_session_number = max(map(int, session_numbers[1:]))
-            current_session_number = last_session_number + 1
-        else:
-            current_session_number = 1
 
+        session_number = self.get_session_number(ws_stats, columns)
+        vocab = self.get_vocab(lesson_number)
 
-        vocab = []
-
-        for row in self.vocab_df.itertuples():
-            if not row.Lesson:
-                continue
-            if row.Lesson > lesson_number:
-                break
-            if row.Lesson == lesson_number:
-                vocab.append((row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)))
-
-        random.shuffle(vocab)
 
         # prepping msgs for the loop session
         i = 1
         count_n = len(vocab)
-
         await interaction.followup.send(f"[Lesson {lesson_number}]")
+
+
+        # TODO: zevl + zrvl function merge!
         counter = f"{i}. word out of {count_n}."
         msg = await interaction.followup.send(counter)
 
-        def compute_percentages(easy, medium, hard):
-            total = easy + medium + hard
-            return (
-                round(easy * 100 / total, 1),
-                round(medium * 100 / total, 1),
-                round(hard * 100 / total, 1),
-            )
 
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
-        stats_list = []
-        easy = easy_p = 0
-        medium = medium_p = 0
-        hard = hard_p = 0
+        stats_list = []     # TODO: append row by row?
+        easy_c = easy_p = 0
+        medium_c = medium_p = 0
+        hard_c = hard_p = 0
         stats = ""
         view = SessionVocabView()
 
@@ -452,35 +464,37 @@ class Language(commands.Cog):
                 word_to_move = vocab.pop()
 
                 vocab.insert(0, word_to_move)
-                easy += 1
+                easy_c += 1
+
 
                 i += 1
-                easy_p, medium_p, hard_p = compute_percentages(
-                    easy, medium, hard
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
                 )
             elif button_id == "medium":
                 word_to_move = vocab.pop()
 
                 vocab.insert(len(vocab) // 2, word_to_move)
-                medium += 1
+                medium_c += 1
                 count_n += 1
 
                 i += 1
-                easy_p, medium_p, hard_p = compute_percentages(
-                    easy, medium, hard
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
                 )
             elif button_id == "hard":
                 word_to_move = vocab.pop()
 
                 new_index = len(vocab) // 5
                 vocab.insert(-new_index, word_to_move)
-                hard += 1
+                hard_c += 1
                 count_n += 1
 
                 i += 1
-                easy_p, medium_p, hard_p = compute_percentages(
-                    easy, medium, hard
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
                 )
+
 
             elif button_id == "end":
                 msg_display = "Ending listening session."
@@ -508,7 +522,7 @@ class Language(commands.Cog):
                     time,
                     word_to_move[1],
                     stats_label[button_id],
-                    current_session_number,
+                    session_number,
                 ]
             )
 
@@ -829,19 +843,11 @@ class Language(commands.Cog):
         msg = await interaction.followup.send(counter)
 
 
-        def compute_percentages(easy, medium, hard):
-            total = easy + medium + hard
-            return (
-                round(easy * 100 / total, 1),
-                round(medium * 100 / total, 1),
-                round(hard * 100 / total, 1),
-            )
-
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
         stats_list = []
-        easy = easy_p = 0
-        medium = medium_p = 0
-        hard = hard_p = 0
+        easy_c = easy_p = 0
+        medium_c = medium_p = 0
+        hard_c = hard_p = 0
         stats = ""
         view = SessionVocabView()
 
@@ -889,34 +895,35 @@ class Language(commands.Cog):
                 word_to_move = nl.pop()
 
                 nl.insert(0, word_to_move)
-                easy += 1
+                easy_c += 1
+
 
                 i += 1
-                easy_p, medium_p, hard_p = compute_percentages(
-                    easy, medium, hard
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
                 )
             elif button_id == "medium":
                 word_to_move = nl.pop()
 
                 nl.insert(len(nl) // 2, word_to_move)
-                medium += 1
+                medium_c += 1
                 count_n += 1
 
                 i += 1
-                easy_p, medium_p, hard_p = compute_percentages(
-                    easy, medium, hard
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
                 )
             elif button_id == "hard":
                 word_to_move = nl.pop()
 
                 new_index = len(nl) // 5
                 nl.insert(-new_index, word_to_move)
-                hard += 1
+                hard_c += 1
                 count_n += 1
 
                 i += 1
-                easy_p, medium_p, hard_p = compute_percentages(
-                    easy, medium, hard
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
                 )
 
             elif button_id == "end":
