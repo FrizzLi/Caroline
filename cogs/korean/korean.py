@@ -9,7 +9,6 @@ from pathlib import Path
 from statistics import fmean
 
 import discord
-import gspread
 import numpy as np
 import pandas as pd
 import pytz
@@ -100,7 +99,7 @@ class Language(commands.Cog):
 
         return voice
 
-    async def session_loop(self, interaction, voice, ws_stats, vocab, session_number):
+    async def session_loop(self, interaction, voice, ws_log, vocab, session_number):
         i = 1
         count_n = len(vocab)
         counter = f"{i}. word out of {count_n}."
@@ -199,9 +198,9 @@ class Language(commands.Cog):
                     await msg.edit(content=content, view=view)
                 except discord.errors.HTTPException as err:
                     print(err)
-                    ws_stats.append_rows(stats_list)
+                    ws_log.append_rows(stats_list)
                     break
-                ws_stats.append_rows(stats_list)
+                ws_log.append_rows(stats_list)
                 break
             elif button_id == "repeat":
                 continue
@@ -220,8 +219,8 @@ class Language(commands.Cog):
                 ]
             )
 
-    def get_session_number(self, ws_stats, columns: int):
-        session_numbers = ws_stats.col_values(columns)
+    def get_session_number(self, ws_log, columns: int):
+        session_numbers = ws_log.col_values(columns)
         if session_numbers:
             last_session_number = max(map(int, session_numbers[1:]))
             session_number = last_session_number + 1
@@ -230,7 +229,7 @@ class Language(commands.Cog):
 
         return session_number
 
-    def get_vocab(self, lesson_number):
+    def get_lesson_vocab(self, lesson_number):
         vocab = []
         for row in self.vocab_df.itertuples():
             if not row.Lesson:
@@ -239,6 +238,163 @@ class Language(commands.Cog):
                 break
             if row.Lesson == lesson_number:
                 vocab.append((row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)))
+
+        random.shuffle(vocab)
+
+        return vocab
+
+    def get_review_vocab(self, ws_log, level_number):
+        score_list = []
+        # get 50 sorted word scores
+        df = pd.DataFrame(ws_log.get_all_records())
+        df.sort_values(["Word", "Date"], ascending=[True, False], inplace=True)
+
+        distr = (1, 0.8, 0.64, 0.512, 0.4096, 0.32768, 0.262144, 0.209715, 0.167772, 0.1342176, 0.107374)
+        scores = {i: j for i, j in enumerate(distr)}
+        datetime_now = datetime.now()
+
+        knowledge = []
+        knowledge_marks = []  # redundant,, but will opt later
+        word_scores = {}
+        new_word = ""
+        debug_compute = []
+        new_word_time_penalty_total = 0
+        new_word_score_total = 0
+        new_word_counter = 0
+        for row in df.itertuples():
+            if new_word_counter >= 10 and new_word == row.Word:
+                continue  # needs opt -> use pd
+            if new_word == row.Word:
+                new_word_counter += 1
+            else:
+                if new_word:
+                    mean = fmean(knowledge)
+                    empty_fill_sum = 0
+                    for i in range(new_word_counter+1, 10):
+                        empty_fill = mean * scores[i]
+                        empty_fill_sum += empty_fill
+                        debug_compute.append(empty_fill)
+                        # print(f"i({i}){new_word}: empty_fill")
+
+                    # empty_fill = fmean(knowledge) * (10-new_word_counter)
+                    word_score = new_word_score_total + empty_fill_sum
+                    # word_score_time_penalized = word_score + new_word_time_penalty_total
+                    word_scores[new_word] = word_score
+                    score_list.append(
+                        [
+                            new_word,
+                            word_score,
+                            "".join(knowledge_marks),
+                            ", ".join(str(round(x,2)) for x in debug_compute)
+                        ]
+                    )
+                    # score_list2.append(
+                    #     [
+                    #         new_word,
+                    #         word_score_time_penalized,
+                    #         "".join(knowledge_marks),
+                    #         ", ".join(str(round(x,2)) for x in debug_compute)
+                    #     ]
+                    # )
+                    new_word_score_total = 0
+                    new_word_counter = 0
+                    new_word_time_penalty_total = 0
+
+                    debug_compute = []
+                    knowledge = []
+                    knowledge_marks = []
+                new_word = row.Word
+
+            if row.Knowledge == "✅":
+                knowledge_multiplier = 1
+            elif row.Knowledge == "⏭️":
+                knowledge_multiplier = 2
+            elif row.Knowledge == "❌":
+                knowledge_multiplier = 4
+            # new_word_score.append(f"{knowledge_multiplier}*{scores[new_word_counter]}")
+
+            new_word_score = knowledge_multiplier * scores[new_word_counter]
+            debug_compute.append(new_word_score)
+            new_word_score_total += new_word_score
+            knowledge.append(knowledge_multiplier)
+            knowledge_marks.append(row.Knowledge)
+
+            row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
+            now_datetime = datetime_now
+            days_diff = (now_datetime - row_datetime).days
+            new_word_time_penalty_total += days_diff * 0.001
+
+        score_list = sorted(score_list, key=lambda x:x[1], reverse=True)
+
+        ws_scores, _ = utils.get_worksheets(
+            "Korea - Users stats",
+            (f"score_monitor-{level_number}",),
+            create=True,
+            size=(10_000, 4)
+        )
+        ws_score = ws_scores[0]
+        ws_score.clear()
+        ws_score.append_rows(score_list)
+
+        #
+        # score_g_ws2 = get_worksheet("Korea - Users stats", f"score_monitor-{level_number}-timed")
+        # score_g_ws2.clear()
+        # score_list2 = []
+        #
+        # score_list2 = sorted(score_list2, key=lambda x:x[1], reverse=True)
+        # score_g_ws2.append_rows(score_list2)
+
+        sorted_word_score = sorted(word_scores.items(), key=lambda item: item[1], reverse=True)
+        number_of_words = len(score_list) if len(score_list) < 100 else 100
+        sorted_words = [sorted_word_score[i][0] for i in range(number_of_words)]
+
+        # word, score, marks arranged
+
+        # Use probability distribution to pick the most unknown words to known words
+        # Create a list of probabilities that decrease linearly from left to right
+        size = number_of_words if number_of_words < 50 else 50
+        weights = np.linspace(1, 0, number_of_words)
+        weights /= weights.sum()
+        nl = np.random.choice(sorted_words, p=weights, size=size, replace=False)
+
+        # IPYNB #######################################
+        # import numpy as np
+        # import matplotlib.pyplot as plt
+
+        # # Set up the range of values to sample from
+        # values = np.arange(100)
+
+        # weights = np.linspace(1, 0, 100)
+        # weights /= weights.sum()
+        # sampled_value = np.random.choice(values, p=weights, size=50, replace=False)
+
+        # plt.hist(sampled_value, bins=20, density=True)  # , , density=True
+        # plt.show()
+        # print(sum(sampled_value[:25]))
+        # print(sum(sampled_value[25:]))
+        # sampled_value
+        # IPYNB #######################################
+
+        # nl2 = []
+        # size = 10
+        # for i in range(0, len(sorted_word_score), size):
+        #     if i > size * 4:
+        #         # nl += sorted_word_score[i::]
+        #         break
+        #     subset = sorted_word_score[i:i+size]
+        #     random.shuffle(subset)
+        #     nl2 += subset
+
+        nl = list(nl)[::-1]
+        # nl2 = nl2[::-1]
+
+        kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean)[::-1].to_dict()
+        kor_to_eng_exs = pd.Series(zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR), index=self.vocab_df.Korean)[::-1].to_dict()
+        vocab = []
+        for kor in nl:
+            eng = kor_to_eng[kor]
+            exs = kor_to_eng_exs[kor]
+            vocab.append((eng, kor, exs))
 
         random.shuffle(vocab)
 
@@ -508,20 +664,57 @@ class Language(commands.Cog):
 
         columns = 4
 
-        level_number = lesson_number // 100
-        ws_statss, _ = utils.get_worksheets(
+        # TODO: make it into just one function! no need zrvl + zevl functions!!!
+        level_number = lesson_number // 100  # ?only diff from zrvl
+        ws_logs, _ = utils.get_worksheets(
             "Korea - Users stats",
             (f"{interaction.user.name}-{level_number}",),
             create=True,
             size=(10_000, columns)
         )
-        ws_stats = ws_statss[0]  # TODO: rename ws_stats
-        session_number = self.get_session_number(ws_stats, columns)
-        vocab = self.get_vocab(lesson_number)
+        ws_log = ws_logs[0]
+        session_number = self.get_session_number(ws_log, columns)
+        vocab = self.get_lesson_vocab(lesson_number)  # ?only diff from zrvl
 
         await interaction.followup.send(f"[Lesson {lesson_number}]")
 
-        await self.session_loop(interaction, voice, ws_stats, vocab, session_number)
+        await self.session_loop(interaction, voice, ws_log, vocab, session_number)
+
+        await self.bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name="/play",
+            ),
+            status=discord.Status.online,
+        )
+
+    @app_commands.command(name="zrvl")
+    async def zreview_vocab_listening(self, interaction, level_number: int = 1):
+        """Start listening vocab exercise."""
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+        voice = await self.get_voice(interaction)
+        await self.bot.change_presence(
+            activity=discord.Game(name="Vocab listening")
+        )
+
+        columns = 4
+
+        ws_logs, _ = utils.get_worksheets(
+            "Korea - Users stats",
+            (f"{interaction.user.name}-{level_number}",),
+            create=True,
+            size=(10_000, columns)
+        )
+        ws_log = ws_logs[0]
+        session_number = self.get_session_number(ws_log, columns)
+        vocab = self.get_review_vocab(ws_log, level_number)
+
+        await interaction.followup.send(f"[Review]; session: {session_number}")
+
+        await self.session_loop(interaction, voice, ws_log, vocab, session_number)
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -652,317 +845,6 @@ class Language(commands.Cog):
             ),
             status=discord.Status.online,
         )
-
-    @app_commands.command(name="zrvl")
-    async def zreview_vocab_listening(self, interaction, level_number: int = 1):
-        """Start listening vocab exercise."""
-
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-        voice = await self.get_voice(interaction)
-
-        def get_worksheet(spread_name, sheet_name):
-            credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
-            credentials_dict = json.loads(credentials_dict_str)
-            g_credentials = gspread.service_account_from_dict(credentials_dict)
-            g_sheet = g_credentials.open(spread_name)
-            worksheet = g_sheet.worksheet(sheet_name)
-            return worksheet
-
-        # TODO: update new sheet (has no header.. create it) (FFreezpmark-2)
-        # TODO: create score_monitor-2 automatically,,, its missing now
-        # TODO: review takes one less word into account bug..
-        vocab_g_ws = get_worksheet("Korea - Users stats", f"{interaction.user.name}-{level_number}")
-        score_g_ws = get_worksheet("Korea - Users stats", f"score_monitor-{level_number}")
-        score_g_ws2 = get_worksheet("Korea - Users stats", f"score_monitor-{level_number}-timed")
-        score_g_ws.clear()
-        score_g_ws2.clear()
-        score_list = []
-        score_list2 = []
-
-        # get current_session_number
-        session_numbers = vocab_g_ws.col_values(4)
-        if session_numbers:
-            last_session_number = max(map(int, session_numbers[1:]))
-            current_session_number = last_session_number + 1
-        else:
-            current_session_number = 1
-
-        # get 50 sorted word scores
-        df = pd.DataFrame(vocab_g_ws.get_all_records())
-        df.sort_values(["Word", "Date"], ascending=[True, False], inplace=True)
-
-        distr = (1, 0.8, 0.64, 0.512, 0.4096, 0.32768, 0.262144, 0.209715, 0.167772, 0.1342176, 0.107374)
-        scores = {i: j for i, j in enumerate(distr)}
-        datetime_now = datetime.now()
-
-        knowledge = []
-        knowledge_marks = []  # redundant,, but will opt later
-        word_scores = {}
-        new_word = ""
-        debug_compute = []
-        new_word_time_penalty_total = 0
-        new_word_score_total = 0
-        new_word_counter = 0
-        for row in df.itertuples():
-            if new_word_counter >= 10 and new_word == row.Word:
-                continue  # needs opt -> use pd
-            if new_word == row.Word:
-                new_word_counter += 1
-            else:
-                if new_word:
-                    mean = fmean(knowledge)
-                    empty_fill_sum = 0
-                    for i in range(new_word_counter+1, 10):
-                        empty_fill = mean * scores[i]
-                        empty_fill_sum += empty_fill
-                        debug_compute.append(empty_fill)
-                        # print(f"i({i}){new_word}: empty_fill")
-
-                    # empty_fill = fmean(knowledge) * (10-new_word_counter)
-                    word_score = new_word_score_total + empty_fill_sum
-                    word_score_time_penalized = word_score + new_word_time_penalty_total
-                    word_scores[new_word] = word_score
-                    score_list.append(
-                        [
-                            new_word,
-                            word_score,
-                            "".join(knowledge_marks),
-                            ", ".join(str(round(x,2)) for x in debug_compute)
-                        ]
-                    )
-                    score_list2.append(
-                        [
-                            new_word,
-                            word_score_time_penalized,
-                            "".join(knowledge_marks),
-                            ", ".join(str(round(x,2)) for x in debug_compute)
-                        ]
-                    )
-                    new_word_score_total = 0
-                    new_word_counter = 0
-                    new_word_time_penalty_total = 0
-
-                    debug_compute = []
-                    knowledge = []
-                    knowledge_marks = []
-                new_word = row.Word
-
-            if row.Knowledge == "✅":
-                knowledge_multiplier = 1
-            elif row.Knowledge == "⏭️":
-                knowledge_multiplier = 2
-            elif row.Knowledge == "❌":
-                knowledge_multiplier = 4
-            # new_word_score.append(f"{knowledge_multiplier}*{scores[new_word_counter]}")
-
-            new_word_score = knowledge_multiplier * scores[new_word_counter]
-            debug_compute.append(new_word_score)
-            new_word_score_total += new_word_score
-            knowledge.append(knowledge_multiplier)
-            knowledge_marks.append(row.Knowledge)
-
-            row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
-            now_datetime = datetime_now
-            days_diff = (now_datetime - row_datetime).days
-            new_word_time_penalty_total += days_diff * 0.001
-
-        score_list = sorted(score_list, key=lambda x:x[1], reverse=True)
-        score_g_ws.append_rows(score_list)
-        score_list2 = sorted(score_list2, key=lambda x:x[1], reverse=True)
-        score_g_ws2.append_rows(score_list2)
-
-        sorted_word_score = sorted(word_scores.items(), key=lambda item: item[1], reverse=True)
-        number_of_words = len(score_list) if len(score_list) < 100 else 100
-        sorted_words = [sorted_word_score[i][0] for i in range(number_of_words)]
-
-        # word, score, marks arranged
-
-        # Use probability distribution to pick the most unknown words to known words
-        # Create a list of probabilities that decrease linearly from left to right
-        size = number_of_words if number_of_words < 50 else 50
-        weights = np.linspace(1, 0, number_of_words)
-        weights /= weights.sum()
-        nl = np.random.choice(sorted_words, p=weights, size=size, replace=False)
-
-        # IPYNB #######################################
-        # import numpy as np
-        # import matplotlib.pyplot as plt
-
-        # # Set up the range of values to sample from
-        # values = np.arange(100)
-
-        # weights = np.linspace(1, 0, 100)
-        # weights /= weights.sum()
-        # sampled_value = np.random.choice(values, p=weights, size=50, replace=False)
-
-        # plt.hist(sampled_value, bins=20, density=True)  # , , density=True
-        # plt.show()
-        # print(sum(sampled_value[:25]))
-        # print(sum(sampled_value[25:]))
-        # sampled_value
-        # IPYNB #######################################
-
-        # nl2 = []
-        # size = 10
-        # for i in range(0, len(sorted_word_score), size):
-        #     if i > size * 4:
-        #         # nl += sorted_word_score[i::]
-        #         break
-        #     subset = sorted_word_score[i:i+size]
-        #     random.shuffle(subset)
-        #     nl2 += subset
-
-        nl = list(nl)[::-1]
-        # nl2 = nl2[::-1]
-        i = 1
-        count_n = len(nl)
-        kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean)[::-1].to_dict()
-        kor_to_eng_exs = pd.Series(zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR), index=self.vocab_df.Korean)[::-1].to_dict()
-        vocab = []
-        for kor in nl:
-            eng = kor_to_eng[kor]
-            exs = kor_to_eng_exs[kor]
-            vocab.append((eng, kor, exs))
-
-        # ### there was a problem that it read duplication instead of first occurence.. so i just removed the row;; maybe just ::-1 is enough
-        # vocab = []
-
-        # for row in self.vocab_df.itertuples():
-        #     if not row.Lesson:
-        #         continue
-        #     if row.Lesson > lesson_number:
-        #         break
-        #     if row.Lesson == lesson_number:
-        #         vocab.append((row.Book_English, row.Korean))
-
-        # random.shuffle(vocab)
-        # ###
-
-        await interaction.followup.send(f"[Review]; session: {current_session_number}")
-        counter = f"{i}. word out of {count_n}."
-        msg = await interaction.followup.send(counter)
-
-
-        stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
-        stats_list = []
-        easy_c = easy_p = 0
-        medium_c = medium_p = 0
-        hard_c = hard_p = 0
-        stats = ""
-        view = SessionVocabView()
-
-        # change: vocab = nl[-1][0], eng = kor_to_eng
-        # kor_to_eng_exs = all vocab, [word] -> ex, [word] -> word
-        # nl -> list of words... ---> (Eng, Kor, (ex_EN, ex_KR))
-
-        while True:
-            kor = nl[-1]
-            example = f"\n{kor_to_eng_exs[kor][1]} = {kor_to_eng_exs[kor][0]}" if kor_to_eng_exs[kor][0] else ""
-            kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
-
-            # handling word that has no audio
-            if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {kor_to_eng[kor]:20}" + " " * (i % 15) + f"{example}||"
-                try:
-                    voice.play(
-                        discord.FFmpegPCMAudio(
-                            self.vocab_audio_paths[kor_no_num],
-                            executable=self.ffmpeg_path,
-                        )
-                    )
-                except Exception as err:
-                    print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
-            else:
-                msg_display = f"{kor} = ||{kor_to_eng[kor]:20}" + " " * (i % 15) + f"{example}||"
-
-            content = f"{counter}\n{msg_display}\n{stats}"
-            try:
-                await msg.edit(content=content, view=view)
-            except discord.errors.HTTPException as err:
-                # TODO: err resolve, cannot delete or edit msg, workarounded
-                print(err)
-                msg = await interaction.followup.send(content)
-                await msg.edit(content=content, view=view)
-
-            # wait for interaction
-            interaction = await self.bot.wait_for(
-                "interaction",
-                check=lambda inter: "custom_id" in inter.data.keys()
-                and inter.user.name == interaction.user.name,
-            )
-
-            # button interactions
-            button_id = interaction.data["custom_id"]
-            if button_id == "easy":
-                word_to_move = nl.pop()
-
-                nl.insert(0, word_to_move)
-                easy_c += 1
-
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-            elif button_id == "medium":
-                word_to_move = nl.pop()
-
-                nl.insert(len(nl) // 2, word_to_move)
-                medium_c += 1
-                count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-            elif button_id == "hard":
-                word_to_move = nl.pop()
-
-                new_index = len(nl) // 5
-                nl.insert(-new_index, word_to_move)
-                hard_c += 1
-                count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-
-            elif button_id == "end":
-                msg_display = "Ending listening session."
-
-                # ending message
-                content = f"{counter}\n{msg_display}\n{stats}"
-                try:
-                    await msg.edit(content=content, view=view)
-                except discord.errors.HTTPException as err:
-                    print(err)
-                    vocab_g_ws.append_rows(stats_list)
-                    msg = await interaction.followup.send(content)
-                    await msg.edit(content=content, view=view)
-                    break
-                vocab_g_ws.append_rows(stats_list)
-                break
-            elif button_id == "repeat":
-                continue
-
-            stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
-            counter = f"{i}. word out of {count_n}"
-
-            time = datetime.now(pytz.timezone(self.timezone))
-            time = time.strftime("%Y-%m-%d %H:%M:%S")
-            stats_list.append(
-                [
-                    time,
-                    word_to_move,
-                    stats_label[button_id],
-                    current_session_number,
-                ]
-            )
-
-
 
     # Button commands
     async def pause(self, interaction):
