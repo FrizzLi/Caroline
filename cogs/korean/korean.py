@@ -83,7 +83,7 @@ class Language(commands.Cog):
 
         return audio_paths_labelled
 
-    def get_voice(self):
+    async def get_voice(self, interaction):
         """Connects to a voice channel before doing voice related commands.
 
         Returns:
@@ -99,7 +99,127 @@ class Language(commands.Cog):
         voice = get(self.bot.voice_clients, guild=interaction.guild)
 
         return voice
-   
+
+    async def session_loop(self, interaction, voice, ws_stats, vocab, session_number):
+        i = 1
+        count_n = len(vocab)
+        counter = f"{i}. word out of {count_n}."
+        msg = await interaction.followup.send(counter)
+
+        stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
+        stats_list = []     # TODO: append row by row?
+        easy_c = easy_p = 0
+        medium_c = medium_p = 0
+        hard_c = hard_p = 0
+        stats = ""
+        view = SessionVocabView()
+        # vocab = list of tuples of eng, kor, ex
+        # ex = eng--kor
+
+        while True:
+            eng, kor, ex = vocab[-1]    # pops a list!, ex is other
+            example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
+            kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
+
+            # handling word that has no audio
+            if kor_no_num in self.vocab_audio_paths:
+                msg_display = f"||{kor} = {eng:20}" + " " * (i % 15) + f"{example}||"
+                try:
+                    voice.play(
+                        discord.FFmpegPCMAudio(
+                            self.vocab_audio_paths[kor_no_num],
+                            executable=self.ffmpeg_path,
+                        )
+                    )
+                except Exception as err:
+                    print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
+            else:
+                msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
+
+            content = f"{counter}\n{msg_display}\n{stats}"
+            try:
+                await msg.edit(content=content, view=view)
+            except discord.errors.HTTPException as err:
+                # TODO: err resolve, cannot delete or edit msg, workarounded
+                print(err)
+                msg = await interaction.followup.send(content)
+                await msg.edit(content=content, view=view)
+
+            # wait for interaction
+            interaction = await self.bot.wait_for(
+                "interaction",
+                check=lambda inter: "custom_id" in inter.data.keys()
+                and inter.user.name == interaction.user.name,
+            )
+
+            # button interactions
+            button_id = interaction.data["custom_id"]
+            if button_id == "easy":
+                word_to_move = vocab.pop()
+
+                vocab.insert(0, word_to_move)
+                easy_c += 1
+
+
+                i += 1
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
+                )
+            elif button_id == "medium":
+                word_to_move = vocab.pop()
+
+                vocab.insert(len(vocab) // 2, word_to_move)
+                medium_c += 1
+                count_n += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
+                )
+            elif button_id == "hard":
+                word_to_move = vocab.pop()
+
+                new_index = len(vocab) // 5
+                vocab.insert(-new_index, word_to_move)
+                hard_c += 1
+                count_n += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
+                )
+
+
+            elif button_id == "end":
+                msg_display = "Ending listening session."
+
+                # ending message
+                content = f"{counter}\n{msg_display}\n{stats}"
+                try:
+                    await msg.edit(content=content, view=view)
+                except discord.errors.HTTPException as err:
+                    print(err)
+                    ws_stats.append_rows(stats_list)
+                    break
+                ws_stats.append_rows(stats_list)
+                break
+            elif button_id == "repeat":
+                continue
+
+            stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
+            counter = f"{i}. word out of {count_n}"
+
+            time = datetime.now(pytz.timezone(self.timezone))
+            time = time.strftime("%Y-%m-%d %H:%M:%S")
+            stats_list.append(
+                [
+                    time,
+                    word_to_move[1],
+                    stats_label[button_id],
+                    session_number,
+                ]
+            )
+
     def get_session_number(self, ws_stats, columns: int):
         session_numbers = ws_stats.col_values(columns)
         if session_numbers:
@@ -107,7 +227,7 @@ class Language(commands.Cog):
             session_number = last_session_number + 1
         else:
             session_number = 1
-       
+
         return session_number
 
     def get_vocab(self, lesson_number):
@@ -123,7 +243,7 @@ class Language(commands.Cog):
         random.shuffle(vocab)
 
         return vocab
-   
+
     def compute_percentages(self, easy_c, medium_c, hard_c):
         total_c = easy_c + medium_c + hard_c
         return (
@@ -381,14 +501,13 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
-        voice = self.get_voice()
+        voice = await self.get_voice(interaction)
         await self.bot.change_presence(
             activity=discord.Game(name="Vocab listening")
         )
 
         columns = 4
 
-        # get user word log
         level_number = lesson_number // 100
         ws_statss, _ = utils.get_worksheets(
             "Korea - Users stats",
@@ -397,134 +516,12 @@ class Language(commands.Cog):
             size=(10_000, columns)
         )
         ws_stats = ws_statss[0]  # TODO: rename ws_stats
-
-
         session_number = self.get_session_number(ws_stats, columns)
         vocab = self.get_vocab(lesson_number)
 
-
-        # prepping msgs for the loop session
-        i = 1
-        count_n = len(vocab)
         await interaction.followup.send(f"[Lesson {lesson_number}]")
 
-
-        # TODO: zevl + zrvl function merge!
-        counter = f"{i}. word out of {count_n}."
-        msg = await interaction.followup.send(counter)
-
-
-        stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
-        stats_list = []     # TODO: append row by row?
-        easy_c = easy_p = 0
-        medium_c = medium_p = 0
-        hard_c = hard_p = 0
-        stats = ""
-        view = SessionVocabView()
-
-        while True:
-            eng, kor, ex = vocab[-1]
-            example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
-            kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
-
-            # handling word that has no audio
-            if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {eng:20}" + " " * (i % 15) + f"{example}||"
-                try:
-                    voice.play(
-                        discord.FFmpegPCMAudio(
-                            self.vocab_audio_paths[kor_no_num],
-                            executable=self.ffmpeg_path,
-                        )
-                    )
-                except Exception as err:
-                    print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
-            else:
-                msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
-
-            content = f"{counter}\n{msg_display}\n{stats}"
-            try:
-                await msg.edit(content=content, view=view)
-            except discord.errors.HTTPException as err:
-                # TODO: err resolve, cannot delete or edit msg, workarounded
-                print(err)
-                msg = await interaction.followup.send(content)
-                await msg.edit(content=content, view=view)
-
-            # wait for interaction
-            interaction = await self.bot.wait_for(
-                "interaction",
-                check=lambda inter: "custom_id" in inter.data.keys()
-                and inter.user.name == interaction.user.name,
-            )
-
-            # button interactions
-            button_id = interaction.data["custom_id"]
-            if button_id == "easy":
-                word_to_move = vocab.pop()
-
-                vocab.insert(0, word_to_move)
-                easy_c += 1
-
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-            elif button_id == "medium":
-                word_to_move = vocab.pop()
-
-                vocab.insert(len(vocab) // 2, word_to_move)
-                medium_c += 1
-                count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-            elif button_id == "hard":
-                word_to_move = vocab.pop()
-
-                new_index = len(vocab) // 5
-                vocab.insert(-new_index, word_to_move)
-                hard_c += 1
-                count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-
-
-            elif button_id == "end":
-                msg_display = "Ending listening session."
-
-                # ending message
-                content = f"{counter}\n{msg_display}\n{stats}"
-                try:
-                    await msg.edit(content=content, view=view)
-                except discord.errors.HTTPException as err:
-                    print(err)
-                    ws_stats.append_rows(stats_list)
-                    break
-                ws_stats.append_rows(stats_list)
-                break
-            elif button_id == "repeat":
-                continue
-
-            stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
-            counter = f"{i}. word out of {count_n}"
-
-            time = datetime.now(pytz.timezone(self.timezone))
-            time = time.strftime("%Y-%m-%d %H:%M:%S")
-            stats_list.append(
-                [
-                    time,
-                    word_to_move[1],
-                    stats_label[button_id],
-                    session_number,
-                ]
-            )
+        await self.session_loop(interaction, voice, ws_stats, vocab, session_number)
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -541,7 +538,7 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
-        voice = self.get_voice()
+        voice = await self.get_voice(interaction)
         await self.bot.change_presence(
             activity=discord.Game(name="Listening exercise")
         )
@@ -663,7 +660,7 @@ class Language(commands.Cog):
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
-        voice = self.get_voice()
+        voice = await self.get_voice(interaction)
 
         def get_worksheet(spread_name, sheet_name):
             credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
@@ -823,6 +820,11 @@ class Language(commands.Cog):
         count_n = len(nl)
         kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean)[::-1].to_dict()
         kor_to_eng_exs = pd.Series(zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR), index=self.vocab_df.Korean)[::-1].to_dict()
+        vocab = []
+        for kor in nl:
+            eng = kor_to_eng[kor]
+            exs = kor_to_eng_exs[kor]
+            vocab.append((eng, kor, exs))
 
         # ### there was a problem that it read duplication instead of first occurence.. so i just removed the row;; maybe just ::-1 is enough
         # vocab = []
@@ -852,6 +854,8 @@ class Language(commands.Cog):
         view = SessionVocabView()
 
         # change: vocab = nl[-1][0], eng = kor_to_eng
+        # kor_to_eng_exs = all vocab, [word] -> ex, [word] -> word
+        # nl -> list of words... ---> (Eng, Kor, (ex_EN, ex_KR))
 
         while True:
             kor = nl[-1]
