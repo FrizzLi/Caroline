@@ -134,8 +134,8 @@ def create_walls(
 
     Returns:
         Tuple[str, List[List[str]], bool]: (
-            name of the file that is going to be created
-            2D map that will be saved into file
+            name of the file that is going to be created,
+            2D map that will be saved into file,
             option to print created walls into console
         )
     """
@@ -185,8 +185,8 @@ def create_terrain(
 
     Returns:
         Tuple[str, List[List[str]], bool]: (
-            name of the file that is going to be created
-            2D map that will be saved into file
+            name of the file that is going to be created,
+            2D map that will be saved into file,
             option to print created walls into console
         )
     """
@@ -220,9 +220,9 @@ def create_properties(
 
     Returns:
         Tuple[str, List[List[str]], bool, str]: (
-            name of the file that is going to be created
-            2D map that will be saved into file
-            option to print created walls into console
+            name of the file that is going to be created,
+            2D map that will be saved into file,
+            option to print created walls into console,
             spacing format between coordinates
         )
     """
@@ -320,7 +320,7 @@ def _evolutionize(
 
     Returns:
         Tuple[List[List[str]], Dict[Tuple[int, int], int], str]: (
-            2D map filled with terrain (wall being -1, unraked being -2)
+            2D map filled with terrain (wall being -1, unraked being -2),
             raking paths that will be used for gif visualization
         )
     """
@@ -452,7 +452,7 @@ def _rake_map(
 
     Returns:
         Tuple[Dict[Tuple[int, int], int], Dict[Tuple[int, int], int]]: (
-            map tuple filled with terrain (map_tuple -> map_tuple_filled)
+            map tuple filled with terrain (map_tuple -> map_tuple_filled),
             raking paths that will be used for gif visualization
         )
     """
@@ -523,7 +523,7 @@ def _get_start_pos(
 
     Returns:
         Tuple[Tuple[int, int], Tuple[int, int]]: (
-            starting position coordinate
+            starting position coordinate,
             movement direction coordinate
         )
     """

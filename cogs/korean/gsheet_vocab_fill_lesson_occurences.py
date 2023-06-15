@@ -47,7 +47,7 @@ def _group_by_count(tokens, log_file):
 
     Returns:
         Tuple[collections.defaultdict[str, int], Dict[str, str]]: (
-            word: occurences
+            word: occurences,
             word: type (E.g. noun)
         )
     """

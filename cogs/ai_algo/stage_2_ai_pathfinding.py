@@ -265,8 +265,8 @@ def _validate_and_set_input_pars(
 
     Returns:
         Tuple[List[Tuple[int, int]], int, str]: (
-            movement coordinate options
-            amount of points to visit
+            movement coordinate options,
+            amount of points to visit,
             algorithm that is going to be used
         )
     """
