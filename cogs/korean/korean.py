@@ -664,8 +664,8 @@ class Language(commands.Cog):
 
         columns = 4
 
-        # TODO: make it into just one function! no need zrvl + zevl functions!!!
-        level_number = lesson_number // 100  # ?only diff from zrvl
+        level_number = lesson_number // 100
+        review_session = False if lesson_number % 100 else True
         ws_logs, _ = utils.get_worksheets(
             "Korea - Users stats",
             (f"{interaction.user.name}-{level_number}",),
@@ -674,45 +674,13 @@ class Language(commands.Cog):
         )
         ws_log = ws_logs[0]
         session_number = self.get_session_number(ws_log, columns)
-        vocab = self.get_lesson_vocab(lesson_number)  # ?only diff from zrvl
 
-        await interaction.followup.send(f"[Lesson {lesson_number}]")
-
-        await self.session_loop(interaction, voice, ws_log, vocab, session_number)
-
-        await self.bot.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.listening,
-                name="/play",
-            ),
-            status=discord.Status.online,
-        )
-
-    @app_commands.command(name="zrvl")
-    async def zreview_vocab_listening(self, interaction, level_number: int = 1):
-        """Start listening vocab exercise."""
-
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-        voice = await self.get_voice(interaction)
-        await self.bot.change_presence(
-            activity=discord.Game(name="Vocab listening")
-        )
-
-        columns = 4
-
-        ws_logs, _ = utils.get_worksheets(
-            "Korea - Users stats",
-            (f"{interaction.user.name}-{level_number}",),
-            create=True,
-            size=(10_000, columns)
-        )
-        ws_log = ws_logs[0]
-        session_number = self.get_session_number(ws_log, columns)
-        vocab = self.get_review_vocab(ws_log, level_number)
-
-        await interaction.followup.send(f"[Review]; session: {session_number}")
+        if review_session:
+            vocab = self.get_review_vocab(ws_log, level_number)
+            await interaction.followup.send(f"Review session: {session_number}")
+        else:
+            vocab = self.get_lesson_vocab(lesson_number)
+            await interaction.followup.send(f"Lesson {lesson_number}]")
 
         await self.session_loop(interaction, voice, ws_log, vocab, session_number)
 
