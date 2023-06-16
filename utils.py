@@ -11,13 +11,21 @@ class WorksheetNameNotInList(Exception):
     """Exception for Worksheet variable type: only lists are allowed."""
 
 
-def get_worksheets(gs_name, ws_names, create=False):
-    """Gets worksheets of spreadsheet.
+def get_worksheets(gs_name, ws_names, create=False, size=(10_000, 20)):
+    """Gets worksheets of spreadsheet. (max 4 worksheets are allowed)
 
     Args:
         gs_name (str): google spreadsheet name
         ws_names (Tuple[str]): worksheet names (a tab of spreadsheet)
-        create (bool): create new spreadsheet/worksheet if it doesn't exist
+        create (bool, optional): Create new spreadsheet/worksheet if it doesn't
+            exist. Defaults to False.
+        size (Tuple[str], optional: Number of rows and columns.
+            Defaults to (10_000, 20).
+
+    Raises:
+        err: SpreadsheetNotFound
+        WorksheetNameNotInList: Worksheets are not in a tuple!
+        err: WorksheetNotFound
 
     Returns:
         List[gspread.worksheet.Worksheet, pandas.core.frame.DataFrame]: (
@@ -55,7 +63,7 @@ def get_worksheets(gs_name, ws_names, create=False):
             assert len(ws_names) < 5, "You're creating too many worksheets!"
             for ws_name in ws_names:
                 worksheet = spreadsheet.add_worksheet(
-                    ws_name, rows="10000", cols="20"
+                    ws_name, rows=size[0], cols=size[1]
                 )
                 worksheets.append(worksheet)
                 worksheet_df = pd.DataFrame(worksheet.get_all_records())
