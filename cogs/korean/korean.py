@@ -46,17 +46,17 @@ class Language(commands.Cog):
         _, ws_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
 
         # ignore rows with no Lesson cell filled (duplicates)
-        df = ws_dfs[0]
-        df["Lesson"].replace("", np.nan, inplace=True)
-        df.dropna(subset=["Lesson"], inplace=True)
+        vocab_df = ws_dfs[0]
+        vocab_df["Lesson"].replace("", np.nan, inplace=True)
+        vocab_df.dropna(subset=["Lesson"], inplace=True)
 
-        return df
+        return vocab_df
 
     def get_vocab_audio_paths(self):
         """Gets vocab's local audio paths of all levels.
 
         Not all words have audio file, it will load only the ones that are
-        present in vocabulary_audio directory that are in each of the lessons.
+        present in vocabulary_audio directory that is in each of the lessons.
         Just so we dont have to read through all the lessons every time this
         module is loaded, the audio paths are stored in pickle file. (cached)
         Audio files are located in data/level_x/lesson_x/vocabulary_audio dir.
@@ -81,143 +81,6 @@ class Language(commands.Cog):
                 pickle.dump(audio_paths_labelled, file)
 
         return audio_paths_labelled
-
-    async def get_voice(self, interaction):
-        """Connects to a voice channel before doing voice related commands.
-
-        Returns:
-            _type_: _description_
-        """
-
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
-        user_voice = interaction.user.voice
-        if not voice and not user_voice:
-            await interaction.followup.send("No bot nor you is connected.")
-        elif not voice:
-            await user_voice.channel.connect()
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
-
-        return voice
-
-    async def session_loop(self, interaction, voice, ws_log, vocab, session_number):
-        i = 1
-        count_n = len(vocab)
-        counter = f"{i}. word out of {count_n}."
-        msg = await interaction.followup.send(counter)
-
-        stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
-        stats_list = []     # TODO: append row by row?
-        easy_c = easy_p = 0
-        medium_c = medium_p = 0
-        hard_c = hard_p = 0
-        stats = ""
-        view = SessionVocabView()
-        # vocab = list of tuples of eng, kor, ex
-        # ex = eng--kor
-
-        while True:
-            eng, kor, ex = vocab[-1]    # pops a list!, ex is other
-            example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
-            kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
-
-            # handling word that has no audio
-            if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {eng:20}" + " " * (i % 15) + f"{example}||"
-                try:
-                    voice.play(
-                        discord.FFmpegPCMAudio(
-                            self.vocab_audio_paths[kor_no_num],
-                            executable=self.ffmpeg_path,
-                        )
-                    )
-                except Exception as err:
-                    print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
-            else:
-                msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
-
-            content = f"{counter}\n{msg_display}\n{stats}"
-            try:
-                await msg.edit(content=content, view=view)
-            except discord.errors.HTTPException as err:
-                # TODO: err resolve, cannot delete or edit msg, workarounded
-                print(err)
-                msg = await interaction.followup.send(content)
-                await msg.edit(content=content, view=view)
-
-            # wait for interaction
-            interaction = await self.bot.wait_for(
-                "interaction",
-                check=lambda inter: "custom_id" in inter.data.keys()
-                and inter.user.name == interaction.user.name,
-            )
-
-            # button interactions
-            button_id = interaction.data["custom_id"]
-            if button_id == "easy":
-                word_to_move = vocab.pop()
-
-                vocab.insert(0, word_to_move)
-                easy_c += 1
-
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-            elif button_id == "medium":
-                word_to_move = vocab.pop()
-
-                vocab.insert(len(vocab) // 2, word_to_move)
-                medium_c += 1
-                count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-            elif button_id == "hard":
-                word_to_move = vocab.pop()
-
-                new_index = len(vocab) // 5
-                vocab.insert(-new_index, word_to_move)
-                hard_c += 1
-                count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-
-
-            elif button_id == "end":
-                msg_display = "Ending listening session."
-
-                # ending message
-                content = f"{counter}\n{msg_display}\n{stats}"
-                try:
-                    await msg.edit(content=content, view=view)
-                except discord.errors.HTTPException as err:
-                    print(err)
-                    ws_log.append_rows(stats_list)
-                    break
-                ws_log.append_rows(stats_list)
-                break
-            elif button_id == "repeat":
-                continue
-
-            stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
-            counter = f"{i}. word out of {count_n}"
-
-            time = datetime.now(pytz.timezone(self.timezone))
-            time = time.strftime("%Y-%m-%d %H:%M:%S")
-            stats_list.append(
-                [
-                    time,
-                    word_to_move[1],
-                    stats_label[button_id],
-                    session_number,
-                ]
-            )
 
     def get_session_number(self, ws_log, columns: int):
         session_numbers = ws_log.col_values(columns)
@@ -408,6 +271,159 @@ class Language(commands.Cog):
             round(hard_c * 100 / total_c, 1),
         )
 
+    async def get_voice(self, interaction):
+        """Gets or connects to the voice channel.
+        
+        It gets the voice channel in which the bot is currently in. 
+        If it is not connected, it connects to one in which the user is
+        currently in.
+
+        Returns:
+            discord.voice_client.VoiceClient: voice channel
+        """
+
+        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        user_voice = interaction.user.voice
+        if not voice and not user_voice:
+            await interaction.followup.send("No bot nor you is connected.")
+        elif not voice:
+            await user_voice.channel.connect()
+        voice = get(self.bot.voice_clients, guild=interaction.guild)
+
+        return voice
+
+    async def run_session_loop(self, interaction, voice, ws_log, vocab, session_number):
+        """Runs session loop of vocabulary words.
+
+        _extended_summary_
+
+        Args:
+            interaction (discord.interactions.Interaction): _description_
+            voice (discord.voice_client.VoiceClient): _description_
+            ws_log (gspread.worksheet.Worksheet): _description_
+            vocab (List[Tuple[str, str, Tuple[str, str]]]): _description_
+            session_number (int): _description_
+        """
+
+        i = 1
+        count_n = len(vocab)
+        counter = f"{i}. word out of {count_n}."
+        msg = await interaction.followup.send(counter)
+
+        stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
+        stats_list = []     # TODO: append row by row?
+        easy_c = easy_p = 0
+        medium_c = medium_p = 0
+        hard_c = hard_p = 0
+        stats = ""
+        view = SessionVocabView()
+        # vocab = list of tuples of eng, kor, ex
+        # ex = eng--kor
+
+        while True:
+            eng, kor, ex = vocab[-1]    # pops a list!, ex is other
+            example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
+            kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
+
+            # handling word that has no audio
+            if kor_no_num in self.vocab_audio_paths:
+                msg_display = f"||{kor} = {eng:20}" + " " * (i % 15) + f"{example}||"
+                try:
+                    voice.play(
+                        discord.FFmpegPCMAudio(
+                            self.vocab_audio_paths[kor_no_num],
+                            executable=self.ffmpeg_path,
+                        )
+                    )
+                except Exception as err:
+                    print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
+            else:
+                msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
+
+            content = f"{counter}\n{msg_display}\n{stats}"
+            try:
+                await msg.edit(content=content, view=view)
+            except discord.errors.HTTPException as err:
+                # TODO: err resolve, cannot delete or edit msg, workarounded
+                print(err)
+                msg = await interaction.followup.send(content)
+                await msg.edit(content=content, view=view)
+
+            # wait for interaction
+            interaction = await self.bot.wait_for(
+                "interaction",
+                check=lambda inter: "custom_id" in inter.data.keys()
+                and inter.user.name == interaction.user.name,
+            )
+
+            # button interactions
+            button_id = interaction.data["custom_id"]
+            if button_id == "easy":
+                word_to_move = vocab.pop()
+
+                vocab.insert(0, word_to_move)
+                easy_c += 1
+
+
+                i += 1
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
+                )
+            elif button_id == "medium":
+                word_to_move = vocab.pop()
+
+                vocab.insert(len(vocab) // 2, word_to_move)
+                medium_c += 1
+                count_n += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
+                )
+            elif button_id == "hard":
+                word_to_move = vocab.pop()
+
+                new_index = len(vocab) // 5
+                vocab.insert(-new_index, word_to_move)
+                hard_c += 1
+                count_n += 1
+
+                i += 1
+                easy_p, medium_p, hard_p = self.compute_percentages(
+                    easy_c, medium_c, hard_c
+                )
+
+
+            elif button_id == "end":
+                msg_display = "Ending listening session."
+
+                # ending message
+                content = f"{counter}\n{msg_display}\n{stats}"
+                try:
+                    await msg.edit(content=content, view=view)
+                except discord.errors.HTTPException as err:
+                    print(err)
+                    ws_log.append_rows(stats_list)
+                    break
+                ws_log.append_rows(stats_list)
+                break
+            elif button_id == "repeat":
+                continue
+
+            stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
+            counter = f"{i}. word out of {count_n}"
+
+            time = datetime.now(pytz.timezone(self.timezone))
+            time = time.strftime("%Y-%m-%d %H:%M:%S")
+            stats_list.append(
+                [
+                    time,
+                    word_to_move[1],
+                    stats_label[button_id],
+                    session_number,
+                ]
+            )
+
     @commands.Cog.listener()
     async def on_ready(self):
         """Executes when the cog is loaded, it initializes timezone.
@@ -418,6 +434,222 @@ class Language(commands.Cog):
 
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
+
+    @app_commands.command(name="zevl")
+    async def zexercise_vocab_listening(self, interaction, lesson_number: int):
+        """Start listening vocab exercise."""
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+        voice = await self.get_voice(interaction)
+        await self.bot.change_presence(
+            activity=discord.Game(name="Vocab listening")
+        )
+
+        columns = 4
+
+        level_number = lesson_number // 100
+        review_session = False if lesson_number % 100 else True
+        ws_logs, _ = utils.get_worksheets(
+            "Korea - Users stats",
+            (f"{interaction.user.name}-{level_number}",),
+            create=True,
+            size=(10_000, columns)
+        )
+        ws_log = ws_logs[0]
+        session_number = self.get_session_number(ws_log, columns)
+
+        if review_session:
+            vocab = self.get_review_vocab(ws_log, level_number)
+            await interaction.followup.send(f"Review session: {session_number}")
+        else:
+            vocab = self.get_lesson_vocab(lesson_number)
+            await interaction.followup.send(f"Lesson {lesson_number}]")
+
+        await self.run_session_loop(interaction, voice, ws_log, vocab, session_number)
+
+        await self.bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name="/play",
+            ),
+            status=discord.Status.online,
+        )
+
+    @app_commands.command(name="zel")
+    async def zexercise_listening(self, interaction, lesson_number: int = 102):
+        """Start listening vocab exercise."""
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+        voice = await self.get_voice(interaction)
+        await self.bot.change_presence(
+            activity=discord.Game(name="Listening exercise")
+        )
+
+        # load audio files
+        src_dir = Path(__file__).parents[0]
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        audio_paths = glob(f"{data_path}/*")
+        name_to_path_dict = {}
+
+        for audio_path in audio_paths:
+            word = Path(audio_path).stem
+            name_to_path_dict[word] = audio_path
+
+        if (
+            "listening_audio" in name_to_path_dict
+            and "listening_text" in name_to_path_dict
+        ):
+            with open(name_to_path_dict["listening_text"], encoding="utf-8") as f:
+                listening_text = f.read()
+                listening_text_tracks = listening_text.split("\n\n")
+            audio_paths2 = sorted(glob(f"{data_path}/listening_audio/*"))  # add sorted cuz linux reversed it
+
+            name_to_audio_path_dict = {}
+            for audio_path2 in audio_paths2:
+                word = Path(audio_path2).stem
+                name_to_audio_path_dict[word] = audio_path2
+        else:
+            return
+
+        i = 1
+        count_n = len(name_to_audio_path_dict)
+
+        queue = []  # list(name_to_audio_path_dict)
+        for track_name, track_text in zip(name_to_audio_path_dict, listening_text_tracks):
+            queue.append((track_name, track_text))
+
+        await interaction.followup.send(f"[Lesson {lesson_number}]")
+        counter = f"{i}. lesson out of {count_n}."
+        msg = await interaction.followup.send(counter)
+        view = SessionListenView()
+
+        while True:
+            # handling word that has no audio
+            try:
+                play_track = queue.pop(0)
+                voice.play(
+                    discord.FFmpegPCMAudio(
+                        name_to_audio_path_dict[play_track[0]],
+                        executable=self.ffmpeg_path,
+                    )
+                )
+            except Exception as err:
+                print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
+
+            content = f"```{counter}\n{play_track[1]}```"
+
+            try:
+                await msg.edit(content=content, view=view)
+            except discord.errors.HTTPException as err:
+                # TODO: err resolve, cannot delete or edit msg, workarounded
+                print(err)
+                msg = await interaction.followup.send(content)
+                await msg.edit(content=content, view=view)
+
+            # wait for interaction
+            interaction = await self.bot.wait_for(
+                "interaction",
+                check=lambda inter: "custom_id" in inter.data.keys()
+                and inter.user.name == interaction.user.name,
+            )
+
+            # button interactions
+            button_id = interaction.data["custom_id"]
+            if button_id == "pauseplay":
+                # TODO: this doesn't work
+                # need to add player, pause NN crucially atm
+                button_id2 = None
+                while button_id2 != "pauseplay":
+                    interaction = await self.bot.wait_for(
+                        "interaction",
+                        check=lambda inter: "custom_id" in inter.data.keys()
+                        and inter.user.name == interaction.user.name,
+                    )
+                    button_id2 = interaction.data["custom_id"]
+            elif button_id == "next":
+                queue.append(play_track)
+                i += 1
+            elif button_id == "repeat":
+                queue.insert(0, play_track)
+            elif button_id == "end":
+                listening_text = "Ending listening session."
+
+                # ending message
+                content = f"```{counter}\n{listening_text}```"
+                try:
+                    await msg.edit(content=content, view=view)
+                except discord.errors.HTTPException as err:
+                    print(str(err).encode("utf-8"))
+                    break
+                break
+
+            counter = f"{i}. lesson out of {count_n}"
+
+        await self.bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name="/play",
+            ),
+            status=discord.Status.online,
+        )
+
+    # Button commands
+    async def pause(self, interaction):
+        """Pause the currently playing song."""
+
+        vc = interaction.guild.voice_client
+        if not vc or not vc.is_playing():
+            return
+        elif vc.is_paused():
+            return
+
+        vc.pause()
+
+    async def resume(self, interaction):
+        """Resume the currently paused song."""
+
+        vc = interaction.guild.voice_client
+        if not vc or not vc.is_connected():
+            return
+        elif not vc.is_paused():
+            return
+
+        vc.resume()
+
+
+    @app_commands.command(name="zer")
+    async def zexercise_reading(self, interaction, lesson_number: int = 102):
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+
+        # load audio files
+        src_dir = Path(__file__).parents[0]
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        audio_paths = glob(f"{data_path}/*")
+        name_to_path_dict = {}
+
+        for audio_path in audio_paths:
+            word = Path(audio_path).stem
+            name_to_path_dict[word] = audio_path
+
+        if "reading_text" in name_to_path_dict:
+            with open(name_to_path_dict["reading_text"], encoding="utf-8") as f:
+                reading_text = f.read()
+        else:
+            return
+
+        await interaction.followup.send(f"[Lesson {lesson_number}]")
+        # view = SessionListenView()
+        await interaction.followup.send(f"```{reading_text}```")
 
     ### ! USELESS IN THIS NEW VER ### (deal with writing part later)
     def load_korean_config(self):
@@ -649,223 +881,6 @@ class Language(commands.Cog):
 
         await interaction.followup.send(f"Exiting {self.lesson} exercise..")
     ### ! USELESS IN THIS NEW VER ###
-
-    @app_commands.command(name="zevl")
-    async def zexercise_vocab_listening(self, interaction, lesson_number: int):
-        """Start listening vocab exercise."""
-
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-        voice = await self.get_voice(interaction)
-        await self.bot.change_presence(
-            activity=discord.Game(name="Vocab listening")
-        )
-
-        columns = 4
-
-        level_number = lesson_number // 100
-        review_session = False if lesson_number % 100 else True
-        ws_logs, _ = utils.get_worksheets(
-            "Korea - Users stats",
-            (f"{interaction.user.name}-{level_number}",),
-            create=True,
-            size=(10_000, columns)
-        )
-        ws_log = ws_logs[0]
-        session_number = self.get_session_number(ws_log, columns)
-
-        if review_session:
-            vocab = self.get_review_vocab(ws_log, level_number)
-            await interaction.followup.send(f"Review session: {session_number}")
-        else:
-            vocab = self.get_lesson_vocab(lesson_number)
-            await interaction.followup.send(f"Lesson {lesson_number}]")
-
-        await self.session_loop(interaction, voice, ws_log, vocab, session_number)
-
-        await self.bot.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.listening,
-                name="/play",
-            ),
-            status=discord.Status.online,
-        )
-
-    @app_commands.command(name="zel")
-    async def zexercise_listening(self, interaction, lesson_number: int = 102):
-        """Start listening vocab exercise."""
-
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-        voice = await self.get_voice(interaction)
-        await self.bot.change_presence(
-            activity=discord.Game(name="Listening exercise")
-        )
-
-        # load audio files
-        src_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
-        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_paths = glob(f"{data_path}/*")
-        name_to_path_dict = {}
-
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            name_to_path_dict[word] = audio_path
-
-        if (
-            "listening_audio" in name_to_path_dict
-            and "listening_text" in name_to_path_dict
-        ):
-            with open(name_to_path_dict["listening_text"], encoding="utf-8") as f:
-                listening_text = f.read()
-                listening_text_tracks = listening_text.split("\n\n")
-            audio_paths2 = sorted(glob(f"{data_path}/listening_audio/*"))  # add sorted cuz linux reversed it
-
-            name_to_audio_path_dict = {}
-            for audio_path2 in audio_paths2:
-                word = Path(audio_path2).stem
-                name_to_audio_path_dict[word] = audio_path2
-        else:
-            return
-
-        i = 1
-        count_n = len(name_to_audio_path_dict)
-
-        queue = []  # list(name_to_audio_path_dict)
-        for track_name, track_text in zip(name_to_audio_path_dict, listening_text_tracks):
-            queue.append((track_name, track_text))
-
-        await interaction.followup.send(f"[Lesson {lesson_number}]")
-        counter = f"{i}. lesson out of {count_n}."
-        msg = await interaction.followup.send(counter)
-        view = SessionListenView()
-
-        while True:
-            # handling word that has no audio
-            try:
-                play_track = queue.pop(0)
-                voice.play(
-                    discord.FFmpegPCMAudio(
-                        name_to_audio_path_dict[play_track[0]],
-                        executable=self.ffmpeg_path,
-                    )
-                )
-            except Exception as err:
-                print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
-
-            content = f"```{counter}\n{play_track[1]}```"
-
-            try:
-                await msg.edit(content=content, view=view)
-            except discord.errors.HTTPException as err:
-                # TODO: err resolve, cannot delete or edit msg, workarounded
-                print(err)
-                msg = await interaction.followup.send(content)
-                await msg.edit(content=content, view=view)
-
-            # wait for interaction
-            interaction = await self.bot.wait_for(
-                "interaction",
-                check=lambda inter: "custom_id" in inter.data.keys()
-                and inter.user.name == interaction.user.name,
-            )
-
-            # button interactions
-            button_id = interaction.data["custom_id"]
-            if button_id == "pauseplay":
-                # TODO: this doesn't work
-                # need to add player, pause NN crucially atm
-                button_id2 = None
-                while button_id2 != "pauseplay":
-                    interaction = await self.bot.wait_for(
-                        "interaction",
-                        check=lambda inter: "custom_id" in inter.data.keys()
-                        and inter.user.name == interaction.user.name,
-                    )
-                    button_id2 = interaction.data["custom_id"]
-            elif button_id == "next":
-                queue.append(play_track)
-                i += 1
-            elif button_id == "repeat":
-                queue.insert(0, play_track)
-            elif button_id == "end":
-                listening_text = "Ending listening session."
-
-                # ending message
-                content = f"```{counter}\n{listening_text}```"
-                try:
-                    await msg.edit(content=content, view=view)
-                except discord.errors.HTTPException as err:
-                    print(str(err).encode("utf-8"))
-                    break
-                break
-
-            counter = f"{i}. lesson out of {count_n}"
-
-        await self.bot.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.listening,
-                name="/play",
-            ),
-            status=discord.Status.online,
-        )
-
-    # Button commands
-    async def pause(self, interaction):
-        """Pause the currently playing song."""
-
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_playing():
-            return
-        elif vc.is_paused():
-            return
-
-        vc.pause()
-
-    async def resume(self, interaction):
-        """Resume the currently paused song."""
-
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_connected():
-            return
-        elif not vc.is_paused():
-            return
-
-        vc.resume()
-
-
-    @app_commands.command(name="zer")
-    async def zexercise_reading(self, interaction, lesson_number: int = 102):
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-
-        # load audio files
-        src_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
-        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_paths = glob(f"{data_path}/*")
-        name_to_path_dict = {}
-
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            name_to_path_dict[word] = audio_path
-
-        if "reading_text" in name_to_path_dict:
-            with open(name_to_path_dict["reading_text"], encoding="utf-8") as f:
-                reading_text = f.read()
-        else:
-            return
-
-        await interaction.followup.send(f"[Lesson {lesson_number}]")
-        # view = SessionListenView()
-        await interaction.followup.send(f"```{reading_text}```")
-
 
 async def setup(bot):
     """Loads up this module (cog) into the bot that was initialized
