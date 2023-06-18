@@ -82,8 +82,18 @@ class Language(commands.Cog):
 
         return audio_paths_labelled
 
-    def get_session_number(self, ws_log, columns: int):
-        session_numbers = ws_log.col_values(columns)
+    def get_session_number(self, ws_log, column_index):
+        """Gets ordinal number of lesson or review of session. Begins with 1.
+
+        Args:
+            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
+            column_index (int): column index used to retrieve session number
+
+        Returns:
+            int: ordinal session number
+        """
+
+        session_numbers = ws_log.col_values(column_index)
         if session_numbers:
             last_session_number = max(map(int, session_numbers[1:]))
             session_number = last_session_number + 1
@@ -93,6 +103,22 @@ class Language(commands.Cog):
         return session_number
 
     def get_lesson_vocab(self, lesson_number):
+        """Gets vocabulary for a given lesson.
+
+        Hundred decimals represent level of the vocabulary. The other two
+        numbers range from 1 to 30 that represent a lesson.
+
+        Args:
+            lesson_number (int): lesson number
+
+        Returns:
+            List[Tuple[str, str, Tuple[str, str]]]: [
+                english word,
+                korean word,
+                (english usage example, korean usage example)
+            ]
+        """
+
         vocab = []
         for row in self.vocab_df.itertuples():
             if not row.Lesson:
@@ -107,6 +133,26 @@ class Language(commands.Cog):
         return vocab
 
     def get_review_vocab(self, ws_log, level_number):
+        """Gets vocabulary review of all encountered word for a given level.
+
+        LOREM IPSUM
+
+        Args:
+            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
+            level_number (int): level number
+
+        Returns:
+            List[Tuple[str, str, Tuple[str, str]]]: [
+                english word,
+                korean word,
+                (english usage example, korean usage example)
+            ]
+        """
+
+        # TODO: Optimize, beautify this, improve this (TODO.MD stuff)
+        # NOTE
+        # MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
+        # Refresh scoring after 10 attempts
         score_list = []
         # get 50 sorted word scores
         df = pd.DataFrame(ws_log.get_all_records())
@@ -264,6 +310,7 @@ class Language(commands.Cog):
         return vocab
 
     def compute_percentages(self, easy_c, medium_c, hard_c):
+        # TODO: this might not be needed
         total_c = easy_c + medium_c + hard_c
         return (
             round(easy_c * 100 / total_c, 1),
@@ -274,9 +321,8 @@ class Language(commands.Cog):
     async def get_voice(self, interaction):
         """Gets or connects to the voice channel.
         
-        It gets the voice channel in which the bot is currently in. 
-        If it is not connected, it connects to one in which the user is
-        currently in.
+        Gets the voice channel in which the bot is currently in. If it is not
+        connected, it connects to channel in which the user is currently in.
 
         Returns:
             discord.voice_client.VoiceClient: voice channel
@@ -305,6 +351,7 @@ class Language(commands.Cog):
             session_number (int): _description_
         """
 
+        # TODO: first priority, not that hard
         i = 1
         count_n = len(vocab)
         counter = f"{i}. word out of {count_n}."
@@ -424,6 +471,29 @@ class Language(commands.Cog):
                 ]
             )
 
+    # Button commands
+    async def pause(self, interaction):
+        """Pause the currently playing song."""
+
+        vc = interaction.guild.voice_client
+        if not vc or not vc.is_playing():
+            return
+        elif vc.is_paused():
+            return
+
+        vc.pause()
+
+    async def resume(self, interaction):
+        """Resume the currently paused song."""
+
+        vc = interaction.guild.voice_client
+        if not vc or not vc.is_connected():
+            return
+        elif not vc.is_paused():
+            return
+
+        vc.resume()
+
     @commands.Cog.listener()
     async def on_ready(self):
         """Executes when the cog is loaded, it initializes timezone.
@@ -437,14 +507,15 @@ class Language(commands.Cog):
 
     @app_commands.command(name="zevl")
     async def zexercise_vocab_listening(self, interaction, lesson_number: int):
-        """Start listening vocab exercise."""
+        """Start listening vocabulary exercise."""
 
+        # TODO: further more detailed doc?
         await interaction.response.send_message(
-            "...Setting up listening session..."
+            "...Setting up vocab session..."
         )
         voice = await self.get_voice(interaction)
         await self.bot.change_presence(
-            activity=discord.Game(name="Vocab listening")
+            activity=discord.Game(name="Vocabulary")
         )
 
         columns = 4
@@ -479,14 +550,15 @@ class Language(commands.Cog):
 
     @app_commands.command(name="zel")
     async def zexercise_listening(self, interaction, lesson_number: int = 102):
-        """Start listening vocab exercise."""
+        """Start listening exercise."""
 
+        # TODO: further more detailed doc?, opt
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
         voice = await self.get_voice(interaction)
         await self.bot.change_presence(
-            activity=discord.Game(name="Listening exercise")
+            activity=discord.Game(name="Listening")
         )
 
         # load audio files
@@ -599,32 +671,11 @@ class Language(commands.Cog):
             status=discord.Status.online,
         )
 
-    # Button commands
-    async def pause(self, interaction):
-        """Pause the currently playing song."""
-
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_playing():
-            return
-        elif vc.is_paused():
-            return
-
-        vc.pause()
-
-    async def resume(self, interaction):
-        """Resume the currently paused song."""
-
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_connected():
-            return
-        elif not vc.is_paused():
-            return
-
-        vc.resume()
-
-
     @app_commands.command(name="zer")
     async def zexercise_reading(self, interaction, lesson_number: int = 102):
+        """Start listening exercise."""
+
+        # TODO: further more detailed doc? opt
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
@@ -651,6 +702,7 @@ class Language(commands.Cog):
         # view = SessionListenView()
         await interaction.followup.send(f"```{reading_text}```")
 
+    # TODO: Last.., remove
     ### ! USELESS IN THIS NEW VER ### (deal with writing part later)
     def load_korean_config(self):
         src_dir = Path(__file__).parents[0]
@@ -773,6 +825,7 @@ class Language(commands.Cog):
     async def zexercise_vocab(self, interaction):
         """Start vocab exercise."""
 
+        # TODO: further more detailed doc? opt, remake
         src_dir = Path(__file__).parents[0]
         level_path = Path(f"{src_dir}/data/{self.level}.json")
         await interaction.response.send_message('Exit by "EXIT"')
@@ -894,6 +947,4 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# NOTE
-# MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
-# Refresh scoring after 10 attempts
+# TODO: rename the function names?
