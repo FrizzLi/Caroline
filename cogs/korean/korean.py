@@ -310,7 +310,7 @@ class Language(commands.Cog):
         return vocab
 
     def compute_percentages(self, easy_c, medium_c, hard_c):
-        # TODO: this might not be needed
+        # TODO: this might not be needed, so no docs yet (TODO.MD stuff)
         total_c = easy_c + medium_c + hard_c
         return (
             round(easy_c * 100 / total_c, 1),
@@ -351,14 +351,16 @@ class Language(commands.Cog):
             session_number (int): _description_
         """
 
-        # TODO: first priority, not that hard
+        # TODO: first priority, not that hard (TODO.MD stuff)
+        # ? percentages, know when to end (try all)
+        # ? stats_list append row by row
         i = 1
         count_n = len(vocab)
         counter = f"{i}. word out of {count_n}."
         msg = await interaction.followup.send(counter)
 
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
-        stats_list = []     # TODO: append row by row?
+        stats_list = []
         easy_c = easy_p = 0
         medium_c = medium_p = 0
         hard_c = hard_p = 0
@@ -509,7 +511,6 @@ class Language(commands.Cog):
     async def zexercise_vocab_listening(self, interaction, lesson_number: int):
         """Start listening vocabulary exercise."""
 
-        # TODO: further more detailed doc?
         await interaction.response.send_message(
             "...Setting up vocab session..."
         )
@@ -549,10 +550,10 @@ class Language(commands.Cog):
         )
 
     @app_commands.command(name="zel")
-    async def zexercise_listening(self, interaction, lesson_number: int = 102):
+    async def zexercise_listening(self, interaction, lesson_number: int):
         """Start listening exercise."""
 
-        # TODO: further more detailed doc?, opt
+        # TODO: 1 opt
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
@@ -565,61 +566,45 @@ class Language(commands.Cog):
         src_dir = Path(__file__).parents[0]
         level = lesson_number // 100
         lesson = lesson_number % 100
-        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_paths = glob(f"{data_path}/*")
-        name_to_path_dict = {}
+        lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        audio_path = Path(f"{lesson_path}/listening_audio")
+        text_path = Path(f"{lesson_path}/listening_text.txt")
+        try:
+            with open(text_path, encoding="utf-8") as f:
+                text = f.read()
+            audio_texts = text.split("\n\n")
+            audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))  # add sorted cuz linux reversed it
+        except Exception as err:
+            print(err)
+            exit()
 
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            name_to_path_dict[word] = audio_path
+        i = 0
+        count_n = len(audio_paths)
 
-        if (
-            "listening_audio" in name_to_path_dict
-            and "listening_text" in name_to_path_dict
-        ):
-            with open(name_to_path_dict["listening_text"], encoding="utf-8") as f:
-                listening_text = f.read()
-                listening_text_tracks = listening_text.split("\n\n")
-            audio_paths2 = sorted(glob(f"{data_path}/listening_audio/*"))  # add sorted cuz linux reversed it
-
-            name_to_audio_path_dict = {}
-            for audio_path2 in audio_paths2:
-                word = Path(audio_path2).stem
-                name_to_audio_path_dict[word] = audio_path2
-        else:
-            return
-
-        i = 1
-        count_n = len(name_to_audio_path_dict)
-
-        queue = []  # list(name_to_audio_path_dict)
-        for track_name, track_text in zip(name_to_audio_path_dict, listening_text_tracks):
-            queue.append((track_name, track_text))
-
-        await interaction.followup.send(f"[Lesson {lesson_number}]")
-        counter = f"{i}. lesson out of {count_n}."
-        msg = await interaction.followup.send(counter)
+        await interaction.followup.send(f"Lesson {lesson_number}]")
+        counter_text = f"{i+1}. lesson out of {count_n}."
+        msg = await interaction.followup.send(counter_text)
         view = SessionListenView()
 
         while True:
-            # handling word that has no audio
+            if i >= count_n:
+                i = 0
             try:
-                play_track = queue.pop(0)
                 voice.play(
                     discord.FFmpegPCMAudio(
-                        name_to_audio_path_dict[play_track[0]],
+                        audio_paths[i],
                         executable=self.ffmpeg_path,
                     )
                 )
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            content = f"```{counter}\n{play_track[1]}```"
+            content = f"```{counter_text}\n{audio_texts[i]}```"
 
             try:
                 await msg.edit(content=content, view=view)
             except discord.errors.HTTPException as err:
-                # TODO: err resolve, cannot delete or edit msg, workarounded
+                # TODO: 1.1 err resolve, cannot delete or edit msg, workarounded (TODO.MD stuff)
                 print(err)
                 msg = await interaction.followup.send(content)
                 await msg.edit(content=content, view=view)
@@ -634,7 +619,7 @@ class Language(commands.Cog):
             # button interactions
             button_id = interaction.data["custom_id"]
             if button_id == "pauseplay":
-                # TODO: this doesn't work
+                # TODO: 1.2 this doesn't work
                 # need to add player, pause NN crucially atm
                 button_id2 = None
                 while button_id2 != "pauseplay":
@@ -645,15 +630,11 @@ class Language(commands.Cog):
                     )
                     button_id2 = interaction.data["custom_id"]
             elif button_id == "next":
-                queue.append(play_track)
                 i += 1
             elif button_id == "repeat":
-                queue.insert(0, play_track)
+                pass
             elif button_id == "end":
-                listening_text = "Ending listening session."
-
-                # ending message
-                content = f"```{counter}\n{listening_text}```"
+                content = f"```{counter_text}\nEnding listening session.```"
                 try:
                     await msg.edit(content=content, view=view)
                 except discord.errors.HTTPException as err:
@@ -661,7 +642,7 @@ class Language(commands.Cog):
                     break
                 break
 
-            counter = f"{i}. lesson out of {count_n}"
+            counter_text = f"{i+1}. lesson out of {count_n}"
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -675,7 +656,6 @@ class Language(commands.Cog):
     async def zexercise_reading(self, interaction, lesson_number: int = 102):
         """Start listening exercise."""
 
-        # TODO: further more detailed doc? opt
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
@@ -702,7 +682,7 @@ class Language(commands.Cog):
         # view = SessionListenView()
         await interaction.followup.send(f"```{reading_text}```")
 
-    # TODO: Last.., remove
+    # TODO: 4 Last.., remove
     ### ! USELESS IN THIS NEW VER ### (deal with writing part later)
     def load_korean_config(self):
         src_dir = Path(__file__).parents[0]
@@ -825,7 +805,7 @@ class Language(commands.Cog):
     async def zexercise_vocab(self, interaction):
         """Start vocab exercise."""
 
-        # TODO: further more detailed doc? opt, remake
+        # TODO: 3 opt, remake
         src_dir = Path(__file__).parents[0]
         level_path = Path(f"{src_dir}/data/{self.level}.json")
         await interaction.response.send_message('Exit by "EXIT"')
@@ -856,7 +836,6 @@ class Language(commands.Cog):
                     json_content = json.load(file)
                     stats = defaultdict(list, json_content)
 
-        # TODO: [During polish] Get audio (what is this TODO?)
         voice = get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:  # slash commands?!
@@ -947,4 +926,4 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# TODO: rename the function names?
+# TODO: rename the function names? (TODO.MD stuff)
