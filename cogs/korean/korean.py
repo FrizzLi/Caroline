@@ -132,6 +132,34 @@ class Language(commands.Cog):
 
         return vocab
 
+    def get_audio_files(self, lesson_number):
+        """Gets text content and path to audio files.
+
+        Args:
+            lesson_number (int): lesson number
+
+        Returns:
+            Tuple[List[str]]: (audio text, audio paths)
+        """
+
+        src_dir = Path(__file__).parents[0]
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        audio_path = Path(f"{lesson_path}/listening_audio")
+        text_path = Path(f"{lesson_path}/listening_text.txt")
+        try:
+            with open(text_path, encoding="utf-8") as f:
+                text = f.read()
+            audio_texts = text.split("\n\n")
+            audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
+            # sorted it because linux system reverses it
+        except Exception as err:
+            print(err)
+            exit()
+
+        return audio_texts, audio_paths
+
     def get_review_vocab(self, ws_log, level_number):
         """Gets vocabulary review of all encountered word for a given level.
 
@@ -338,7 +366,7 @@ class Language(commands.Cog):
 
         return voice
 
-    async def run_session_loop(self, interaction, voice, ws_log, vocab, session_number):
+    async def run_vocab_session_loop(self, interaction, voice, ws_log, vocab, session_number):
         """Runs session loop of vocabulary words.
 
         _extended_summary_
@@ -473,6 +501,73 @@ class Language(commands.Cog):
                 ]
             )
 
+    async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
+        # TODO: (TODO.MD stuff)
+        i = 0
+        count_n = len(audio_paths)
+
+        counter_text = f"{i+1}. lesson out of {count_n}."
+        msg = await interaction.followup.send(counter_text)
+        view = SessionListenView()
+
+        while True:
+            if i >= count_n:
+                i = 0
+            try:
+                voice.play(
+                    discord.FFmpegPCMAudio(
+                        audio_paths[i],
+                        executable=self.ffmpeg_path,
+                    )
+                )
+            except Exception as err:
+                print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
+
+            content = f"```{counter_text}\n{audio_texts[i]}```"
+
+            try:
+                await msg.edit(content=content, view=view)
+            except discord.errors.HTTPException as err:
+                # TODO: err resolve, cannot delete or edit msg, workarounded (TODO.MD stuff)
+                print(err)
+                msg = await interaction.followup.send(content)
+                await msg.edit(content=content, view=view)
+
+            # wait for interaction
+            interaction = await self.bot.wait_for(
+                "interaction",
+                check=lambda inter: "custom_id" in inter.data.keys()
+                and inter.user.name == interaction.user.name,
+            )
+
+            # button interactions
+            button_id = interaction.data["custom_id"]
+            if button_id == "pauseplay":
+                # TODO: this doesn't work
+                # need to add player, pause NN crucially atm
+                button_id2 = None
+                while button_id2 != "pauseplay":
+                    interaction = await self.bot.wait_for(
+                        "interaction",
+                        check=lambda inter: "custom_id" in inter.data.keys()
+                        and inter.user.name == interaction.user.name,
+                    )
+                    button_id2 = interaction.data["custom_id"]
+            elif button_id == "next":
+                i += 1
+            elif button_id == "repeat":
+                pass
+            elif button_id == "end":
+                content = f"```{counter_text}\nEnding listening session.```"
+                try:
+                    await msg.edit(content=content, view=view)
+                except discord.errors.HTTPException as err:
+                    print(str(err).encode("utf-8"))
+                    break
+                break
+
+            counter_text = f"{i+1}. lesson out of {count_n}"
+
     # Button commands
     async def pause(self, interaction):
         """Pause the currently playing song."""
@@ -539,7 +634,7 @@ class Language(commands.Cog):
             vocab = self.get_lesson_vocab(lesson_number)
             await interaction.followup.send(f"Lesson {lesson_number}]")
 
-        await self.run_session_loop(interaction, voice, ws_log, vocab, session_number)
+        await self.run_vocab_session_loop(interaction, voice, ws_log, vocab, session_number)
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -553,7 +648,6 @@ class Language(commands.Cog):
     async def zexercise_listening(self, interaction, lesson_number: int):
         """Start listening exercise."""
 
-        # TODO: 1 opt
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
@@ -562,87 +656,11 @@ class Language(commands.Cog):
             activity=discord.Game(name="Listening")
         )
 
-        # load audio files
-        src_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
-        lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_path = Path(f"{lesson_path}/listening_audio")
-        text_path = Path(f"{lesson_path}/listening_text.txt")
-        try:
-            with open(text_path, encoding="utf-8") as f:
-                text = f.read()
-            audio_texts = text.split("\n\n")
-            audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))  # add sorted cuz linux reversed it
-        except Exception as err:
-            print(err)
-            exit()
-
-        i = 0
-        count_n = len(audio_paths)
+        audio_texts, audio_paths = self.get_audio_files(lesson_number)
 
         await interaction.followup.send(f"Lesson {lesson_number}]")
-        counter_text = f"{i+1}. lesson out of {count_n}."
-        msg = await interaction.followup.send(counter_text)
-        view = SessionListenView()
 
-        while True:
-            if i >= count_n:
-                i = 0
-            try:
-                voice.play(
-                    discord.FFmpegPCMAudio(
-                        audio_paths[i],
-                        executable=self.ffmpeg_path,
-                    )
-                )
-            except Exception as err:
-                print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
-
-            content = f"```{counter_text}\n{audio_texts[i]}```"
-
-            try:
-                await msg.edit(content=content, view=view)
-            except discord.errors.HTTPException as err:
-                # TODO: 1.1 err resolve, cannot delete or edit msg, workarounded (TODO.MD stuff)
-                print(err)
-                msg = await interaction.followup.send(content)
-                await msg.edit(content=content, view=view)
-
-            # wait for interaction
-            interaction = await self.bot.wait_for(
-                "interaction",
-                check=lambda inter: "custom_id" in inter.data.keys()
-                and inter.user.name == interaction.user.name,
-            )
-
-            # button interactions
-            button_id = interaction.data["custom_id"]
-            if button_id == "pauseplay":
-                # TODO: 1.2 this doesn't work
-                # need to add player, pause NN crucially atm
-                button_id2 = None
-                while button_id2 != "pauseplay":
-                    interaction = await self.bot.wait_for(
-                        "interaction",
-                        check=lambda inter: "custom_id" in inter.data.keys()
-                        and inter.user.name == interaction.user.name,
-                    )
-                    button_id2 = interaction.data["custom_id"]
-            elif button_id == "next":
-                i += 1
-            elif button_id == "repeat":
-                pass
-            elif button_id == "end":
-                content = f"```{counter_text}\nEnding listening session.```"
-                try:
-                    await msg.edit(content=content, view=view)
-                except discord.errors.HTTPException as err:
-                    print(str(err).encode("utf-8"))
-                    break
-                break
-
-            counter_text = f"{i+1}. lesson out of {count_n}"
+        await self.run_listening_session_loop(interaction, voice, audio_texts, audio_paths)
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -682,7 +700,7 @@ class Language(commands.Cog):
         # view = SessionListenView()
         await interaction.followup.send(f"```{reading_text}```")
 
-    # TODO: 4 Last.., remove
+    # TODO: 1 Last.., remove
     ### ! USELESS IN THIS NEW VER ### (deal with writing part later)
     def load_korean_config(self):
         src_dir = Path(__file__).parents[0]
@@ -805,7 +823,7 @@ class Language(commands.Cog):
     async def zexercise_vocab(self, interaction):
         """Start vocab exercise."""
 
-        # TODO: 3 opt, remake
+        # TODO: opt, remake (TODO.MD stuff)
         src_dir = Path(__file__).parents[0]
         level_path = Path(f"{src_dir}/data/{self.level}.json")
         await interaction.response.send_message('Exit by "EXIT"')
@@ -926,4 +944,4 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# TODO: rename the function names? (TODO.MD stuff)
+# TODO: 2 rename and rearrange function names (TODO.MD stuff); Look at TODOs, prioritize and implement
