@@ -18,7 +18,6 @@ from discord.utils import get
 
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
-# from cogs.korean.vocab_audio_search import dl_vocab  # !
 
 
 class Language(commands.Cog):
@@ -26,7 +25,6 @@ class Language(commands.Cog):
         self.vocab_audio_paths = self.get_vocab_audio_paths()
         self.vocab_df = self.get_vocab_table()
         self.bot = bot
-        self.korean_config = self.load_korean_config()  # !
         self.ffmpeg_path = (
             "C:/ffmpeg/ffmpeg.exe" if os.name == "nt" else "/usr/bin/ffmpeg"
         )
@@ -700,125 +698,6 @@ class Language(commands.Cog):
         # view = SessionListenView()
         await interaction.followup.send(f"```{reading_text}```")
 
-    # TODO: 1 Last.., remove
-    ### ! USELESS IN THIS NEW VER ### (deal with writing part later)
-    def load_korean_config(self):
-        src_dir = Path(__file__).parents[0]
-        config_path = Path(f"{src_dir}/config.json")
-        if os.path.exists(config_path):
-            with open(config_path, encoding="utf-8") as file:
-                config = json.load(file)
-        else:
-            config = {"level": 1, "lesson": 1, "custom": "default"}
-            with open(config_path, "w", encoding="utf-8") as file:
-                json.dump(config, file)
-
-        return config
-
-    def save_config(self):
-        src_dir = Path(__file__).parents[0]
-        config_path = Path(f"{src_dir}/config.json")
-        with open(config_path, "w", encoding="utf-8") as file:
-            json.dump(self.korean_config, file)
-
-    @property
-    def level(self):
-        return f'vocab_level_{self.korean_config["level"]}'
-
-    @level.setter
-    def level(self, number):
-        self.korean_config["level"] = number
-        self.save_config()
-
-    @property
-    def lesson(self):
-        return f'lesson_{self.korean_config["lesson"]}'
-
-    @lesson.setter
-    def lesson(self, number):
-        self.korean_config["lesson"] = number
-        self.save_config()
-
-    @property
-    def custom(self):
-        return f'custom_{self.korean_config["custom"]}'
-
-    @custom.setter
-    def custom(self, fname):
-        self.korean_config["custom"] = fname
-        self.save_config()
-
-    @app_commands.command()
-    async def zkorean_settings(self, interaction):
-        """Shows level, lesson, custom settings."""
-
-        embed = discord.Embed(
-            title="Korean settings",
-            description="Settings for choosing lessons",
-            colour=discord.Colour.blue(),
-        )
-        for setting in self.korean_config:
-            embed.add_field(name=setting, value=self.korean_config[setting])
-
-        await interaction.response.send_message(embed=embed)
-
-    # @app_commands.command()
-    # async def zset_level(self, interaction, number: int):
-    #     self.level = number
-    #     msg = f"Level number was set to {number}."
-    #     await interaction.response.send_message(msg)
-
-    # @app_commands.command()
-    # async def zset_lesson(self, interaction, number: int):
-    #     self.lesson = number
-    #     msg = f"Lesson number was set to {number}."
-    #     await interaction.response.send_message(msg)
-
-    # @app_commands.command()
-    # async def zset_custom_filename(self, interaction, fname: str):
-    #     self.custom = fname
-    #     msg = f"Custom file name was set to {fname}."
-    #     await interaction.response.send_message(msg)
-
-    # @app_commands.command()
-    # async def zadd_lesson(self, interaction):
-    #     """Adds lesson into user's customized lesson file."""
-
-    #     src_dir = Path(__file__).parents[0]
-    #     data_path = Path(f"{src_dir}/data")
-    #     data_user_path = Path(f"{data_path}/users/{interaction.user.name}")
-    #     Path(data_user_path).mkdir(parents=True, exist_ok=True)
-    #     custom_path = Path(f"{data_user_path}/{self.custom}.json")
-
-    #     if os.path.exists(custom_path):
-    #         with open(custom_path, encoding="utf-8") as file:
-    #             custom_vocab = json.load(file)
-    #     else:
-    #         custom_vocab = {}
-
-    #     level_path = Path(f"{data_path}/{self.level}.json")
-    #     with open(level_path, encoding="utf-8") as file:
-    #         level_vocab = json.load(file)
-
-    #     custom_vocab = {**custom_vocab, **level_vocab[self.lesson]}
-    #     with open(custom_path, "w", encoding="utf-8") as file:
-    #         json.dump(custom_vocab, file, indent=4, ensure_ascii=False)
-
-    #     msg = f"{self.lesson} from {self.level} was saved into {self.custom}."
-    #     await interaction.response.send_message(msg)
-
-    # @app_commands.command()
-    # async def zcreate_vocab(
-    #     self, interaction, lesson_only: int = 1, text_only: int = 1
-    # ):
-    #     """Creates audio and json files from the text files."""
-
-    #     lesson = self.lesson if lesson_only else False
-    #     msg = "Downloading and creating vocab..."
-    #     await interaction.response.send_message(msg)
-    #     dl_vocab(self.level, lesson, text_only)
-    #     await interaction.followup.send("Vocab has been created!")
-
     @app_commands.command(name="zev")
     async def zexercise_vocab(self, interaction):
         """Start vocab exercise."""
@@ -930,7 +809,6 @@ class Language(commands.Cog):
             await interaction.followup.send("Score has been saved.")
 
         await interaction.followup.send(f"Exiting {self.lesson} exercise..")
-    ### ! USELESS IN THIS NEW VER ###
 
 async def setup(bot):
     """Loads up this module (cog) into the bot that was initialized
