@@ -22,19 +22,18 @@ from cogs.korean.session_views import SessionListenView, SessionVocabView
 
 class Language(commands.Cog):
     def __init__(self, bot):
-        self.vocab_audio_paths = self.get_vocab_audio_paths()
-        self.vocab_df = self.get_vocab_table()
+        self.vocab_audio_paths = self._get_vocab_audio_paths()
+        self.vocab_df = self._get_vocab_table()
         self.bot = bot
         self.ffmpeg_path = (
             "C:/ffmpeg/ffmpeg.exe" if os.name == "nt" else "/usr/bin/ffmpeg"
         )
         self.timezone = ""
 
-    # These parameters doesn't need to be in config, they're not so usable
-    personalization = True  # NotImplemented  # !
-    show_eng_word = 1  # works for writing exercise  # !
+    personalization = True  # NotImplemented
+    show_eng_word = 1  # works for writing exercise
 
-    def get_vocab_table(self):
+    def _get_vocab_table(self):
         """Gets the whole vocabulary table dataframed from google spreadsheet.
 
         Returns:
@@ -50,7 +49,7 @@ class Language(commands.Cog):
 
         return vocab_df
 
-    def get_vocab_audio_paths(self):
+    def _get_vocab_audio_paths(self):
         """Gets vocab's local audio paths of all levels.
 
         Not all words have audio file, it will load only the ones that are
@@ -80,18 +79,18 @@ class Language(commands.Cog):
 
         return audio_paths_labelled
 
-    def get_session_number(self, ws_log, column_index):
+    def get_session_number(self, ws_log, session_column):
         """Gets ordinal number of lesson or review of session. Begins with 1.
 
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
-            column_index (int): column index used to retrieve session number
+            session_column (int): column index used to retrieve session number
 
         Returns:
             int: ordinal session number
         """
 
-        session_numbers = ws_log.col_values(column_index)
+        session_numbers = ws_log.col_values(session_column)
         if session_numbers:
             last_session_number = max(map(int, session_numbers[1:]))
             session_number = last_session_number + 1
@@ -99,6 +98,15 @@ class Language(commands.Cog):
             session_number = 1
 
         return session_number
+
+    def compute_percentages(self, easy_c, medium_c, hard_c):
+        # TODO: this might not be needed, so no docs yet (TODO.MD stuff)
+        total_c = easy_c + medium_c + hard_c
+        return (
+            round(easy_c * 100 / total_c, 1),
+            round(medium_c * 100 / total_c, 1),
+            round(hard_c * 100 / total_c, 1),
+        )
 
     def get_lesson_vocab(self, lesson_number):
         """Gets vocabulary for a given lesson.
@@ -129,34 +137,6 @@ class Language(commands.Cog):
         random.shuffle(vocab)
 
         return vocab
-
-    def get_audio_files(self, lesson_number):
-        """Gets text content and path to audio files.
-
-        Args:
-            lesson_number (int): lesson number
-
-        Returns:
-            Tuple[List[str]]: (audio text, audio paths)
-        """
-
-        src_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
-        lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_path = Path(f"{lesson_path}/listening_audio")
-        text_path = Path(f"{lesson_path}/listening_text.txt")
-        try:
-            with open(text_path, encoding="utf-8") as f:
-                text = f.read()
-            audio_texts = text.split("\n\n")
-            audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
-            # sorted it because linux system reverses it
-        except Exception as err:
-            print(err)
-            exit()
-
-        return audio_texts, audio_paths
 
     def get_review_vocab(self, ws_log, level_number):
         """Gets vocabulary review of all encountered word for a given level.
@@ -335,14 +315,33 @@ class Language(commands.Cog):
 
         return vocab
 
-    def compute_percentages(self, easy_c, medium_c, hard_c):
-        # TODO: this might not be needed, so no docs yet (TODO.MD stuff)
-        total_c = easy_c + medium_c + hard_c
-        return (
-            round(easy_c * 100 / total_c, 1),
-            round(medium_c * 100 / total_c, 1),
-            round(hard_c * 100 / total_c, 1),
-        )
+    def get_listening_files(self, lesson_number):
+        """Gets text content and path to audio files.
+
+        Args:
+            lesson_number (int): lesson number
+
+        Returns:
+            Tuple[List[str]]: (audio text, audio paths)
+        """
+
+        src_dir = Path(__file__).parents[0]
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        audio_path = Path(f"{lesson_path}/listening_audio")
+        text_path = Path(f"{lesson_path}/listening_text.txt")
+        try:
+            with open(text_path, encoding="utf-8") as f:
+                text = f.read()
+            audio_texts = text.split("\n\n")
+            audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
+            # sorted it because linux system reverses it
+        except Exception as err:
+            print(err)
+            exit()
+
+        return audio_texts, audio_paths
 
     async def get_voice(self, interaction):
         """Gets or connects to the voice channel.
@@ -600,8 +599,8 @@ class Language(commands.Cog):
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
 
-    @app_commands.command(name="zevl")
-    async def zexercise_vocab_listening(self, interaction, lesson_number: int):
+    @app_commands.command(name="vl")
+    async def vocab_listening(self, interaction, lesson_number: int):
         """Start listening vocabulary exercise."""
 
         await interaction.response.send_message(
@@ -642,64 +641,8 @@ class Language(commands.Cog):
             status=discord.Status.online,
         )
 
-    @app_commands.command(name="zel")
-    async def zexercise_listening(self, interaction, lesson_number: int):
-        """Start listening exercise."""
-
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-        voice = await self.get_voice(interaction)
-        await self.bot.change_presence(
-            activity=discord.Game(name="Listening")
-        )
-
-        audio_texts, audio_paths = self.get_audio_files(lesson_number)
-
-        await interaction.followup.send(f"Lesson {lesson_number}]")
-
-        await self.run_listening_session_loop(interaction, voice, audio_texts, audio_paths)
-
-        await self.bot.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.listening,
-                name="/play",
-            ),
-            status=discord.Status.online,
-        )
-
-    @app_commands.command(name="zer")
-    async def zexercise_reading(self, interaction, lesson_number: int = 102):
-        """Start listening exercise."""
-
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-
-        # load audio files
-        src_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
-        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_paths = glob(f"{data_path}/*")
-        name_to_path_dict = {}
-
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            name_to_path_dict[word] = audio_path
-
-        if "reading_text" in name_to_path_dict:
-            with open(name_to_path_dict["reading_text"], encoding="utf-8") as f:
-                reading_text = f.read()
-        else:
-            return
-
-        await interaction.followup.send(f"[Lesson {lesson_number}]")
-        # view = SessionListenView()
-        await interaction.followup.send(f"```{reading_text}```")
-
-    @app_commands.command(name="zev")
-    async def zexercise_vocab(self, interaction):
+    @app_commands.command(name="vw")
+    async def vocab_writing(self, interaction):
         """Start vocab exercise."""
 
         # TODO: opt, remake (TODO.MD stuff)
@@ -810,6 +753,62 @@ class Language(commands.Cog):
 
         await interaction.followup.send(f"Exiting {self.lesson} exercise..")
 
+    @app_commands.command(name="l")
+    async def listening(self, interaction, lesson_number: int):
+        """Start listening exercise."""
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+        voice = await self.get_voice(interaction)
+        await self.bot.change_presence(
+            activity=discord.Game(name="Listening")
+        )
+
+        audio_texts, audio_paths = self.get_listening_files(lesson_number)
+
+        await interaction.followup.send(f"Lesson {lesson_number}]")
+
+        await self.run_listening_session_loop(interaction, voice, audio_texts, audio_paths)
+
+        await self.bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name="/play",
+            ),
+            status=discord.Status.online,
+        )
+
+    @app_commands.command(name="r")
+    async def reading(self, interaction, lesson_number: int):
+        """Start listening exercise."""
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+
+        # load audio files
+        src_dir = Path(__file__).parents[0]
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        audio_paths = glob(f"{data_path}/*")
+        name_to_path_dict = {}
+
+        for audio_path in audio_paths:
+            word = Path(audio_path).stem
+            name_to_path_dict[word] = audio_path
+
+        if "reading_text" in name_to_path_dict:
+            with open(name_to_path_dict["reading_text"], encoding="utf-8") as f:
+                reading_text = f.read()
+        else:
+            return
+
+        await interaction.followup.send(f"[Lesson {lesson_number}]")
+        # view = SessionListenView()
+        await interaction.followup.send(f"```{reading_text}```")
+
 async def setup(bot):
     """Loads up this module (cog) into the bot that was initialized
     in the main function.
@@ -822,4 +821,4 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# TODO: 2 rename and rearrange function names (TODO.MD stuff); Look at TODOs, prioritize and implement
+# TODO: Look at TODOs, prioritize and implement
