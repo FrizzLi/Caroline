@@ -138,7 +138,7 @@ class Language(commands.Cog):
 
         return vocab
 
-    def get_review_vocab(self, ws_log, level_number):
+    def get_review_vocab(self, ws_log, level_number, user_name):
         """Gets vocabulary review of all encountered word for a given level.
 
         LOREM IPSUM
@@ -146,6 +146,7 @@ class Language(commands.Cog):
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             level_number (int): level number
+            user_name (str): user name (used for worksheet name)
 
         Returns:
             List[Tuple[str, str, Tuple[str, str]]]: [
@@ -243,7 +244,7 @@ class Language(commands.Cog):
 
         ws_scores, _ = utils.get_worksheets(
             "Korea - Users stats",
-            (f"score_monitor-{level_number}",),
+            (f"{user_name}-score-{level_number}",),
             create=True,
             size=(10_000, 4)
         )
@@ -625,7 +626,7 @@ class Language(commands.Cog):
         session_number = self.get_session_number(ws_log, columns)
 
         if review_session:
-            vocab = self.get_review_vocab(ws_log, level_number)
+            vocab = self.get_review_vocab(ws_log, level_number, interaction.user.name)
             await interaction.followup.send(f"Review session: {session_number}")
         else:
             vocab = self.get_lesson_vocab(lesson_number)
