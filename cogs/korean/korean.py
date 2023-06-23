@@ -623,6 +623,9 @@ class Language(commands.Cog):
             size=(10_000, columns)
         )
         ws_log = ws_logs[0]
+        if not ws_log.get_values("A1"):
+            ws_log.append_row(["Date", "Word", "Knowledge", "Session number"])
+
         session_number = self.get_session_number(ws_log, columns)
 
         if review_session:
