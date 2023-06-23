@@ -14,6 +14,9 @@ class WorksheetNameNotInList(Exception):
 def get_worksheets(gs_name, ws_names, create=False, size=(10_000, 20)):
     """Gets worksheets of spreadsheet. (max 4 worksheets are allowed)
 
+    If create is False and if at least one worksheet was found, it returns the
+    worksheet instead of raising an error.
+
     Args:
         gs_name (str): google spreadsheet name
         ws_names (Tuple[str]): worksheet names (a tab of spreadsheet)
@@ -68,7 +71,7 @@ def get_worksheets(gs_name, ws_names, create=False, size=(10_000, 20)):
                 worksheets.append(worksheet)
                 worksheet_df = pd.DataFrame(worksheet.get_all_records())
                 worksheet_dfs.append(worksheet_df)
-        else:
+        elif not worksheet_dfs:
             raise err
 
     print("Done!")
