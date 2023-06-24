@@ -99,76 +99,31 @@ class Language(commands.Cog):
 
         return session_number
 
-    def compute_percentages(self, easy_c, medium_c, hard_c):
-        # TODO: this might not be needed, so no docs yet (TODO.MD stuff)
-        total_c = easy_c + medium_c + hard_c
-        return (
-            round(easy_c * 100 / total_c, 1),
-            round(medium_c * 100 / total_c, 1),
-            round(hard_c * 100 / total_c, 1),
-        )
-
-    def get_lesson_vocab(self, lesson_number):
-        """Gets vocabulary for a given lesson.
-
-        Hundred decimals represent level of the vocabulary. The other two
-        numbers range from 1 to 30 that represent a lesson.
-
-        Args:
-            lesson_number (int): lesson number
+    def get_score_distribution(self):
+        """Gets score distribution for vocabulary picking.
 
         Returns:
-            List[Tuple[str, str, Tuple[str, str]]]: [
-                english word,
-                korean word,
-                (english usage example, korean usage example)
-            ]
+            Dict[int, float]: indexed distribution values
         """
 
-        vocab = []
-        for row in self.vocab_df.itertuples():
-            if not row.Lesson:
-                continue
-            if row.Lesson > lesson_number:
-                break
-            if row.Lesson == lesson_number:
-                vocab.append((row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)))
+        amount = 10
+        score = 1
+        reducer = 0.8
+        distribution_vals = []
+        for i in range(amount):
+            distribution_vals.append(score)
+            score *= reducer
 
-        random.shuffle(vocab)
+        scores = {i: round(j, 3) for i, j in enumerate(distribution_vals)}
 
-        return vocab
+        return scores
 
-    def get_review_vocab(self, ws_log, level_number, user_name):
-        """Gets vocabulary review of all encountered word for a given level.
-
-        LOREM IPSUM
-
-        Args:
-            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
-            level_number (int): level number
-            user_name (str): user name (used for worksheet name)
-
-        Returns:
-            List[Tuple[str, str, Tuple[str, str]]]: [
-                english word,
-                korean word,
-                (english usage example, korean usage example)
-            ]
-        """
-
-        # TODO: Optimize, beautify this, improve this (TODO.MD stuff)
-        # NOTE
-        # MAX Values: 4 * 1 (20% decr each) + 0.01 (per day difference)
-        # Refresh scoring after 10 attempts
-        score_list = []
-        # get 50 sorted word scores
+    def get_score_of_words(self, ws_log, scores):
         df = pd.DataFrame(ws_log.get_all_records())
         df.sort_values(["Word", "Date"], ascending=[True, False], inplace=True)
 
-        distr = (1, 0.8, 0.64, 0.512, 0.4096, 0.32768, 0.262144, 0.209715, 0.167772, 0.1342176, 0.107374)
-        scores = {i: j for i, j in enumerate(distr)}
         datetime_now = datetime.now()
-
+        score_list = []
         knowledge = []
         knowledge_marks = []  # redundant,, but will opt later
         word_scores = {}
@@ -239,8 +194,71 @@ class Language(commands.Cog):
             now_datetime = datetime_now
             days_diff = (now_datetime - row_datetime).days
             new_word_time_penalty_total += days_diff * 0.001
-
+        
         score_list = sorted(score_list, key=lambda x:x[1], reverse=True)
+
+        return score_list, word_scores
+
+
+    def compute_percentages(self, easy_c, medium_c, hard_c):
+        # TODO: this might not be needed, so no docs yet (TODO.MD stuff)
+        total_c = easy_c + medium_c + hard_c
+        return (
+            round(easy_c * 100 / total_c, 1),
+            round(medium_c * 100 / total_c, 1),
+            round(hard_c * 100 / total_c, 1),
+        )
+
+    def get_lesson_vocab(self, lesson_number):
+        """Gets vocabulary for a given lesson.
+
+        Hundred decimals represent level of the vocabulary. The other two
+        numbers range from 1 to 30 that represent a lesson.
+
+        Args:
+            lesson_number (int): lesson number
+
+        Returns:
+            List[Tuple[str, str, Tuple[str, str]]]: [
+                english word,
+                korean word,
+                (english usage example, korean usage example)
+            ]
+        """
+
+        vocab = []
+        for row in self.vocab_df.itertuples():
+            if not row.Lesson:
+                continue
+            if row.Lesson > lesson_number:
+                break
+            if row.Lesson == lesson_number:
+                vocab.append((row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)))
+
+        random.shuffle(vocab)
+
+        return vocab
+
+    def get_review_vocab(self, ws_log, level_number, user_name):
+        """Gets vocabulary review of all encountered word for a given level.
+
+        LOREM IPSUM
+
+        Args:
+            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
+            level_number (int): level number
+            user_name (str): user name (used for worksheet name)
+
+        Returns:
+            List[Tuple[str, str, Tuple[str, str]]]: [
+                english word,
+                korean word,
+                (english usage example, korean usage example)
+            ]
+        """
+
+        score_vals = self.get_score_distribution()
+        score_list, word_scores = self.get_score_of_words(ws_log, score_vals)
 
         ws_scores, _ = utils.get_worksheets(
             "Korea - Users stats",
@@ -252,7 +270,7 @@ class Language(commands.Cog):
         ws_score.clear()
         ws_score.append_rows(score_list)
 
-        #
+        # TIMED SCORE
         # score_g_ws2 = get_worksheet("Korea - Users stats", f"score_monitor-{level_number}-timed")
         # score_g_ws2.clear()
         # score_list2 = []
@@ -260,11 +278,10 @@ class Language(commands.Cog):
         # score_list2 = sorted(score_list2, key=lambda x:x[1], reverse=True)
         # score_g_ws2.append_rows(score_list2)
 
+        # Arranging words, score, marks
         sorted_word_score = sorted(word_scores.items(), key=lambda item: item[1], reverse=True)
         number_of_words = len(score_list) if len(score_list) < 100 else 100
         sorted_words = [sorted_word_score[i][0] for i in range(number_of_words)]
-
-        # word, score, marks arranged
 
         # Use probability distribution to pick the most unknown words to known words
         # Create a list of probabilities that decrease linearly from left to right
@@ -273,24 +290,7 @@ class Language(commands.Cog):
         weights /= weights.sum()
         nl = np.random.choice(sorted_words, p=weights, size=size, replace=False)
 
-        # IPYNB #######################################
-        # import numpy as np
-        # import matplotlib.pyplot as plt
-
-        # # Set up the range of values to sample from
-        # values = np.arange(100)
-
-        # weights = np.linspace(1, 0, 100)
-        # weights /= weights.sum()
-        # sampled_value = np.random.choice(values, p=weights, size=50, replace=False)
-
-        # plt.hist(sampled_value, bins=20, density=True)  # , , density=True
-        # plt.show()
-        # print(sum(sampled_value[:25]))
-        # print(sum(sampled_value[25:]))
-        # sampled_value
-        # IPYNB #######################################
-
+        # TIMED SCORE
         # nl2 = []
         # size = 10
         # for i in range(0, len(sorted_word_score), size):
@@ -302,10 +302,18 @@ class Language(commands.Cog):
         #     nl2 += subset
 
         nl = list(nl)[::-1]
+        # TIMED SCORE
         # nl2 = nl2[::-1]
 
-        kor_to_eng = pd.Series(self.vocab_df.Book_English.values, index=self.vocab_df.Korean)[::-1].to_dict()
-        kor_to_eng_exs = pd.Series(zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR), index=self.vocab_df.Korean)[::-1].to_dict()
+        kor_to_eng = pd.Series(
+            self.vocab_df.Book_English.values, index=self.vocab_df.Korean
+        )[::-1].to_dict()
+
+        kor_to_eng_exs = pd.Series(
+            zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR), 
+                index=self.vocab_df.Korean
+            )[::-1].to_dict()
+
         vocab = []
         for kor in nl:
             eng = kor_to_eng[kor]
