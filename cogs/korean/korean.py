@@ -106,7 +106,7 @@ class Language(commands.Cog):
             Dict[int, float]: indexed distribution values
         """
 
-        amount = 10
+        amount = 11
         score = 1
         reducer = 0.8
         distribution_vals = []
@@ -119,61 +119,65 @@ class Language(commands.Cog):
         return scores
 
     def get_score_of_words(self, ws_log, scores):
-        df = pd.DataFrame(ws_log.get_all_records())
-        df.sort_values(["Word", "Date"], ascending=[True, False], inplace=True)
+        # TODO: Take time into account (visualize, just last usage?); only the first guesses in session
+        # time compared to other words, or just.. days/weeks?
 
         datetime_now = datetime.now()
         score_list = []
         knowledge = []
         knowledge_marks = []  # redundant,, but will opt later
         word_scores = {}
-        new_word = ""
+        
+        session_number = 0
         debug_compute = []
         new_word_time_penalty_total = 0
         new_word_score_total = 0
         new_word_counter = 0
+        new_word = ws_log.get_values("B2")
+        df = pd.DataFrame(ws_log.get_all_records())
+        df = df.sort_values(["Word", "Date"])
+
         for row in df.itertuples():
             if new_word_counter >= 10 and new_word == row.Word:
-                continue  # needs opt -> use pd
+                continue                # discard everything after 10th word
             if new_word == row.Word:
+                if session_number and session_number == row.Session_number:
+                    continue            # discard everything after 1st word in session
                 new_word_counter += 1
-            else:
-                if new_word:
-                    mean = fmean(knowledge)
-                    empty_fill_sum = 0
-                    for i in range(new_word_counter+1, 10):
-                        empty_fill = mean * scores[i]
-                        empty_fill_sum += empty_fill
-                        debug_compute.append(empty_fill)
-                        # print(f"i({i}){new_word}: empty_fill")
+                session_number = row.Session_number
+            else:                       # new word occured in the iterations
+                # compute missing words' score up to 10 amount
+                empty_fill_sum = 0
+                mean = fmean(knowledge)
+                for i in range(new_word_counter+1, 10):
+                    empty_fill = mean * scores[i]
+                    empty_fill_sum += empty_fill
+                    debug_compute.append(empty_fill)
 
-                    # empty_fill = fmean(knowledge) * (10-new_word_counter)
-                    word_score = new_word_score_total + empty_fill_sum
-                    # word_score_time_penalized = word_score + new_word_time_penalty_total
-                    word_scores[new_word] = word_score
-                    score_list.append(
-                        [
-                            new_word,
-                            word_score,
-                            "".join(knowledge_marks),
-                            ", ".join(str(round(x,2)) for x in debug_compute)
-                        ]
-                    )
-                    # score_list2.append(
-                    #     [
-                    #         new_word,
-                    #         word_score_time_penalized,
-                    #         "".join(knowledge_marks),
-                    #         ", ".join(str(round(x,2)) for x in debug_compute)
-                    #     ]
-                    # )
-                    new_word_score_total = 0
-                    new_word_counter = 0
-                    new_word_time_penalty_total = 0
+                # get total score of one word and store it into dict[word]->score
+                word_score = new_word_score_total + empty_fill_sum
+                word_scores[new_word] = word_score
 
-                    debug_compute = []
-                    knowledge = []
-                    knowledge_marks = []
+                # creating row
+                score_list.append(
+                    [
+                        new_word,
+                        word_score,
+                        "".join(knowledge_marks),
+                        ", ".join(str(round(x,2)) for x in debug_compute)
+                    ]
+                )
+
+                # resetting variables
+                new_word_score_total = 0
+                new_word_counter = 0
+                new_word_time_penalty_total = 0
+                session_number = row.Session_number
+
+                debug_compute = []
+                knowledge = []
+                knowledge_marks = []
+
                 new_word = row.Word
 
             if row.Knowledge == "✅":
@@ -182,14 +186,16 @@ class Language(commands.Cog):
                 knowledge_multiplier = 2
             elif row.Knowledge == "❌":
                 knowledge_multiplier = 4
-            # new_word_score.append(f"{knowledge_multiplier}*{scores[new_word_counter]}")
 
+            # TODO: transfer this into else block, scoring is reversed.. deal with it, compute that stuff all at once
+            # get score for word
             new_word_score = knowledge_multiplier * scores[new_word_counter]
-            debug_compute.append(new_word_score)
             new_word_score_total += new_word_score
+            debug_compute.append(new_word_score)
             knowledge.append(knowledge_multiplier)
             knowledge_marks.append(row.Knowledge)
 
+            # taking time into account -> new_word_time_penalty_total
             row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
             now_datetime = datetime_now
             days_diff = (now_datetime - row_datetime).days
@@ -285,6 +291,7 @@ class Language(commands.Cog):
 
         # Use probability distribution to pick the most unknown words to known words
         # Create a list of probabilities that decrease linearly from left to right
+        # TODO: Shuffle vocab size, more dense distribution
         size = number_of_words if number_of_words < 50 else 50
         weights = np.linspace(1, 0, number_of_words)
         weights /= weights.sum()
@@ -632,7 +639,7 @@ class Language(commands.Cog):
         )
         ws_log = ws_logs[0]
         if not ws_log.get_values("A1"):
-            ws_log.append_row(["Date", "Word", "Knowledge", "Session number"])
+            ws_log.append_row(["Date", "Word", "Knowledge", "Session_number"])
 
         session_number = self.get_session_number(ws_log, columns)
 
