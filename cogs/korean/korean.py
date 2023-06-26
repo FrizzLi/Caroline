@@ -116,21 +116,57 @@ class Language(commands.Cog):
 
         return distribution_vals
 
-    def get_score_of_words(self, ws_log, distr_vals):
-        # optimization+readability + only first guess in session + only last guess time consideration
-        # # take into account how many times tried?
+    def get_time_penalty_data(self, row_date, now_date, coefficient = 0.005):
+        """Gets time score penalty and emoji visualization for worksheet.
 
-        time_penalty_coefficient = 0.003
+        Args:
+            row_date (str): row's (word's) guess date
+            now_date (datetime.datetime): current date
+            coefficient (float, optional): Penalty coefficient.
+                Defaults to 0.005.
 
-        datetime_now = datetime.now()
+        Returns:
+            Tuple[int, List[str]]: score_penalty, time_marks
+        """
+
+        # score penalty
+        row_date = datetime.strptime(row_date, "%Y-%m-%d %H:%M:%S")
+        days_diff = (now_date - row_date).days
+        score_penalty = days_diff * coefficient
+
+        # emoji visualizations
+        months, days = divmod(days_diff, 30)
+        weeks, days = divmod(days, 7)
+        time_marks = ["🌙"] * months + ["📅"] * weeks + ["🌞"] * days
+
+        return score_penalty, time_marks
+
+    def get_score(self, ws_log, distr_vals):
+        """Gets score of words and visualization rows for worksheet.
+
+        Scoring system takes into account: 
+         - first guesses in a session, by each latter session, the importance
+           of score is being reduced by distribution values
+         - time of the last guess of a certain word
+
+        Args:
+            ws_log (gspread.worksheet.Worksheet): worksheet log of guesses
+            distr_vals (List[float]): distribution values
+
+        Returns:
+            Tuple[List[str, int, str, str], Dict[str, int]]: (
+                table_rows - (word, score, knowledge_marks, time_marks),
+                word_scores - korean word scores
+            )
+        """
+
         score_table = {"✅": 1, "⏭️": 2, "❌": 4}
+        considering_amount = len(distr_vals)
         table_rows = []
         word_scores = {}
-        considering_amount = len(distr_vals)
 
         df = pd.DataFrame(ws_log.get_all_records())
         df = df.sort_values(["Word", "Date"])
-
         previous_row = df.iloc[0]
         knowledge_marks = [previous_row.Knowledge]
         knowledge_scores = [score_table[previous_row.Knowledge]]
@@ -143,44 +179,38 @@ class Language(commands.Cog):
                 knowledge_scores_mean = fmean(knowledge_scores)
                 extension_amount = abs(len(knowledge_scores) - len(distr_vals))
                 knowledge_scores += [knowledge_scores_mean] * extension_amount
-                
                 distr_score = np.array(knowledge_scores) * np.array(distr_vals)
-            
-                # adding time score penalty (last time guessed)
-                datetime_row = datetime.strptime(previous_row.Date, "%Y-%m-%d %H:%M:%S")
-                days_diff = (datetime_now - datetime_row).days
-                time_score_penalty = days_diff * time_penalty_coefficient
 
-                final_score = sum(distr_score) + time_score_penalty
-
-                # getting emoji visualizations
-                months, days = divmod(days_diff, 30)
-                weeks, days = divmod(days, 7)
-                emoji_time = ["🌙"] * months + ["📅"] * weeks + ["🌞"] * days
+                time_score_penalty, time_marks = self.get_time_penalty_data(
+                    previous_row.Date,
+                    datetime.now()
+                )
 
                 knowledge_marks.reverse()
                 knowledge_marks = knowledge_marks[:considering_amount]
+
+                final_score = sum(distr_score) + time_score_penalty
 
                 table_rows.append(
                     [
                         previous_row.Word,
                         final_score,
                         "".join(knowledge_marks),
-                        "".join(emoji_time)
+                        "".join(time_marks)
                     ]
                 )
 
                 word_scores[previous_row.Word] = final_score
-                knowledge_scores = []
-                knowledge_marks = []
+                knowledge_marks = [row.Knowledge]
+                knowledge_scores = [score_table[row.Knowledge]]
 
             # take into account only the first guesses in one session
-            if previous_row.Session_number != row.Session_number:
+            elif previous_row.Session_number != row.Session_number:
                 knowledge_marks.append(row.Knowledge)
                 knowledge_scores.append(score_table[row.Knowledge])
-            
+
             previous_row = row
-        
+
         table_rows = sorted(table_rows, key=lambda x:x[1], reverse=True)
 
         return table_rows, word_scores
@@ -244,7 +274,7 @@ class Language(commands.Cog):
         """
 
         distr_vals = self.get_score_distribution()
-        score_list, word_scores = self.get_score_of_words(ws_log, distr_vals)
+        score_list, word_scores = self.get_score(ws_log, distr_vals)
 
         ws_scores, _ = utils.get_worksheets(
             "Korea - Users stats",
