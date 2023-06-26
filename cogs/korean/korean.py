@@ -103,107 +103,87 @@ class Language(commands.Cog):
         """Gets score distribution for vocabulary picking.
 
         Returns:
-            Dict[int, float]: indexed distribution values
+            List[float]: distribution values
         """
 
-        amount = 11
+        amount = 10
         score = 1
         reducer = 0.8
         distribution_vals = []
-        for i in range(amount):
+        for _ in range(amount):
             distribution_vals.append(score)
-            score *= reducer
+            score = round(score * reducer, 3)
 
-        scores = {i: round(j, 3) for i, j in enumerate(distribution_vals)}
+        return distribution_vals
 
-        return scores
+    def get_score_of_words(self, ws_log, distr_vals):
+        # optimization+readability + only first guess in session + only last guess time consideration
+        # # take into account how many times tried?
 
-    def get_score_of_words(self, ws_log, scores):
-        # TODO: Take time into account (visualize, just last usage?); only the first guesses in session
-        # time compared to other words, or just.. days/weeks?
+        time_penalty_coefficient = 0.003
 
         datetime_now = datetime.now()
-        score_list = []
-        knowledge = []
-        knowledge_marks = []  # redundant,, but will opt later
+        score_table = {"✅": 1, "⏭️": 2, "❌": 4}
+        table_rows = []
         word_scores = {}
-        
-        session_number = 0
-        debug_compute = []
-        new_word_time_penalty_total = 0
-        new_word_score_total = 0
-        new_word_counter = 0
-        new_word = ws_log.get_values("B2")
+        considering_amount = len(distr_vals)
+
         df = pd.DataFrame(ws_log.get_all_records())
         df = df.sort_values(["Word", "Date"])
 
+        previous_row = df.iloc[0]
+        knowledge_marks = [previous_row.Knowledge]
+        knowledge_scores = [score_table[previous_row.Knowledge]]
+        df.drop(0)
+
         for row in df.itertuples():
-            if new_word_counter >= 10 and new_word == row.Word:
-                continue                # discard everything after 10th word
-            if new_word == row.Word:
-                if session_number and session_number == row.Session_number:
-                    continue            # discard everything after 1st word in session
-                new_word_counter += 1
-                session_number = row.Session_number
-            else:                       # new word occured in the iterations
-                # compute missing words' score up to 10 amount
-                empty_fill_sum = 0
-                mean = fmean(knowledge)
-                for i in range(new_word_counter+1, 10):
-                    empty_fill = mean * scores[i]
-                    empty_fill_sum += empty_fill
-                    debug_compute.append(empty_fill)
+            if previous_row.Word != row.Word:
+                knowledge_scores.reverse()
+                knowledge_scores = knowledge_scores[:considering_amount]
+                knowledge_scores_mean = fmean(knowledge_scores)
+                extension_amount = abs(len(knowledge_scores) - len(distr_vals))
+                knowledge_scores += [knowledge_scores_mean] * extension_amount
+                
+                distr_score = np.array(knowledge_scores) * np.array(distr_vals)
+            
+                # adding time score penalty (last time guessed)
+                datetime_row = datetime.strptime(previous_row.Date, "%Y-%m-%d %H:%M:%S")
+                days_diff = (datetime_now - datetime_row).days
+                time_score_penalty = days_diff * time_penalty_coefficient
 
-                # get total score of one word and store it into dict[word]->score
-                word_score = new_word_score_total + empty_fill_sum
-                word_scores[new_word] = word_score
+                final_score = sum(distr_score) + time_score_penalty
 
-                # creating row
-                score_list.append(
+                # getting emoji visualizations
+                months, days = divmod(days_diff, 30)
+                weeks, days = divmod(days, 7)
+                emoji_time = ["🌙"] * months + ["📅"] * weeks + ["🌞"] * days
+
+                knowledge_marks.reverse()
+                knowledge_marks = knowledge_marks[:considering_amount]
+
+                table_rows.append(
                     [
-                        new_word,
-                        word_score,
+                        previous_row.Word,
+                        final_score,
                         "".join(knowledge_marks),
-                        ", ".join(str(round(x,2)) for x in debug_compute)
+                        "".join(emoji_time)
                     ]
                 )
 
-                # resetting variables
-                new_word_score_total = 0
-                new_word_counter = 0
-                new_word_time_penalty_total = 0
-                session_number = row.Session_number
-
-                debug_compute = []
-                knowledge = []
+                word_scores[previous_row.Word] = final_score
+                knowledge_scores = []
                 knowledge_marks = []
 
-                new_word = row.Word
-
-            if row.Knowledge == "✅":
-                knowledge_multiplier = 1
-            elif row.Knowledge == "⏭️":
-                knowledge_multiplier = 2
-            elif row.Knowledge == "❌":
-                knowledge_multiplier = 4
-
-            # TODO: transfer this into else block, scoring is reversed.. deal with it, compute that stuff all at once
-            # get score for word
-            new_word_score = knowledge_multiplier * scores[new_word_counter]
-            new_word_score_total += new_word_score
-            debug_compute.append(new_word_score)
-            knowledge.append(knowledge_multiplier)
-            knowledge_marks.append(row.Knowledge)
-
-            # taking time into account -> new_word_time_penalty_total
-            row_datetime = datetime.strptime(row.Date, "%Y-%m-%d %H:%M:%S")
-            now_datetime = datetime_now
-            days_diff = (now_datetime - row_datetime).days
-            new_word_time_penalty_total += days_diff * 0.001
+            # take into account only the first guesses in one session
+            if previous_row.Session_number != row.Session_number:
+                knowledge_marks.append(row.Knowledge)
+                knowledge_scores.append(score_table[row.Knowledge])
+            
+            previous_row = row
         
-        score_list = sorted(score_list, key=lambda x:x[1], reverse=True)
+        table_rows = sorted(table_rows, key=lambda x:x[1], reverse=True)
 
-        return score_list, word_scores
+        return table_rows, word_scores
 
 
     def compute_percentages(self, easy_c, medium_c, hard_c):
@@ -263,8 +243,8 @@ class Language(commands.Cog):
             ]
         """
 
-        score_vals = self.get_score_distribution()
-        score_list, word_scores = self.get_score_of_words(ws_log, score_vals)
+        distr_vals = self.get_score_distribution()
+        score_list, word_scores = self.get_score_of_words(ws_log, distr_vals)
 
         ws_scores, _ = utils.get_worksheets(
             "Korea - Users stats",
@@ -317,7 +297,7 @@ class Language(commands.Cog):
         )[::-1].to_dict()
 
         kor_to_eng_exs = pd.Series(
-            zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR), 
+            zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR),
                 index=self.vocab_df.Korean
             )[::-1].to_dict()
 
