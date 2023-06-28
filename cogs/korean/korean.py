@@ -141,7 +141,7 @@ class Language(commands.Cog):
 
         return score_penalty, time_marks
 
-    def get_score(self, ws_log, distr_vals):
+    def get_score(self, ws_log):
         """Gets score of words and visualization rows for worksheet.
 
         Scoring system takes into account: 
@@ -151,7 +151,6 @@ class Language(commands.Cog):
 
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet log of guesses
-            distr_vals (List[float]): distribution values
 
         Returns:
             Tuple[List[str, int, str, str], Dict[str, int]]: (
@@ -161,6 +160,7 @@ class Language(commands.Cog):
         """
 
         score_table = {"✅": 1, "⏭️": 2, "❌": 4}
+        distr_vals = self.get_score_distribution()
         considering_amount = len(distr_vals)
         table_rows = []
         word_scores = {}
@@ -273,7 +273,6 @@ class Language(commands.Cog):
             ]
         """
 
-        distr_vals = self.get_score_distribution()
         score_list, word_scores = self.get_score(ws_log, distr_vals)
 
         ws_scores, _ = utils.get_worksheets(
