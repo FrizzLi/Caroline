@@ -407,7 +407,7 @@ class Language(commands.Cog):
         # ? stats_list append row by row
         i = 1
         count_n = len(vocab)
-        counter = f"{i}. word out of {count_n}."
+        counter = f"{i} word out of {count_n}."
         msg = await interaction.followup.send(counter)
 
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
@@ -511,7 +511,7 @@ class Language(commands.Cog):
                 continue
 
             stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
-            counter = f"{i}. word out of {count_n}"
+            counter = f"{i} word out of {count_n}"
 
             time = datetime.now(pytz.timezone(self.timezone))
             time = time.strftime("%Y-%m-%d %H:%M:%S")
