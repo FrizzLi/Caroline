@@ -142,7 +142,7 @@ class Language(commands.Cog):
         return score_penalty, time_marks
 
     def get_score(self, ws_log):
-        """Gets score of words and visualization rows for worksheet.
+        """Gets score of words and visualizing list of rows for worksheet.
 
         Scoring system takes into account: 
          - first guesses in a session, by each latter session, the importance
@@ -153,9 +153,8 @@ class Language(commands.Cog):
             ws_log (gspread.worksheet.Worksheet): worksheet log of guesses
 
         Returns:
-            Tuple[List[str, int, str, str], Dict[str, int]]: (
-                table_rows - (word, score, knowledge_marks, time_marks),
-                word_scores - korean word scores
+            Tuple[List[str, int, str, str]]: (
+                word, score, (knowledge_marks, time_marks)
             )
         """
 
@@ -163,7 +162,6 @@ class Language(commands.Cog):
         distr_vals = self.get_score_distribution()
         considering_amount = len(distr_vals)
         table_rows = []
-        word_scores = {}
 
         df = pd.DataFrame(ws_log.get_all_records())
         df = df.sort_values(["Word", "Date"])
@@ -200,7 +198,6 @@ class Language(commands.Cog):
                     ]
                 )
 
-                word_scores[previous_row.Word] = final_score
                 knowledge_marks = [row.Knowledge]
                 knowledge_scores = [score_table[row.Knowledge]]
 
@@ -213,8 +210,32 @@ class Language(commands.Cog):
 
         table_rows = sorted(table_rows, key=lambda x:x[1], reverse=True)
 
-        return table_rows, word_scores
+        return table_rows
 
+    def get_random_words(self, words, consider_amount=150, pick_amount=50):
+        """Gets randomly chosen words for session.
+
+        Creates linear probability distribution and uses it to pick words
+        randomly from the most unknown ones to the most unknown ones.
+
+        Args:
+            words (List[str]): korean words
+            consider_amount (int, optional): Amount of words to consider into
+                random picking. Defaults to 150.
+            pick_amount (int, optional): Amount of words to pick.
+                Defaults to 50.
+
+        Returns:
+            numpy.ndarray: (list of) picked words
+        """
+
+        consider_amount = len(words) if len(words) < consider_amount else consider_amount
+        size = consider_amount if consider_amount < pick_amount else pick_amount
+        weights = np.linspace(1, 0, consider_amount)
+        weights /= weights.sum()
+        picked_words = np.random.choice(words[:consider_amount], p=weights, size=size, replace=False)
+
+        return picked_words
 
     def compute_percentages(self, easy_c, medium_c, hard_c):
         # TODO: this might not be needed, so no docs yet (TODO.MD stuff)
@@ -273,65 +294,34 @@ class Language(commands.Cog):
             ]
         """
 
-        score_list, word_scores = self.get_score(ws_log, distr_vals)
+        score_data = self.get_score(ws_log)
 
-        ws_scores, _ = utils.get_worksheets(
+        # create worksheet of scores
+        ws_scores_list, _ = utils.get_worksheets(
             "Korea - Users stats",
             (f"{user_name}-score-{level_number}",),
             create=True,
             size=(10_000, 4)
         )
-        ws_score = ws_scores[0]
-        ws_score.clear()
-        ws_score.append_rows(score_list)
+        ws_scores = ws_scores_list[0]
+        ws_scores.clear()
+        ws_scores.append_rows(score_data)
 
-        # TIMED SCORE
-        # score_g_ws2 = get_worksheet("Korea - Users stats", f"score_monitor-{level_number}-timed")
-        # score_g_ws2.clear()
-        # score_list2 = []
-        #
-        # score_list2 = sorted(score_list2, key=lambda x:x[1], reverse=True)
-        # score_g_ws2.append_rows(score_list2)
+        picked_words = self.get_random_words([row[0] for row in score_data])
 
-        # Arranging words, score, marks
-        sorted_word_score = sorted(word_scores.items(), key=lambda item: item[1], reverse=True)
-        number_of_words = len(score_list) if len(score_list) < 100 else 100
-        sorted_words = [sorted_word_score[i][0] for i in range(number_of_words)]
-
-        # Use probability distribution to pick the most unknown words to known words
-        # Create a list of probabilities that decrease linearly from left to right
-        # TODO: Shuffle vocab size, more dense distribution
-        size = number_of_words if number_of_words < 50 else 50
-        weights = np.linspace(1, 0, number_of_words)
-        weights /= weights.sum()
-        nl = np.random.choice(sorted_words, p=weights, size=size, replace=False)
-
-        # TIMED SCORE
-        # nl2 = []
-        # size = 10
-        # for i in range(0, len(sorted_word_score), size):
-        #     if i > size * 4:
-        #         # nl += sorted_word_score[i::]
-        #         break
-        #     subset = sorted_word_score[i:i+size]
-        #     random.shuffle(subset)
-        #     nl2 += subset
-
-        nl = list(nl)[::-1]
-        # TIMED SCORE
-        # nl2 = nl2[::-1]
-
+        # getting english data from worksheet
         kor_to_eng = pd.Series(
             self.vocab_df.Book_English.values, index=self.vocab_df.Korean
-        )[::-1].to_dict()
+        ).to_dict()
 
         kor_to_eng_exs = pd.Series(
             zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR),
                 index=self.vocab_df.Korean
-            )[::-1].to_dict()
+            ).to_dict()
 
+        # creating vocab list with all the content
         vocab = []
-        for kor in nl:
+        for kor in picked_words:
             eng = kor_to_eng[kor]
             exs = kor_to_eng_exs[kor]
             vocab.append((eng, kor, exs))
