@@ -219,7 +219,7 @@ class Language(commands.Cog):
         randomly from the most unknown ones to the most unknown ones.
 
         Args:
-            words (List[str]): korean words
+            words (List[str]): korean words that were guessed
             consider_amount (int, optional): Amount of words to consider into
                 random picking. Defaults to 150.
             pick_amount (int, optional): Amount of words to pick.
@@ -277,9 +277,7 @@ class Language(commands.Cog):
         return vocab
 
     def get_review_vocab(self, ws_log, level_number, user_name):
-        """Gets vocabulary review of all encountered word for a given level.
-
-        LOREM IPSUM
+        """Gets vocabulary review of all guessed words for a given level.
 
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
@@ -307,26 +305,25 @@ class Language(commands.Cog):
         ws_scores.clear()
         ws_scores.append_rows(score_data)
 
-        picked_words = self.get_random_words([row[0] for row in score_data])
+        guessed_words = [row[0] for row in score_data]
+        picked_words = self.get_random_words(guessed_words)
 
         # getting english data from worksheet
-        kor_to_eng = pd.Series(
-            self.vocab_df.Book_English.values, index=self.vocab_df.Korean
-        ).to_dict()
-
-        kor_to_eng_exs = pd.Series(
-            zip(self.vocab_df.Example_EN, self.vocab_df.Example_KR),
-                index=self.vocab_df.Korean
+        korean_word_data = pd.Series(
+            zip(
+                self.vocab_df.Book_English,
+                self.vocab_df.Example_EN,
+                self.vocab_df.Example_KR
+            ),
+            index=self.vocab_df.Korean
             ).to_dict()
 
-        # creating vocab list with all the content
+        # creating vocab list with all of the content
         vocab = []
         for kor in picked_words:
-            eng = kor_to_eng[kor]
-            exs = kor_to_eng_exs[kor]
+            eng = korean_word_data[kor][0]
+            exs = korean_word_data[kor][1:]
             vocab.append((eng, kor, exs))
-
-        random.shuffle(vocab)
 
         return vocab
 
