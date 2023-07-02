@@ -388,24 +388,15 @@ class Language(commands.Cog):
             session_number (int): _description_
         """
 
-        # TODO: session end -> percentages; display hardest ones/practice them again?)
-        # TODO: session dur -> no. of missing checked words
-        # TODO: Select "next" lesson, so remembering which was the last lesson the user took is not necessary
-        # TODO: Webhook error
-
-        i = 1
-        count_n = len(vocab)
-        msg_str = f"{i} word out of {count_n}."
-        msg = await interaction.channel.send(msg_str)
-
+        # TODO: Select "next" lesson (nn remembering); 200? review?
+        # TODO: deal with (i) % 15
+        unknown_amount = len(vocab)
+        msg_str = f"{unknown_amount} words remaining."
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
-        stats_list = []
-        easy_c = easy_p = 0
-        medium_c = medium_p = 0
-        hard_c = hard_p = 0
-        stats = ""
         view = SessionVocabView()
+        stats = []
 
+        msg = await interaction.channel.send(msg_str)
         while True:
             eng, kor, ex = vocab[-1]
             example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
@@ -426,7 +417,8 @@ class Language(commands.Cog):
             else:
                 msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
 
-            content = f"{msg_str}\n{msg_display}\n{stats}"
+            msg_str = f"{unknown_amount} words remaining."
+            content = f"{msg_str}\n{msg_display}"
             await msg.edit(content=content, view=view)
 
             # wait for interaction
@@ -438,66 +430,37 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
-            if button_id == "easy":
-                word_to_move = vocab.pop()
-
-                vocab.insert(0, word_to_move)
-                easy_c += 1
-
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-            elif button_id == "medium":
-                word_to_move = vocab.pop()
-
-                vocab.insert(len(vocab) // 2, word_to_move)
-                medium_c += 1
-                count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-            elif button_id == "hard":
-                word_to_move = vocab.pop()
-
-                new_index = len(vocab) // 5
-                vocab.insert(-new_index, word_to_move)
-                hard_c += 1
-                count_n += 1
-
-                i += 1
-                easy_p, medium_p, hard_p = self.compute_percentages(
-                    easy_c, medium_c, hard_c
-                )
-
-
-            elif button_id == "end":
-                msg_display = "Ending listening session."
-
-                # ending message
-                content = f"{msg_str}\n{msg_display}\n{stats}"
-                try:
-                    await msg.edit(content=content, view=view)
-                except discord.errors.HTTPException as err:
-                    print(err)
-                    ws_log.append_rows(stats_list)
-                    break
-                ws_log.append_rows(stats_list)
-                break
-            elif button_id == "repeat":
+            if button_id == "repeat":
                 continue
 
-            stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
-            msg_str = f"{i} word out of {count_n}"
+            word_to_move = vocab.pop()
+            if button_id == "easy":
+                vocab.insert(0, word_to_move)
+                if unknown_amount:
+                    unknown_amount -= 1
+            elif button_id == "medium":
+                vocab.insert(len(vocab) // 2, word_to_move)
+            elif button_id == "hard":
+                vocab.insert(- len(vocab) // 5, word_to_move)
+            elif button_id == "end":
+                for stat in stats:
+                    pass
+
+                # TODO: display the hardest words (end)
+                # TODO: display percentages overall (end)
+
+                # easy_p, medium_p, hard_p = self.compute_percentages(easy, medium, hard)
+                # statss = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
+                content = f"{msg_str}\n{statss}"
+                await msg.edit(content=content, view=view)
+                ws_log.append_rows(stats)
+                break
 
             time = datetime.now(pytz.timezone(self.timezone))
-            time = time.strftime("%Y-%m-%d %H:%M:%S")
-            stats_list.append(
+            time_str = time.strftime("%Y-%m-%d %H:%M:%S")
+            stats.append(
                 [
-                    time,
+                    time_str,
                     word_to_move[1],
                     stats_label[button_id],
                     session_number,
