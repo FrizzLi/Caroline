@@ -388,17 +388,15 @@ class Language(commands.Cog):
             session_number (int): _description_
         """
 
-        # TODO: first priority, not that hard (TODO.MD stuff)
-        # TODO: Update sheets when the session is over, not when it starts
-        # TODO: Session windows display (no. of missing checked words; end -> display hardest ones/practice them again)
-        # TODO: Buttons: Disable during play, pause for listening + 10s backwards
+        # TODO: session end -> percentages; display hardest ones/practice them again?)
+        # TODO: session dur -> no. of missing checked words
         # TODO: Select "next" lesson, so remembering which was the last lesson the user took is not necessary
-        # ? percentages, know when to end (try all)
-        # ? stats_list append row by row
+        # TODO: Webhook error
+
         i = 1
         count_n = len(vocab)
-        counter = f"{i} word out of {count_n}."
-        msg = await interaction.followup.send(counter)
+        msg_str = f"{i} word out of {count_n}."
+        msg = await interaction.channel.send(msg_str)
 
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
         stats_list = []
@@ -407,15 +405,13 @@ class Language(commands.Cog):
         hard_c = hard_p = 0
         stats = ""
         view = SessionVocabView()
-        # vocab = list of tuples of eng, kor, ex
-        # ex = eng--kor
 
         while True:
-            eng, kor, ex = vocab[-1]    # pops a list!, ex is other
+            eng, kor, ex = vocab[-1]
             example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
             kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
-            # handling word that has no audio
+            # handling word with audio
             if kor_no_num in self.vocab_audio_paths:
                 msg_display = f"||{kor} = {eng:20}" + " " * (i % 15) + f"{example}||"
                 try:
@@ -430,14 +426,8 @@ class Language(commands.Cog):
             else:
                 msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
 
-            content = f"{counter}\n{msg_display}\n{stats}"
-            try:
-                await msg.edit(content=content, view=view)
-            except discord.errors.HTTPException as err:
-                # TODO: err resolve, cannot delete or edit msg, workarounded
-                print(err)
-                msg = await interaction.followup.send(content)
-                await msg.edit(content=content, view=view)
+            content = f"{msg_str}\n{msg_display}\n{stats}"
+            await msg.edit(content=content, view=view)
 
             # wait for interaction
             interaction = await self.bot.wait_for(
@@ -488,7 +478,7 @@ class Language(commands.Cog):
                 msg_display = "Ending listening session."
 
                 # ending message
-                content = f"{counter}\n{msg_display}\n{stats}"
+                content = f"{msg_str}\n{msg_display}\n{stats}"
                 try:
                     await msg.edit(content=content, view=view)
                 except discord.errors.HTTPException as err:
@@ -501,7 +491,7 @@ class Language(commands.Cog):
                 continue
 
             stats = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
-            counter = f"{i} word out of {count_n}"
+            msg_str = f"{i} word out of {count_n}"
 
             time = datetime.now(pytz.timezone(self.timezone))
             time = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -515,9 +505,9 @@ class Language(commands.Cog):
             )
 
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
-        # TODO: (TODO.MD stuff)
-        # TODO Bug: Error when long time no use.. (listening)
-        i = 0:
+        # TODO: Error when long time no use.. (listening)
+        # TODO: Pause for listening + 10s backwards
+        i = 0
         count_n = len(audio_paths)
 
         counter_text = f"{i+1}. lesson out of {count_n}."
