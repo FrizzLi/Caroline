@@ -389,6 +389,10 @@ class Language(commands.Cog):
         """
 
         # TODO: first priority, not that hard (TODO.MD stuff)
+        # TODO: Update sheets when the session is over, not when it starts
+        # TODO: Session windows display (no. of missing checked words; end -> display hardest ones/practice them again)
+        # TODO: Buttons: Disable during play, pause for listening + 10s backwards
+        # TODO: Select "next" lesson, so remembering which was the last lesson the user took is not necessary
         # ? percentages, know when to end (try all)
         # ? stats_list append row by row
         i = 1
@@ -512,7 +516,8 @@ class Language(commands.Cog):
 
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
         # TODO: (TODO.MD stuff)
-        i = 0
+        # TODO Bug: Error when long time no use.. (listening)
+        i = 0:
         count_n = len(audio_paths)
 
         counter_text = f"{i+1}. lesson out of {count_n}."
@@ -802,6 +807,7 @@ class Language(commands.Cog):
             "...Setting up listening session..."
         )
 
+        # TODO: NOT Have to be connected to turn on reading lesson
         # load audio files
         src_dir = Path(__file__).parents[0]
         level = lesson_number // 100
