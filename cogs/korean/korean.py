@@ -389,7 +389,10 @@ class Language(commands.Cog):
         """
 
         # TODO: Select "next" lesson (nn remembering); 200? review?
+        # TODO: no. of missing checked words -> no. of X -> no. of >
         # TODO: deal with (i) % 15
+        # display the hardest words
+
         unknown_amount = len(vocab)
         msg_str = f"{unknown_amount} words remaining."
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
@@ -417,7 +420,6 @@ class Language(commands.Cog):
             else:
                 msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
 
-            msg_str = f"{unknown_amount} words remaining."
             content = f"{msg_str}\n{msg_display}"
             await msg.edit(content=content, view=view)
 
@@ -436,19 +438,16 @@ class Language(commands.Cog):
             word_to_move = vocab.pop()
             if button_id == "easy":
                 vocab.insert(0, word_to_move)
-                if unknown_amount:
-                    unknown_amount -= 1
+                unknown_amount -= 1
             elif button_id == "medium":
                 vocab.insert(len(vocab) // 2, word_to_move)
+                unknown_amount -= 1
             elif button_id == "hard":
                 vocab.insert(- len(vocab) // 5, word_to_move)
             elif button_id == "end":
                 for stat in stats:
                     pass
-
-                # TODO: display the hardest words (end)
-                # TODO: display percentages overall (end)
-
+                # stats
                 # easy_p, medium_p, hard_p = self.compute_percentages(easy, medium, hard)
                 # statss = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
                 content = f"{msg_str}\n{statss}"
@@ -456,6 +455,7 @@ class Language(commands.Cog):
                 ws_log.append_rows(stats)
                 break
 
+            msg_str = f"{unknown_amount} words remaining."
             time = datetime.now(pytz.timezone(self.timezone))
             time_str = time.strftime("%Y-%m-%d %H:%M:%S")
             stats.append(
