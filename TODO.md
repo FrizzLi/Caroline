@@ -17,22 +17,30 @@
   - [ ] Do deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
   - [ ] Bug: when the bot leaves the voice, refresh button still works..
   - [ ] Voice: dont leave right away when everybody leaves, wait 10 seconds at least
+  - [ ] Like button (to remember URL for next time)
 
 - [ ] korean.py
-  - [ ] AI/ChatGPT:
-    - [ ] Listening, Reading: Sentence Click for exploration -> grammar, vocab, translation
-    - [ ] Create dynamic adaptable content... (many ideas) - sth they can build on, commit
+  - [ ] ALL - create base forms
+  - [ ] UP TO 10 LESSON - count read/listen occurences + remove ;
+  - [ ] Publishing it: Make it in your server (networking) [UPON WEBSITE BUILDING], Elastic search for gsheet data for all users?
 
-  - [ ] Production:
-     - [ ] Elastic search for gsheet data for all users?
-     - [ ] Make bot for public / Make it in your server (networking)
-
-  - [ ] Scoring system, vocab picking:
-    - [ ] ~Add visualization on worksheet, streak play, daily q, graph of practice intensity like on github
-    - [ ] ~Buttons: Disable during play
-    - [ ] ~Function vocab_writing [REM] vocab writing function (IMP maybe later)
-    - [ ] ~Add audio for reading texts?
-
+  - [ ] Discarded:
+    - [ ] Scoring system, vocab picking:
+      - [ ] ~create stats before session..!? At the start of the day or sth? (after longer time, the scorings would be different, but its not that important)
+      - [ ] ~Add visualization on worksheet, streak play, daily q, graph of practice intensity like on github
+      - [ ] ~Buttons: Disable during play
+      - [ ] ~Function vocab_writing [REM] vocab writing function (IMP maybe later)
+      - [ ] ~Add audio for reading texts?
+  
+    - [ ] AI/ChatGPT Problems:
+      - [ ] Add pictures for each word - those images are kinda weird, maybe donable, but not paying attention to it now
+      - [ ] More meanings chaos (with numbers, without numbers[;;;])
+      - [ ] No precise base form detection for Reading/Listening vocabulary detection (ChatGPT isn't sufficient, combine it with my script? For now 10 Lessons are enough... can include it;; take chatgpt output, pass it into konlpy, check only words that are not in the vocab)
+      - [ ] Pharses/Two words in vocab gspread - split, find words, if both exist, create () with 를/을 / 이/가 (+eng)
+      - [ ] Similarity: meanings(vs) / spelling / antonyms (level 2 and more); 대충, 정도, 주소, 조사
+      - [ ] Listening, Reading: Sentence Click for exploration -> grammar, vocab, translation
+      - [ ] Create questions for reading/listening
+      - [ ] Create dynamic adaptable content... (many ideas) - sth they can build on, commit
 ### Done ✓
 
 - [x] Create my first TODO.md  
