@@ -237,14 +237,48 @@ class Language(commands.Cog):
 
         return picked_words
 
-    def compute_percentages(self, easy_c, medium_c, hard_c):
-        # TODO: this might not be needed, so no docs yet (TODO.MD stuff)
-        total_c = easy_c + medium_c + hard_c
-        return (
-            round(easy_c * 100 / total_c, 1),
-            round(medium_c * 100 / total_c, 1),
-            round(hard_c * 100 / total_c, 1),
+    def get_ending_session_stats(self, stats):
+        """Gets ending session stats.
+
+        Top 5 hardest words and overall mark first guess percentages.
+
+        Args:
+            stats (List[str, str, str, int]): time, word, mark, session number
+
+        Returns:
+            str: stats
+        """
+
+        # get marks count and scoring per word
+        marks_count = {"✅": 0, "⏭️": 0, "❌": 0}
+        scoring = {"✅": 0, "⏭️": 1, "❌": 2}
+        word_scores = {}
+        for _, word, mark, _ in stats:
+            if word not in word_scores:
+                word_scores[word] = scoring[mark]
+                marks_count[mark] += 1
+            else:
+                word_scores[word] += scoring[mark]
+
+        # get hardest words
+        word_scores_sorted = sorted(word_scores.items(), key=lambda x:x[1], reverse=True)
+        hardest_words = [word for word, score in word_scores_sorted[:5]]
+        hardest_words_string = ", ".join(hardest_words)
+
+        # get mark percentages
+        total = sum(marks_count.values())
+        for mark in marks_count:
+            marks_count[mark] = round(marks_count[mark] * 100 / total, 1)
+
+        percentages_summary = (
+            f"{marks_count['✅']}%,"
+            f"   {marks_count['⏭️']}%,"
+            f"   {marks_count['❌']}%"
         )
+
+        stats = f"Hardest words: {hardest_words_string}\n{percentages_summary}"
+
+        return stats
 
     def get_lesson_vocab(self, lesson_number):
         """Gets vocabulary for a given lesson.
@@ -389,10 +423,8 @@ class Language(commands.Cog):
         """
 
         # TODO: Select "next" lesson (nn remembering); 200? review?
-        # TODO: no. of missing checked words -> no. of X -> no. of >
         # TODO: deal with (i) % 15
-        # display the hardest words
-
+        i = 1
         unknown_amount = len(vocab)
         msg_str = f"{unknown_amount} words remaining."
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
@@ -420,6 +452,7 @@ class Language(commands.Cog):
             else:
                 msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
 
+            msg_str = f"{unknown_amount} words remaining"
             content = f"{msg_str}\n{msg_display}"
             await msg.edit(content=content, view=view)
 
@@ -438,24 +471,20 @@ class Language(commands.Cog):
             word_to_move = vocab.pop()
             if button_id == "easy":
                 vocab.insert(0, word_to_move)
-                unknown_amount -= 1
+                if unknown_amount:
+                    unknown_amount -= 1
             elif button_id == "medium":
                 vocab.insert(len(vocab) // 2, word_to_move)
-                unknown_amount -= 1
             elif button_id == "hard":
                 vocab.insert(- len(vocab) // 5, word_to_move)
             elif button_id == "end":
-                for stat in stats:
-                    pass
-                # stats
-                # easy_p, medium_p, hard_p = self.compute_percentages(easy, medium, hard)
-                # statss = f"{easy_p}%,   {medium_p}%,   {hard_p}%"
-                content = f"{msg_str}\n{statss}"
+                stats_str = self.get_ending_session_stats(stats)
+                content = f"{msg_str}\n{stats_str}"
                 await msg.edit(content=content, view=view)
                 ws_log.append_rows(stats)
                 break
-
-            msg_str = f"{unknown_amount} words remaining."
+            
+            i += 1
             time = datetime.now(pytz.timezone(self.timezone))
             time_str = time.strftime("%Y-%m-%d %H:%M:%S")
             stats.append(
