@@ -389,6 +389,9 @@ class Language(commands.Cog):
 
         return audio_texts, audio_paths
 
+    def get_next_level_lesson_number(self):
+
+
     async def get_voice(self, interaction):
         """Gets or connects to the voice channel.
         
@@ -399,20 +402,18 @@ class Language(commands.Cog):
             discord.voice_client.VoiceClient: voice channel
         """
 
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:
             await interaction.followup.send("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
 
         return voice
 
     async def run_vocab_session_loop(self, interaction, voice, ws_log, vocab, session_number):
-        """Runs session loop of vocabulary words.
-
-        _extended_summary_
+        """Runs session loop for vocabulary words.
 
         Args:
             interaction (discord.interactions.Interaction): _description_
@@ -422,9 +423,8 @@ class Language(commands.Cog):
             session_number (int): _description_
         """
 
-        # TODO: Select "next" lesson (nn remembering); 200? review?
-        # TODO: deal with (i) % 15
         i = 1
+        max_spaces = 30  # using for discord bug with spoiled words
         unknown_amount = len(vocab)
         msg_str = f"{unknown_amount} words remaining."
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
@@ -439,7 +439,7 @@ class Language(commands.Cog):
 
             # handling word with audio
             if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {eng:20}" + " " * (i % 15) + f"{example}||"
+                msg_display = f"||{kor} = {eng:20}" + " " * (i % max_spaces) + f"{example}||"
                 try:
                     voice.play(
                         discord.FFmpegPCMAudio(
@@ -450,7 +450,7 @@ class Language(commands.Cog):
                 except Exception as err:
                     print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
             else:
-                msg_display = f"{kor} = ||{eng:20}" + " " * (i % 15) + f"{example}||"
+                msg_display = f"{kor} = ||{eng:20}" + " " * (i % max_spaces) + f"{example}||"
 
             msg_str = f"{unknown_amount} words remaining"
             content = f"{msg_str}\n{msg_display}"
@@ -599,7 +599,7 @@ class Language(commands.Cog):
             self.timezone = json.load(file)["timezone"]
 
     @app_commands.command(name="vl")
-    async def vocab_listening(self, interaction, lesson_number: int):
+    async def vocab_listening(self, interaction, level_lesson_number: int):
         """Start listening vocabulary exercise."""
 
         await interaction.response.send_message(
@@ -611,9 +611,26 @@ class Language(commands.Cog):
         )
 
         columns = 4
+        # validation checks + get_next_lesson
+        level_number = level_lesson_number // 100
+        lesson_number = level_lesson_number % 100
+        # TODO in get_next...
+        ws_scores_list, _ = utils.get_worksheets(
+            "Korea - Users stats",
+            (f"{user_name}-score-{level_number}",),
+            create=True,
+            size=(10_000, 4)
+        )
+        ws_scores = ws_scores_list[0]
+        ws_scores.clear()
+        ws_scores.append_rows(score_data)
+        #
+        if level_lesson_number == 1:
+            level_number, lesson_number = self.get_next_level_lesson_number()
+        elif not (0 < level_number < 5 and lesson_number < 31):
+            await interaction.followup.send("Wrong lesson number!")
+        review_session = False if level_lesson_number else True
 
-        level_number = lesson_number // 100
-        review_session = False if lesson_number % 100 else True
         ws_logs, _ = utils.get_worksheets(
             "Korea - Users stats",
             (f"{interaction.user.name}-{level_number}",),
@@ -678,15 +695,13 @@ class Language(commands.Cog):
                     json_content = json.load(file)
                     stats = defaultdict(list, json_content)
 
-        voice = get(self.bot.voice_clients, guild=interaction.guild)
+        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:  # slash commands?!
             raise commands.CommandError("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
-        voice = discord.utils.get(
-            self.bot.voice_clients, guild=interaction.guild
-        )
+        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
 
         # session starts
         attempts = 0
