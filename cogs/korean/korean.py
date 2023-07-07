@@ -14,7 +14,7 @@ import pandas as pd
 import pytz
 from discord import app_commands
 from discord.ext import commands
-from discord.utils import get
+from gspread.exceptions import WorksheetNotFound
 
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
@@ -280,14 +280,14 @@ class Language(commands.Cog):
 
         return stats
 
-    def get_lesson_vocab(self, lesson_number):
+    def get_lesson_vocab(self, level_lesson_number):
         """Gets vocabulary for a given lesson.
 
         Hundred decimals represent level of the vocabulary. The other two
         numbers range from 1 to 30 that represent a lesson.
 
         Args:
-            lesson_number (int): lesson number
+            level_lesson_number (int): lesson number
 
         Returns:
             List[Tuple[str, str, Tuple[str, str]]]: [
@@ -301,9 +301,9 @@ class Language(commands.Cog):
         for row in self.vocab_df.itertuples():
             if not row.Lesson:
                 continue
-            if row.Lesson > lesson_number:
+            if row.Lesson > level_lesson_number:
                 break
-            if row.Lesson == lesson_number:
+            if row.Lesson == level_lesson_number:
                 vocab.append((row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)))
 
         random.shuffle(vocab)
@@ -389,9 +389,6 @@ class Language(commands.Cog):
 
         return audio_texts, audio_paths
 
-    def get_next_level_lesson_number(self):
-
-
     async def get_voice(self, interaction):
         """Gets or connects to the voice channel.
         
@@ -411,6 +408,33 @@ class Language(commands.Cog):
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
 
         return voice
+
+    async def get_level_lesson(self, level_lesson_number, interaction):
+        # validation checks + get_next_lesson
+        # getting next unknown level lesson
+        if level_lesson_number == 1:
+            try:
+                ws_scores_list, _ = utils.get_worksheets(
+                    "Korea - Users stats",
+                    (f"{interaction.user.name}-score-1",),
+                )
+            except WorksheetNotFound:
+                level_lesson_number = 101
+            ws_scores = ws_scores_list[0]
+
+            for row in self.vocab_df.itertuples():
+                if not row.Lesson:
+                    continue
+            level_lesson_number = None
+
+        # validation check
+        level_number = level_lesson_number // 100
+        lesson_number = level_lesson_number % 100
+        if not (0 < level_number < 5 and lesson_number < 31):
+            await interaction.followup.send("Wrong lesson number!")
+            raise commands.CommandError("Wrong lesson number!")
+        
+        return level_number, lesson_number
 
     async def run_vocab_session_loop(self, interaction, voice, ws_log, vocab, session_number):
         """Runs session loop for vocabulary words.
@@ -610,27 +634,10 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
-        columns = 4
-        # validation checks + get_next_lesson
-        level_number = level_lesson_number // 100
-        lesson_number = level_lesson_number % 100
-        # TODO in get_next...
-        ws_scores_list, _ = utils.get_worksheets(
-            "Korea - Users stats",
-            (f"{user_name}-score-{level_number}",),
-            create=True,
-            size=(10_000, 4)
-        )
-        ws_scores = ws_scores_list[0]
-        ws_scores.clear()
-        ws_scores.append_rows(score_data)
-        #
-        if level_lesson_number == 1:
-            level_number, lesson_number = self.get_next_level_lesson_number()
-        elif not (0 < level_number < 5 and lesson_number < 31):
-            await interaction.followup.send("Wrong lesson number!")
-        review_session = False if level_lesson_number else True
+        level_number, lesson_number = await self.get_level_lesson(level_lesson_number, interaction)
 
+        # get users stats worksheet
+        columns = 4
         ws_logs, _ = utils.get_worksheets(
             "Korea - Users stats",
             (f"{interaction.user.name}-{level_number}",),
@@ -643,12 +650,12 @@ class Language(commands.Cog):
 
         session_number = self.get_session_number(ws_log, columns)
 
-        if review_session:
+        if lesson_number:
+            vocab = self.get_lesson_vocab(level_lesson_number)
+            await interaction.followup.send(f"Lesson {level_lesson_number}]")
+        else:
             vocab = self.get_review_vocab(ws_log, level_number, interaction.user.name)
             await interaction.followup.send(f"Review session: {session_number}")
-        else:
-            vocab = self.get_lesson_vocab(lesson_number)
-            await interaction.followup.send(f"Lesson {lesson_number}]")
 
         await self.run_vocab_session_loop(interaction, voice, ws_log, vocab, session_number)
 
