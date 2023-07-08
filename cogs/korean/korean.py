@@ -409,25 +409,53 @@ class Language(commands.Cog):
 
         return voice
 
-    async def get_level_lesson(self, level_lesson_number, interaction):
-        # validation checks + get_next_lesson
-        # getting next unknown level lesson
+    async def get_level_lesson(self, interaction, level_lesson_number):
+        """Gets level and lesson numbers with validation checks.
+
+        There are 3 types of level_lesson_number:
+         - One ("1") finds the next user's unknown lesson
+         - Pure hundreds ("100", ..., "400") review session of one levels words
+         - Hundreds up to 30 ("101", ..., "130") specific lesson number
+
+        Args:
+            interaction (discord.interaction.Interaction): slash cmd context
+            level_lesson_number (int): level lesson number
+
+        Raises:
+            commands.CommandError: Wrong lesson number!
+
+        Returns:
+            Tuple[int, int]: (level_number, lesson_number)
+        """
+
+        # get next level_lesson_number
         if level_lesson_number == 1:
+            df = self.vocab_df
+            user_name = interaction.user.name
+            ws_names = (
+                f"{user_name}-score-1", 
+                f"{user_name}-score-2",
+                f"{user_name}-score-3",
+                f"{user_name}-score-4"
+            )
             try:
-                ws_scores_list, _ = utils.get_worksheets(
-                    "Korea - Users stats",
-                    (f"{interaction.user.name}-score-1",),
-                )
+                _, scores_df_list = utils.get_worksheets("Korea - Users stats", ws_names)
             except WorksheetNotFound:
                 level_lesson_number = 101
-            ws_scores = ws_scores_list[0]
 
-            for row in self.vocab_df.itertuples():
-                if not row.Lesson:
-                    continue
-            level_lesson_number = None
+            for i, scores_df in enumerate(scores_df_list, 1):
+                known_set = set(scores_df[df.columns[0]])
+                level_set = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
+                unknown_set = level_set - known_set
+                if unknown_set:
+                    unknown_word_lessons = df.loc[df["Korean"].isin(unknown_set), "Lesson"]
+                    level_lesson_number = int(sorted(unknown_word_lessons)[0])
+                    break
 
-        # validation check
+            if level_lesson_number == 1:
+                level_lesson_number += 100 + len(scores_df_list) * 100
+
+        # get level and lesson number with validation check
         level_number = level_lesson_number // 100
         lesson_number = level_lesson_number % 100
         if not (0 < level_number < 5 and lesson_number < 31):
@@ -634,7 +662,7 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
-        level_number, lesson_number = await self.get_level_lesson(level_lesson_number, interaction)
+        level_number, lesson_number = await self.get_level_lesson(interaction, level_lesson_number)
 
         # get users stats worksheet
         columns = 4
