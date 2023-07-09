@@ -262,7 +262,10 @@ class Language(commands.Cog):
 
         # get hardest words
         word_scores_sorted = sorted(word_scores.items(), key=lambda x:x[1], reverse=True)
-        hardest_words = [word for word, score in word_scores_sorted[:5]]
+        hardest_words = []
+        for word, _ in word_scores_sorted[:5]:
+            if word:
+                hardest_words.append(word)
         hardest_words_string = ", ".join(hardest_words)
 
         # get mark percentages
