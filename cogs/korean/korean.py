@@ -279,7 +279,7 @@ class Language(commands.Cog):
             f"   {marks_count['❌']}%"
         )
 
-        stats = f"Hardest words: {hardest_words_string}\n{percentages_summary}"
+        stats = f"Total guesses: {total}\nHardest words: {hardest_words_string}\n{percentages_summary}"
 
         return stats
 
@@ -480,8 +480,8 @@ class Language(commands.Cog):
 
         i = 1
         max_spaces = 30  # using for discord bug with spoiled words
-        unknown_amount = len(vocab)
-        msg_str = f"{unknown_amount} words remaining."
+        unchecked = set(vocab)
+        msg_str = f"{len(unchecked)} words remaining."
         stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
         view = SessionVocabView()
         stats = []
@@ -507,7 +507,7 @@ class Language(commands.Cog):
             else:
                 msg_display = f"{kor} = ||{eng:20}" + " " * (i % max_spaces) + f"{example}||"
 
-            msg_str = f"{unknown_amount} words remaining"
+            msg_str = f"{len(unchecked)} words remaining"
             content = f"{msg_str}\n{msg_display}"
             await msg.edit(content=content, view=view)
 
@@ -526,8 +526,8 @@ class Language(commands.Cog):
             word_to_move = vocab.pop()
             if button_id == "easy":
                 vocab.insert(0, word_to_move)
-                if unknown_amount:
-                    unknown_amount -= 1
+                if word_to_move in unchecked:
+                    unchecked.remove(word_to_move)
             elif button_id == "medium":
                 vocab.insert(len(vocab) // 2, word_to_move)
             elif button_id == "hard":
