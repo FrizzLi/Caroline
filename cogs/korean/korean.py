@@ -91,24 +91,25 @@ class Language(commands.Cog):
         """
 
         session_numbers = ws_log.col_values(session_column)
-        if session_numbers:
-            last_session_number = max(map(int, session_numbers[1:]))
-            session_number = last_session_number + 1
+        if len(session_numbers) > 1:
+            session_number = int(session_numbers[-1]) + 1
         else:
             session_number = 1
 
         return session_number
 
-    def get_score_distribution(self):
+    def get_score_distribution(self, amount=10, reducer=0.8):
         """Gets score distribution for vocabulary picking.
+
+        Args:
+            amount (int, optional): amount of values. Defaults to 10.
+            reducer (float, optional): reducing coefficient. Defaults to 0.8.
 
         Returns:
             List[float]: distribution values
         """
 
-        amount = 10
         score = 1
-        reducer = 0.8
         distribution_vals = []
         for _ in range(amount):
             distribution_vals.append(score)
@@ -126,7 +127,7 @@ class Language(commands.Cog):
                 Defaults to 0.005.
 
         Returns:
-            Tuple[int, List[str]]: score_penalty, time_marks
+            Tuple[int, List[str]]: score penalty, time marks
         """
 
         # score penalty
@@ -150,7 +151,7 @@ class Language(commands.Cog):
          - time of the last guess of a certain word
 
         Args:
-            ws_log (gspread.worksheet.Worksheet): worksheet log of guesses
+            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
 
         Returns:
             Tuple[List[str, int, str, str]]: (
@@ -216,10 +217,10 @@ class Language(commands.Cog):
         """Gets randomly chosen words for session.
 
         Creates linear probability distribution and uses it to pick words
-        randomly from the most unknown ones to the most unknown ones.
+        randomly from the most unknown ones to the more known ones.
 
         Args:
-            words (List[str]): korean words that were guessed
+            words (List[str]): words that were guessed
             consider_amount (int, optional): Amount of words to consider into
                 random picking. Defaults to 150.
             pick_amount (int, optional): Amount of words to pick.
@@ -238,9 +239,10 @@ class Language(commands.Cog):
         return picked_words
 
     def get_ending_session_stats(self, stats):
-        """Gets ending session stats.
+        """Gets stats that will be displayed when the session ends.
 
-        Top 5 hardest words and overall mark first guess percentages.
+        Contains top 5 wrongly guessed words and overall percentages for each
+        mark.
 
         Args:
             stats (List[str, str, str, int]): time, word, mark, session number
@@ -286,8 +288,8 @@ class Language(commands.Cog):
     def get_lesson_vocab(self, level_lesson_number):
         """Gets vocabulary for a given lesson.
 
-        Hundred decimals represent level of the vocabulary. The other two
-        numbers range from 1 to 30 that represent a lesson.
+        Hundred decimals represent level of the vocabulary. 
+        The other two numbers range from 1 to 30 that represent a lesson.
 
         Args:
             level_lesson_number (int): lesson number
@@ -364,19 +366,19 @@ class Language(commands.Cog):
 
         return vocab
 
-    def get_listening_files(self, lesson_number):
-        """Gets text content and path to audio files.
+    def get_listening_files(self, level_lesson_number):
+        """Gets listening contents text and path to audio files.
 
         Args:
-            lesson_number (int): lesson number
+            level_lesson_number (int): lesson number
 
         Returns:
             Tuple[List[str]]: (audio text, audio paths)
         """
 
         src_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
+        level = level_lesson_number // 100
+        lesson = level_lesson_number % 100
         lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
         audio_path = Path(f"{lesson_path}/listening_audio")
         text_path = Path(f"{lesson_path}/listening_text.txt")
@@ -421,7 +423,7 @@ class Language(commands.Cog):
          - Hundreds up to 30 ("101", ..., "130") specific lesson number
 
         Args:
-            interaction (discord.interaction.Interaction): slash cmd context
+            interaction (discord.interactions.Interaction): slash cmd context
             level_lesson_number (int): level lesson number
 
         Raises:
@@ -464,25 +466,29 @@ class Language(commands.Cog):
         if not (0 < level_number < 5 and lesson_number < 31):
             await interaction.followup.send("Wrong lesson number!")
             raise commands.CommandError("Wrong lesson number!")
-        
+
         return level_number, lesson_number
 
-    async def run_vocab_session_loop(self, interaction, voice, ws_log, vocab, session_number):
+    async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, vocab):
         """Runs session loop for vocabulary words.
 
         Args:
-            interaction (discord.interactions.Interaction): _description_
-            voice (discord.voice_client.VoiceClient): _description_
-            ws_log (gspread.worksheet.Worksheet): _description_
-            vocab (List[Tuple[str, str, Tuple[str, str]]]): _description_
-            session_number (int): _description_
+            interaction (discord.interactions.Interaction): slash cmd context
+            voice (discord.voice_client.VoiceClient): voice client channel
+            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
+            session_number (int): session number
+            vocab (List[Tuple[str, str, Tuple[str, str]]]): [
+                english word,
+                korean word,
+                (english usage example, korean usage example)
+            ]
         """
 
         i = 1
         max_spaces = 30  # using for discord bug with spoiled words
         unchecked = set(vocab)
         msg_str = f"{len(unchecked)} words remaining."
-        stats_label = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
+        stat_labels = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
         view = SessionVocabView()
         stats = []
 
@@ -538,7 +544,7 @@ class Language(commands.Cog):
                 await msg.edit(content=content, view=view)
                 ws_log.append_rows(stats)
                 break
-            
+
             i += 1
             time = datetime.now(pytz.timezone(self.timezone))
             time_str = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -546,14 +552,14 @@ class Language(commands.Cog):
                 [
                     time_str,
                     word_to_move[1],
-                    stats_label[button_id],
+                    stat_labels[button_id],
                     session_number,
                 ]
             )
 
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
-        # TODO: Error when long time no use.. (listening)
-        # TODO: Pause for listening + 10s backwards
+        # TODO LISTEN: Error when long time no use.. (listening)
+        # TODO LISTEN: Pause for listening + 10s backwards
         i = 0
         count_n = len(audio_paths)
 
@@ -579,7 +585,7 @@ class Language(commands.Cog):
             try:
                 await msg.edit(content=content, view=view)
             except discord.errors.HTTPException as err:
-                # TODO: err resolve, cannot delete or edit msg, workarounded (TODO.MD stuff)
+                # TODO LISTEN: err resolve, cannot delete or edit msg, workarounded (TODO.MD stuff)
                 print(err)
                 msg = await interaction.followup.send(content)
                 await msg.edit(content=content, view=view)
@@ -594,7 +600,7 @@ class Language(commands.Cog):
             # button interactions
             button_id = interaction.data["custom_id"]
             if button_id == "pauseplay":
-                # TODO: this doesn't work
+                # TODO LISTEN: this doesn't work
                 # need to add player, pause NN crucially atm
                 button_id2 = None
                 while button_id2 != "pauseplay":
@@ -688,7 +694,7 @@ class Language(commands.Cog):
             vocab = self.get_review_vocab(ws_log, level_number, interaction.user.name)
             await interaction.followup.send(f"Review session: {session_number}")
 
-        await self.run_vocab_session_loop(interaction, voice, ws_log, vocab, session_number)
+        await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, vocab)
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -702,7 +708,7 @@ class Language(commands.Cog):
     async def vocab_writing(self, interaction):
         """Start vocab exercise."""
 
-        # TODO: opt, remake (TODO.MD stuff)
+        # TODO WRITING: opt, remake (TODO.MD stuff)
         src_dir = Path(__file__).parents[0]
         level_path = Path(f"{src_dir}/data/{self.level}.json")
         await interaction.response.send_message('Exit by "EXIT"')
@@ -842,7 +848,7 @@ class Language(commands.Cog):
             "...Setting up listening session..."
         )
 
-        # TODO: NOT Have to be connected to turn on reading lesson
+        # TODO READING: NOT Have to be connected to turn on reading lesson
         # load audio files
         src_dir = Path(__file__).parents[0]
         level = lesson_number // 100
@@ -876,5 +882,3 @@ async def setup(bot):
     await bot.add_cog(
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
-
-# TODO: Look at TODOs, prioritize and implement
