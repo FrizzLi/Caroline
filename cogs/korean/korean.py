@@ -1,3 +1,28 @@
+"""This module serves to help studying korean with vocabulary, listening and
+writing sessions.
+
+Function hierarchy:
+vocab_listening
+    _get_vocab_table
+    _get_vocab_audio_paths
+    async get_voice
+    async get_level_lesson
+    get_session_number
+    get_lesson_vocab
+    get_review_vocab
+        get_score
+            get_score_distribution
+            get_time_penalty_data
+        get_random_words
+    async run_vocab_session_loop
+        get_ending_session_stats
+
+listening
+    async get_voice
+    get_listening_files
+    async run_listening_session_loop
+"""
+
 import json
 import os
 import pickle
@@ -79,6 +104,81 @@ class Language(commands.Cog):
 
         return audio_paths_labelled
 
+    async def get_voice(self, interaction):
+        """Gets or connects to the voice channel.
+        
+        Gets the voice channel in which the bot is currently in. If it is not
+        connected, it connects to channel in which the user is currently in.
+
+        Returns:
+            discord.voice_client.VoiceClient: voice channel
+        """
+
+        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
+        user_voice = interaction.user.voice
+        if not voice and not user_voice:
+            await interaction.followup.send("No bot nor you is connected.")
+        elif not voice:
+            await user_voice.channel.connect()
+        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
+
+        return voice
+
+    async def get_level_lesson(self, interaction, level_lesson_number):
+        """Gets level and lesson numbers with validation checks.
+
+        There are 3 types of level_lesson_number:
+         - One ("1") finds the next user's unknown lesson
+         - Pure hundreds ("100", ..., "400") review session of one levels words
+         - Hundreds up to 30 ("101", ..., "130") specific lesson number
+
+        Args:
+            interaction (discord.interactions.Interaction): slash cmd context
+            level_lesson_number (int): level lesson number
+
+        Raises:
+            commands.CommandError: Wrong lesson number!
+
+        Returns:
+            Tuple[int, int]: (level_number, lesson_number)
+        """
+
+        # get next level_lesson_number
+        if level_lesson_number == 1:
+            df = self.vocab_df
+            user_name = interaction.user.name
+            ws_names = (
+                f"{user_name}-score-1", 
+                f"{user_name}-score-2",
+                f"{user_name}-score-3",
+                f"{user_name}-score-4"
+            )
+            try:
+                _, scores_df_list = utils.get_worksheets("Korea - Users stats", ws_names)
+            except WorksheetNotFound:
+                level_lesson_number = 101
+
+            for i, scores_df in enumerate(scores_df_list, 1):
+                known_set = set(scores_df[df.columns[0]])
+                level_set = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
+                unknown_set = level_set - known_set
+                if unknown_set:
+                    unknown_word_lessons = df.loc[df["Korean"].isin(unknown_set), "Lesson"]
+                    level_lesson_number = int(sorted(unknown_word_lessons)[0])
+                    break
+
+            if level_lesson_number == 1:
+                level_lesson_number += 100 + len(scores_df_list) * 100
+
+        # get level and lesson number with validation check
+        level_number = level_lesson_number // 100
+        lesson_number = level_lesson_number % 100
+        if not (0 < level_number < 5 and lesson_number < 31):
+            await interaction.followup.send("Wrong lesson number!")
+            raise commands.CommandError("Wrong lesson number!")
+
+        return level_number, lesson_number
+
     def get_session_number(self, ws_log, session_column):
         """Gets ordinal number of lesson or review of session. Begins with 1.
 
@@ -97,193 +197,6 @@ class Language(commands.Cog):
             session_number = 1
 
         return session_number
-
-    def get_score_distribution(self, amount=10, reducer=0.8):
-        """Gets score distribution for vocabulary picking.
-
-        Args:
-            amount (int, optional): amount of values. Defaults to 10.
-            reducer (float, optional): reducing coefficient. Defaults to 0.8.
-
-        Returns:
-            List[float]: distribution values
-        """
-
-        score = 1
-        distribution_vals = []
-        for _ in range(amount):
-            distribution_vals.append(score)
-            score = round(score * reducer, 3)
-
-        return distribution_vals
-
-    def get_time_penalty_data(self, row_date, now_date, coefficient = 0.005):
-        """Gets time score penalty and emoji visualization for worksheet.
-
-        Args:
-            row_date (str): row's (word's) guess date
-            now_date (datetime.datetime): current date
-            coefficient (float, optional): Penalty coefficient.
-                Defaults to 0.005.
-
-        Returns:
-            Tuple[int, List[str]]: score penalty, time marks
-        """
-
-        # score penalty
-        row_date = datetime.strptime(row_date, "%Y-%m-%d %H:%M:%S")
-        days_diff = (now_date - row_date).days
-        score_penalty = days_diff * coefficient
-
-        # emoji visualizations
-        months, days = divmod(days_diff, 30)
-        weeks, days = divmod(days, 7)
-        time_marks = ["🌙"] * months + ["📅"] * weeks + ["🌞"] * days
-
-        return score_penalty, time_marks
-
-    def get_score(self, ws_log):
-        """Gets score of words and visualizing list of rows for worksheet.
-
-        Scoring system takes into account: 
-         - first guesses in a session, by each latter session, the importance
-           of score is being reduced by distribution values
-         - time of the last guess of a certain word
-
-        Args:
-            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
-
-        Returns:
-            Tuple[List[str, int, str, str]]: (
-                word, score, (knowledge_marks, time_marks)
-            )
-        """
-
-        score_table = {"✅": 1, "⏭️": 2, "❌": 4}
-        distr_vals = self.get_score_distribution()
-        considering_amount = len(distr_vals)
-        table_rows = []
-
-        df = pd.DataFrame(ws_log.get_all_records())
-        df = df.sort_values(["Word", "Date"])
-        previous_row = df.iloc[0]
-        knowledge_marks = [previous_row.Knowledge]
-        knowledge_scores = [score_table[previous_row.Knowledge]]
-        df.drop(0)
-
-        for row in df.itertuples():
-            if previous_row.Word != row.Word:
-                knowledge_scores.reverse()
-                knowledge_scores = knowledge_scores[:considering_amount]
-                knowledge_scores_mean = fmean(knowledge_scores)
-                extension_amount = abs(len(knowledge_scores) - len(distr_vals))
-                knowledge_scores += [knowledge_scores_mean] * extension_amount
-                distr_score = np.array(knowledge_scores) * np.array(distr_vals)
-
-                time_score_penalty, time_marks = self.get_time_penalty_data(
-                    previous_row.Date,
-                    datetime.now()
-                )
-
-                knowledge_marks.reverse()
-                knowledge_marks = knowledge_marks[:considering_amount]
-
-                final_score = sum(distr_score) + time_score_penalty
-
-                table_rows.append(
-                    [
-                        previous_row.Word,
-                        final_score,
-                        "".join(knowledge_marks),
-                        "".join(time_marks)
-                    ]
-                )
-
-                knowledge_marks = [row.Knowledge]
-                knowledge_scores = [score_table[row.Knowledge]]
-
-            # take into account only the first guesses in one session
-            elif previous_row.Session_number != row.Session_number:
-                knowledge_marks.append(row.Knowledge)
-                knowledge_scores.append(score_table[row.Knowledge])
-
-            previous_row = row
-
-        table_rows = sorted(table_rows, key=lambda x:x[1], reverse=True)
-
-        return table_rows
-
-    def get_random_words(self, words, consider_amount=150, pick_amount=50):
-        """Gets randomly chosen words for session.
-
-        Creates linear probability distribution and uses it to pick words
-        randomly from the most unknown ones to the more known ones.
-
-        Args:
-            words (List[str]): words that were guessed
-            consider_amount (int, optional): Amount of words to consider into
-                random picking. Defaults to 150.
-            pick_amount (int, optional): Amount of words to pick.
-                Defaults to 50.
-
-        Returns:
-            numpy.ndarray: (list of) picked words
-        """
-
-        consider_amount = len(words) if len(words) < consider_amount else consider_amount
-        size = consider_amount if consider_amount < pick_amount else pick_amount
-        weights = np.linspace(1, 0, consider_amount)
-        weights /= weights.sum()
-        picked_words = np.random.choice(words[:consider_amount], p=weights, size=size, replace=False)
-
-        return picked_words
-
-    def get_ending_session_stats(self, stats):
-        """Gets stats that will be displayed when the session ends.
-
-        Contains top 5 wrongly guessed words and overall percentages for each
-        mark.
-
-        Args:
-            stats (List[str, str, str, int]): time, word, mark, session number
-
-        Returns:
-            str: stats
-        """
-
-        # get marks count and scoring per word
-        marks_count = {"✅": 0, "⏭️": 0, "❌": 0}
-        scoring = {"✅": 0, "⏭️": 1, "❌": 2}
-        word_scores = {}
-        for _, word, mark, _ in stats:
-            if word not in word_scores:
-                word_scores[word] = scoring[mark]
-                marks_count[mark] += 1
-            else:
-                word_scores[word] += scoring[mark]
-
-        # get hardest words
-        word_scores_sorted = sorted(word_scores.items(), key=lambda x:x[1], reverse=True)
-        hardest_words = []
-        for word, _ in word_scores_sorted[:5]:
-            if word:
-                hardest_words.append(word)
-        hardest_words_string = ", ".join(hardest_words)
-
-        # get mark percentages
-        total = sum(marks_count.values())
-        for mark in marks_count:
-            marks_count[mark] = round(marks_count[mark] * 100 / total, 1)
-
-        percentages_summary = (
-            f"{marks_count['✅']}%,"
-            f"   {marks_count['⏭️']}%,"
-            f"   {marks_count['❌']}%"
-        )
-
-        stats = f"Total guesses: {total}\nHardest words: {hardest_words_string}\n{percentages_summary}"
-
-        return stats
 
     def get_lesson_vocab(self, level_lesson_number):
         """Gets vocabulary for a given lesson.
@@ -366,108 +279,145 @@ class Language(commands.Cog):
 
         return vocab
 
-    def get_listening_files(self, level_lesson_number):
-        """Gets listening contents text and path to audio files.
+    def get_score(self, ws_log):
+        """Gets score of words and visualizing list of rows for worksheet.
+
+        Scoring system takes into account: 
+         - first guesses in a session, by each latter session, the importance
+           of score is being reduced by distribution values
+         - time of the last guess of a certain word
 
         Args:
-            level_lesson_number (int): lesson number
+            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
 
         Returns:
-            Tuple[List[str]]: (audio text, audio paths)
-        """
-
-        src_dir = Path(__file__).parents[0]
-        level = level_lesson_number // 100
-        lesson = level_lesson_number % 100
-        lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_path = Path(f"{lesson_path}/listening_audio")
-        text_path = Path(f"{lesson_path}/listening_text.txt")
-        try:
-            with open(text_path, encoding="utf-8") as f:
-                text = f.read()
-            audio_texts = text.split("\n\n")
-            audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
-            # sorted it because linux system reverses it
-        except Exception as err:
-            print(err)
-            exit()
-
-        return audio_texts, audio_paths
-
-    async def get_voice(self, interaction):
-        """Gets or connects to the voice channel.
-        
-        Gets the voice channel in which the bot is currently in. If it is not
-        connected, it connects to channel in which the user is currently in.
-
-        Returns:
-            discord.voice_client.VoiceClient: voice channel
-        """
-
-        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
-        user_voice = interaction.user.voice
-        if not voice and not user_voice:
-            await interaction.followup.send("No bot nor you is connected.")
-        elif not voice:
-            await user_voice.channel.connect()
-        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
-
-        return voice
-
-    async def get_level_lesson(self, interaction, level_lesson_number):
-        """Gets level and lesson numbers with validation checks.
-
-        There are 3 types of level_lesson_number:
-         - One ("1") finds the next user's unknown lesson
-         - Pure hundreds ("100", ..., "400") review session of one levels words
-         - Hundreds up to 30 ("101", ..., "130") specific lesson number
-
-        Args:
-            interaction (discord.interactions.Interaction): slash cmd context
-            level_lesson_number (int): level lesson number
-
-        Raises:
-            commands.CommandError: Wrong lesson number!
-
-        Returns:
-            Tuple[int, int]: (level_number, lesson_number)
-        """
-
-        # get next level_lesson_number
-        if level_lesson_number == 1:
-            df = self.vocab_df
-            user_name = interaction.user.name
-            ws_names = (
-                f"{user_name}-score-1", 
-                f"{user_name}-score-2",
-                f"{user_name}-score-3",
-                f"{user_name}-score-4"
+            Tuple[List[str, int, str, str]]: (
+                word, score, (knowledge_marks, time_marks)
             )
-            try:
-                _, scores_df_list = utils.get_worksheets("Korea - Users stats", ws_names)
-            except WorksheetNotFound:
-                level_lesson_number = 101
+        """
 
-            for i, scores_df in enumerate(scores_df_list, 1):
-                known_set = set(scores_df[df.columns[0]])
-                level_set = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
-                unknown_set = level_set - known_set
-                if unknown_set:
-                    unknown_word_lessons = df.loc[df["Korean"].isin(unknown_set), "Lesson"]
-                    level_lesson_number = int(sorted(unknown_word_lessons)[0])
-                    break
+        score_table = {"✅": 1, "⏭️": 2, "❌": 4}
+        distr_vals = self.get_score_distribution()
+        considering_amount = len(distr_vals)
+        table_rows = []
 
-            if level_lesson_number == 1:
-                level_lesson_number += 100 + len(scores_df_list) * 100
+        df = pd.DataFrame(ws_log.get_all_records())
+        df = df.sort_values(["Word", "Date"])
+        previous_row = df.iloc[0]
+        knowledge_marks = [previous_row.Knowledge]
+        knowledge_scores = [score_table[previous_row.Knowledge]]
+        df.drop(0)
 
-        # get level and lesson number with validation check
-        level_number = level_lesson_number // 100
-        lesson_number = level_lesson_number % 100
-        if not (0 < level_number < 5 and lesson_number < 31):
-            await interaction.followup.send("Wrong lesson number!")
-            raise commands.CommandError("Wrong lesson number!")
+        for row in df.itertuples():
+            if previous_row.Word != row.Word:
+                knowledge_scores.reverse()
+                knowledge_scores = knowledge_scores[:considering_amount]
+                knowledge_scores_mean = fmean(knowledge_scores)
+                extension_amount = abs(len(knowledge_scores) - len(distr_vals))
+                knowledge_scores += [knowledge_scores_mean] * extension_amount
+                distr_score = np.array(knowledge_scores) * np.array(distr_vals)
 
-        return level_number, lesson_number
+                time_score_penalty, time_marks = self.get_time_penalty_data(
+                    previous_row.Date,
+                    datetime.now()
+                )
+
+                knowledge_marks.reverse()
+                knowledge_marks = knowledge_marks[:considering_amount]
+
+                final_score = sum(distr_score) + time_score_penalty
+
+                table_rows.append(
+                    [
+                        previous_row.Word,
+                        final_score,
+                        "".join(knowledge_marks),
+                        "".join(time_marks)
+                    ]
+                )
+
+                knowledge_marks = [row.Knowledge]
+                knowledge_scores = [score_table[row.Knowledge]]
+
+            # take into account only the first guesses in one session
+            elif previous_row.Session_number != row.Session_number:
+                knowledge_marks.append(row.Knowledge)
+                knowledge_scores.append(score_table[row.Knowledge])
+
+            previous_row = row
+
+        table_rows = sorted(table_rows, key=lambda x:x[1], reverse=True)
+
+        return table_rows
+
+    def get_score_distribution(self, amount=10, reducer=0.8):
+        """Gets score distribution for vocabulary picking.
+
+        Args:
+            amount (int, optional): amount of values. Defaults to 10.
+            reducer (float, optional): reducing coefficient. Defaults to 0.8.
+
+        Returns:
+            List[float]: distribution values
+        """
+
+        score = 1
+        distribution_vals = []
+        for _ in range(amount):
+            distribution_vals.append(score)
+            score = round(score * reducer, 3)
+
+        return distribution_vals
+
+    def get_time_penalty_data(self, row_date, now_date, coefficient = 0.005):
+        """Gets time score penalty and emoji visualization for worksheet.
+
+        Args:
+            row_date (str): row's (word's) guess date
+            now_date (datetime.datetime): current date
+            coefficient (float, optional): Penalty coefficient.
+                Defaults to 0.005.
+
+        Returns:
+            Tuple[int, List[str]]: score penalty, time marks
+        """
+
+        # score penalty
+        row_date = datetime.strptime(row_date, "%Y-%m-%d %H:%M:%S")
+        days_diff = (now_date - row_date).days
+        score_penalty = days_diff * coefficient
+
+        # emoji visualizations
+        months, days = divmod(days_diff, 30)
+        weeks, days = divmod(days, 7)
+        time_marks = ["🌙"] * months + ["📅"] * weeks + ["🌞"] * days
+
+        return score_penalty, time_marks
+
+    def get_random_words(self, words, consider_amount=150, pick_amount=50):
+        """Gets randomly chosen words for session.
+
+        Creates linear probability distribution and uses it to pick words
+        randomly from the most unknown ones to the more known ones.
+
+        Args:
+            words (List[str]): words that were guessed
+            consider_amount (int, optional): Amount of words to consider into
+                random picking. Defaults to 150.
+            pick_amount (int, optional): Amount of words to pick.
+                Defaults to 50.
+
+        Returns:
+            numpy.ndarray: (list of) picked words
+        """
+
+        consider_amount = len(words) if len(words) < consider_amount else consider_amount
+        size = consider_amount if consider_amount < pick_amount else pick_amount
+        weights = np.linspace(1, 0, consider_amount)
+        weights /= weights.sum()
+        picked_words = np.random.choice(words[:consider_amount], p=weights, size=size, replace=False)
+
+        return picked_words
 
     async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, vocab):
         """Runs session loop for vocabulary words.
@@ -556,6 +506,81 @@ class Language(commands.Cog):
                     session_number,
                 ]
             )
+
+    def get_ending_session_stats(self, stats):
+        """Gets stats that will be displayed when the session ends.
+
+        Contains top 5 wrongly guessed words and overall percentages for each
+        mark.
+
+        Args:
+            stats (List[str, str, str, int]): time, word, mark, session number
+
+        Returns:
+            str: stats
+        """
+
+        # get marks count and scoring per word
+        marks_count = {"✅": 0, "⏭️": 0, "❌": 0}
+        scoring = {"✅": 0, "⏭️": 1, "❌": 2}
+        word_scores = {}
+        for _, word, mark, _ in stats:
+            if word not in word_scores:
+                word_scores[word] = scoring[mark]
+                marks_count[mark] += 1
+            else:
+                word_scores[word] += scoring[mark]
+
+        # get hardest words
+        word_scores_sorted = sorted(word_scores.items(), key=lambda x:x[1], reverse=True)
+        hardest_words = []
+        for word, _ in word_scores_sorted[:5]:
+            if word:
+                hardest_words.append(word)
+        hardest_words_string = ", ".join(hardest_words)
+
+        # get mark percentages
+        total = sum(marks_count.values())
+        for mark in marks_count:
+            marks_count[mark] = round(marks_count[mark] * 100 / total, 1)
+
+        percentages_summary = (
+            f"{marks_count['✅']}%,"
+            f"   {marks_count['⏭️']}%,"
+            f"   {marks_count['❌']}%"
+        )
+
+        stats = f"Total guesses: {total}\nHardest words: {hardest_words_string}\n{percentages_summary}"
+
+        return stats
+
+    def get_listening_files(self, level_lesson_number):
+        """Gets listening contents text and path to audio files.
+
+        Args:
+            level_lesson_number (int): lesson number
+
+        Returns:
+            Tuple[List[str]]: (audio text, audio paths)
+        """
+
+        src_dir = Path(__file__).parents[0]
+        level = level_lesson_number // 100
+        lesson = level_lesson_number % 100
+        lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        audio_path = Path(f"{lesson_path}/listening_audio")
+        text_path = Path(f"{lesson_path}/listening_text.txt")
+        try:
+            with open(text_path, encoding="utf-8") as f:
+                text = f.read()
+            audio_texts = text.split("\n\n")
+            audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
+            # sorted it because linux system reverses it
+        except Exception as err:
+            print(err)
+            exit()
+
+        return audio_texts, audio_paths
 
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
         # TODO LISTEN: Error when long time no use.. (listening)
