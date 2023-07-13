@@ -6,7 +6,7 @@ vocab_listening
     _get_vocab_table
     _get_vocab_audio_paths
     async get_voice
-    async get_level_lesson
+    get_level_lesson
     get_session_number
     get_lesson_vocab
     get_review_vocab
@@ -19,8 +19,13 @@ vocab_listening
 
 listening
     async get_voice
-    get_listening_files
+    async get_listening_files
+        get_level_lesson
     async run_listening_session_loop
+
+reading
+
+vocab_writing
 """
 
 import json
@@ -124,20 +129,19 @@ class Language(commands.Cog):
 
         return voice
 
-    async def get_level_lesson(self, interaction, level_lesson_number):
+    def get_level_lesson(self, interaction, level_lesson_number):
         """Gets level and lesson numbers with validation checks.
 
+        If the given level_lesson_number is invalid, it return zeros
         There are 3 types of level_lesson_number:
          - One ("1") finds the next user's unknown lesson
          - Pure hundreds ("100", ..., "400") review session of one levels words
          - Hundreds up to 30 ("101", ..., "130") specific lesson number
+        
 
         Args:
             interaction (discord.interactions.Interaction): slash cmd context
             level_lesson_number (int): level lesson number
-
-        Raises:
-            commands.CommandError: Wrong lesson number!
 
         Returns:
             Tuple[int, int]: (level_number, lesson_number)
@@ -174,8 +178,7 @@ class Language(commands.Cog):
         level_number = level_lesson_number // 100
         lesson_number = level_lesson_number % 100
         if not (0 < level_number < 5 and lesson_number < 31):
-            await interaction.followup.send("Wrong lesson number!")
-            raise commands.CommandError("Wrong lesson number!")
+            return 0, 0
 
         return level_number, lesson_number
 
@@ -554,31 +557,33 @@ class Language(commands.Cog):
 
         return stats
 
-    def get_listening_files(self, level_lesson_number):
+    async def get_listening_files(self, interaction, level_lesson_number):
         """Gets listening contents text and path to audio files.
 
         Args:
+            interaction (discord.interactions.Interaction): slash cmd context
             level_lesson_number (int): lesson number
 
         Returns:
-            Tuple[List[str]]: (audio text, audio paths)
+            Tuple[List[str], List[str]]: (audio text, audio paths)
         """
 
         src_dir = Path(__file__).parents[0]
-        level = level_lesson_number // 100
-        lesson = level_lesson_number % 100
+        level, lesson = self.get_level_lesson(interaction, level_lesson_number)
         lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
         audio_path = Path(f"{lesson_path}/listening_audio")
         text_path = Path(f"{lesson_path}/listening_text.txt")
+
         try:
             with open(text_path, encoding="utf-8") as f:
                 text = f.read()
             audio_texts = text.split("\n\n")
             audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
             # sorted it because linux system reverses it
-        except Exception as err:
-            print(err)
-            exit()
+        except Exception as exc:
+            msg = f"{level_lesson_number} lesson's files were not found!"
+            await interaction.followup.send(msg)
+            raise commands.CommandError(msg) from exc
 
         return audio_texts, audio_paths
 
@@ -696,7 +701,11 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
-        level_number, lesson_number = await self.get_level_lesson(interaction, level_lesson_number)
+        level_number, lesson_number = self.get_level_lesson(interaction, level_lesson_number)
+        if not level_number and not lesson_number:
+            msg = "Wrong lesson number!"
+            await interaction.followup.send(msg)
+            assert False, msg
 
         # get users stats worksheet
         columns = 4
@@ -728,6 +737,63 @@ class Language(commands.Cog):
             ),
             status=discord.Status.online,
         )
+
+    @app_commands.command(name="l")
+    async def listening(self, interaction, level_lesson_number: int):
+        """Start listening exercise."""
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+        voice = await self.get_voice(interaction)
+        await self.bot.change_presence(
+            activity=discord.Game(name="Listening")
+        )
+
+        audio_texts, audio_paths = await self.get_listening_files(interaction, level_lesson_number)
+
+        await interaction.followup.send(f"Lesson {level_lesson_number}]")
+
+        await self.run_listening_session_loop(interaction, voice, audio_texts, audio_paths)
+
+        await self.bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name="/play",
+            ),
+            status=discord.Status.online,
+        )
+
+    @app_commands.command(name="r")
+    async def reading(self, interaction, lesson_number: int):
+        """Start listening exercise."""
+
+        await interaction.response.send_message(
+            "...Setting up listening session..."
+        )
+
+        # TODO READING: NOT Have to be connected to turn on reading lesson
+        # load audio files
+        src_dir = Path(__file__).parents[0]
+        level = lesson_number // 100
+        lesson = lesson_number % 100
+        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        audio_paths = glob(f"{data_path}/*")
+        name_to_path_dict = {}
+
+        for audio_path in audio_paths:
+            word = Path(audio_path).stem
+            name_to_path_dict[word] = audio_path
+
+        if "reading_text" in name_to_path_dict:
+            with open(name_to_path_dict["reading_text"], encoding="utf-8") as f:
+                reading_text = f.read()
+        else:
+            return
+
+        await interaction.followup.send(f"[Lesson {lesson_number}]")
+        # view = SessionListenView()
+        await interaction.followup.send(f"```{reading_text}```")
 
     @app_commands.command(name="vw")
     async def vocab_writing(self, interaction):
@@ -767,7 +833,9 @@ class Language(commands.Cog):
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:  # slash commands?!
-            raise commands.CommandError("No bot nor you is connected.")
+            msg = "No bot nor you is connected."
+            await interaction.followup.send(msg)
+            raise commands.CommandError(msg)
         elif not voice:
             await user_voice.channel.connect()
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
@@ -839,62 +907,6 @@ class Language(commands.Cog):
 
         await interaction.followup.send(f"Exiting {self.lesson} exercise..")
 
-    @app_commands.command(name="l")
-    async def listening(self, interaction, lesson_number: int):
-        """Start listening exercise."""
-
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-        voice = await self.get_voice(interaction)
-        await self.bot.change_presence(
-            activity=discord.Game(name="Listening")
-        )
-
-        audio_texts, audio_paths = self.get_listening_files(lesson_number)
-
-        await interaction.followup.send(f"Lesson {lesson_number}]")
-
-        await self.run_listening_session_loop(interaction, voice, audio_texts, audio_paths)
-
-        await self.bot.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.listening,
-                name="/play",
-            ),
-            status=discord.Status.online,
-        )
-
-    @app_commands.command(name="r")
-    async def reading(self, interaction, lesson_number: int):
-        """Start listening exercise."""
-
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
-
-        # TODO READING: NOT Have to be connected to turn on reading lesson
-        # load audio files
-        src_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
-        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_paths = glob(f"{data_path}/*")
-        name_to_path_dict = {}
-
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            name_to_path_dict[word] = audio_path
-
-        if "reading_text" in name_to_path_dict:
-            with open(name_to_path_dict["reading_text"], encoding="utf-8") as f:
-                reading_text = f.read()
-        else:
-            return
-
-        await interaction.followup.send(f"[Lesson {lesson_number}]")
-        # view = SessionListenView()
-        await interaction.followup.send(f"```{reading_text}```")
 
 async def setup(bot):
     """Loads up this module (cog) into the bot that was initialized
