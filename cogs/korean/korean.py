@@ -10,7 +10,7 @@ vocab_listening
     get_session_number
     get_lesson_vocab
     get_review_vocab
-        get_score
+        get_users_level_score
             get_score_distribution
             get_time_penalty_data
         get_random_words
@@ -163,7 +163,7 @@ class Language(commands.Cog):
                 level_lesson_number = 101
 
             for i, scores_df in enumerate(scores_df_list, 1):
-                known_set = set(scores_df[df.columns[0]])
+                known_set = set(scores_df[scores_df.columns[0]])
                 level_set = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
                 unknown_set = level_set - known_set
                 if unknown_set:
@@ -247,7 +247,7 @@ class Language(commands.Cog):
             ]
         """
 
-        score_data = self.get_score(ws_log)
+        score_data = self.get_users_level_score(ws_log)
 
         # create worksheet of scores
         ws_scores_list, _ = utils.get_worksheets(
@@ -258,9 +258,10 @@ class Language(commands.Cog):
         )
         ws_scores = ws_scores_list[0]
         ws_scores.clear()
+        score_data.insert(0, ["Word", "Score", "Knowledge", "Last_time"])
         ws_scores.append_rows(score_data)
 
-        guessed_words = [row[0] for row in score_data]
+        guessed_words = [row[0] for row in score_data[1:]]
         picked_words = self.get_random_words(guessed_words)
 
         # getting english data from worksheet
@@ -282,7 +283,7 @@ class Language(commands.Cog):
 
         return vocab
 
-    def get_score(self, ws_log):
+    def get_users_level_score(self, ws_log):
         """Gets score of words and visualizing list of rows for worksheet.
 
         Scoring system takes into account: 
@@ -310,6 +311,7 @@ class Language(commands.Cog):
         knowledge_marks = [previous_row.Knowledge]
         knowledge_scores = [score_table[previous_row.Knowledge]]
         df.drop(0)
+        df = pd.concat([df, pd.DataFrame({"Word": ["NAN"], "Knowledge": ["❌"]})])  # for the last word
 
         for row in df.itertuples():
             if previous_row.Word != row.Word:
@@ -522,6 +524,9 @@ class Language(commands.Cog):
         Returns:
             str: stats
         """
+
+        if not stats:
+            return "There weren't any words guessed."
 
         # get marks count and scoring per word
         marks_count = {"✅": 0, "⏭️": 0, "❌": 0}
