@@ -8,8 +8,12 @@ import time
 
 from pathlib import Path
 
+# TODO: Vocab audio download:
+# Fix/Improve audio downloading (current script is published in memo bookmark)
+# Word by word mp3, to make sound for two words / or remove two words?
 
-def dl_vocab(level, lesson, text_only):
+
+def dl_vocab():
     def search_words(koreanWords):
         url = ('https://ko.dict.naver.com/api3/koko/search?' + urllib.parse.urlencode({'query': koreanWords}) + '&range=word&page=1')
         response = urllib.request.urlopen(url)
@@ -65,91 +69,100 @@ def dl_vocab(level, lesson, text_only):
     def get_lesson_names(paths):
         return paths.split("\\")[-1][:-4]
 
-    src_dir = Path(__file__).parents[0]
-    level_dir = Path(f"{src_dir}/data/{level}")
-    if lesson:
-        path = f"{level_dir}\\{lesson}.txt"
-    else:
-        path = f"{level_dir}\\lesson_*.txt"
 
-    lesson_paths = glob(path, recursive=True)
-    name_paths = list(map(get_lesson_names, lesson_paths))
 
-    # create lesson directories
-    for lesson_name in name_paths:
-        full_path = f"{level_dir}\\{lesson_name}"
-        Path(full_path).mkdir(parents=True, exist_ok=True)
+    # level, lesson, text_only
 
-    # create vocabulary json file from text files.
-    vocabd = {}
-    try:
-        for path in lesson_paths:
-            lesson_key = path.split("\\")[-1][:-4]
-            vocabd[lesson_key] = {}
-            with open(path, encoding="utf-8") as f:
-                for line in f:
-                    if line == "\n":
-                        continue
-                    val, key = line.split(" - ")
-                    key = key.strip()
-                    # here add code if we want to guess korean form
-                    vocabd[lesson_key][key] = val
-    except Exception as e:
-        print(f"{e}: {line}")
+    # level = "level_1"
+    # lesson = "lesson_1"
 
-    if vocabd:
-        if os.path.exists(f"{level_dir}.json"):
-            with open(f"{level_dir}.json", encoding="utf-8") as f:
-                old_vocabd = json.load(f)
-                vocabd = {**old_vocabd, **vocabd}
-        with open(f"{level_dir}.json", "w", encoding="utf-8") as f:
-            json.dump(vocabd, f, indent=4, sort_keys=True, ensure_ascii=False)
+    # src_dir = Path(__file__).parents[0]
+    # level_dir = Path(f"{src_dir}/data/{level}")
+    # if lesson:
+    #     path = f"{level_dir}\\{lesson}.txt"
+    # else:
+    #     path = f"{level_dir}\\lesson_*.txt"
 
-    if text_only:
-        return
+    # lesson_paths = glob(path, recursive=True)
+    # name_paths = list(map(get_lesson_names, lesson_paths))
 
-    # download audio part
-    for lesson_name in name_paths:
-        print(f"Creating audio for {lesson_name}...")
+    # # create lesson directories
+    # for lesson_name in name_paths:
+    #     full_path = f"{level_dir}\\{lesson_name}"
+    #     Path(full_path).mkdir(parents=True, exist_ok=True)
 
-        korean_lesson_words = []
-        for word in vocabd[lesson_name]:
-            dict_val = vocabd[lesson_name][word]
-            korean_lesson_words.append(dict_val)
+    # # create vocabulary json file from text files.
+    # vocabd = {}
+    # try:
+    #     for path in lesson_paths:
+    #         lesson_key = path.split("\\")[-1][:-4]
+    #         vocabd[lesson_key] = {}
+    #         with open(path, encoding="utf-8") as f:
+    #             for line in f:
+    #                 if line == "\n":
+    #                     continue
+    #                 val, key = line.split(" - ")
+    #                 key = key.strip()
+    #                 # here add code if we want to guess korean form
+    #                 vocabd[lesson_key][key] = val
+    # except Exception as e:
+    #     print(f"{e}: {line}")
 
+    # if vocabd:
+    #     if os.path.exists(f"{level_dir}.json"):
+    #         with open(f"{level_dir}.json", encoding="utf-8") as f:
+    #             old_vocabd = json.load(f)
+    #             vocabd = {**old_vocabd, **vocabd}
+    #     with open(f"{level_dir}.json", "w", encoding="utf-8") as f:
+    #         json.dump(vocabd, f, indent=4, sort_keys=True, ensure_ascii=False)
+
+    # if text_only:
+    #     return
+
+    # # download audio part
+    # for lesson_name in name_paths:
+    #     print(f"Creating audio for {lesson_name}...")
+
+    #     korean_lesson_words = []
+    #     for word in vocabd[lesson_name]:
+    #         dict_val = vocabd[lesson_name][word]
+    #         korean_lesson_words.append(dict_val)
+    korean_lesson_words = ["한국어", "친하다", "사과"]
+    unfoundWords = []
+    unchangedWordList = []
+    timesDownloaded = []
+    mp3Links = []
+    wordInputs = unchangedWordList = korean_lesson_words
+    timesDownloaded = [0] * len(unchangedWordList)
+    parse_words(wordInputs)
+
+    for z in range(0, len(timesDownloaded)):
+        if timesDownloaded[z] == 0:
+            unfoundWords.append(unchangedWordList[z])
+
+    if unfoundWords:
+        print(",".join(str(x) for x in unfoundWords) + " could not be found.")
+        print("Rerunning individual searches for unfound words.")
+        print(unfoundWords)
+        oldUnfoundWords = unfoundWords
         unfoundWords = []
-        unchangedWordList = []
-        timesDownloaded = []
-        mp3Links = []
-        wordInputs = unchangedWordList = korean_lesson_words
-        timesDownloaded = [0] * len(unchangedWordList)
-        parse_words(wordInputs)
+        for x in range(0, len(oldUnfoundWords)):
+            print("Searching: " + str(x + 1) + "/" + str(len(oldUnfoundWords)))
+            search_words(oldUnfoundWords[x])
 
         for z in range(0, len(timesDownloaded)):
             if timesDownloaded[z] == 0:
                 unfoundWords.append(unchangedWordList[z])
 
+        # saving unfounded words into text files
         if unfoundWords:
-            print(",".join(str(x) for x in unfoundWords) + " could not be found.")
-            print("Rerunning individual searches for unfound words.")
-            print(unfoundWords)
-            oldUnfoundWords = unfoundWords
-            unfoundWords = []
-            for x in range(0, len(oldUnfoundWords)):
-                print("Searching: " + str(x + 1) + "/" + str(len(oldUnfoundWords)))
-                search_words(oldUnfoundWords[x])
-
-            for z in range(0, len(timesDownloaded)):
-                if timesDownloaded[z] == 0:
-                    unfoundWords.append(unchangedWordList[z])
-
-            # saving unfounded words into text files
-            if unfoundWords:
-                unfoundWords_str = ", ".join(str(x) for x in unfoundWords)
-                # n = lesson_name[-1] if lesson_name[-2] == "_" else lesson_name[-2:]
-                # path = f"{level_dir}\\{n}unfoundWords.txt"
-                # with open(path, "w", encoding="utf-8") as f:
-                #     f.write(unfoundWords_str)
-                print(unfoundWords_str + " could not be found.")
+            unfoundWords_str = ", ".join(str(x) for x in unfoundWords)
+            # n = lesson_name[-1] if lesson_name[-2] == "_" else lesson_name[-2:]
+            # path = f"{level_dir}\\{n}unfoundWords.txt"
+            # with open(path, "w", encoding="utf-8") as f:
+            #     f.write(unfoundWords_str)
+            print(unfoundWords_str + " could not be found.")
 
 # https://www.reddit.com/r/Korean/comments/a0wkq7/tip_mass_download_audio_files_from_naver/
+
+dl_vocab()
