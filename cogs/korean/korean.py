@@ -1,5 +1,4 @@
-"""This module serves to help studying korean with vocabulary, listening and
-writing sessions.
+"""This module serves to help studying korean vocabulary and listening.
 
 Function hierarchy:
 vocab_listening
@@ -168,7 +167,7 @@ class Language(commands.Cog):
                 if unknown_set:
                     unknown_word_lessons = df.loc[df["Korean"].isin(unknown_set), "Lesson"]
                     level_lesson_number = int(sorted(unknown_word_lessons)[0])
-                    print(f"Unknown word lessons in level {i}: {unknown_word_lessons}")
+                    print(f"Unknown words in lesson {level_lesson_number}: {unknown_set}")
                     break
 
             if level_lesson_number == 1:
@@ -250,6 +249,7 @@ class Language(commands.Cog):
         score_data = self.get_users_level_score(ws_log)
 
         # create worksheet of scores
+        # TODO: do this after review/lesson!, not before review!
         ws_scores_list, _ = utils.get_worksheets(
             "Korea - Users stats",
             (f"{user_name}-score-{level_number}",),
@@ -707,6 +707,7 @@ class Language(commands.Cog):
         )
 
         level_number, lesson_number = self.get_level_lesson(interaction, level_lesson_number)
+        level_lesson_number = level_number * 100 + lesson_number
         if not level_number and not lesson_number:
             msg = "Wrong lesson number!"
             await interaction.followup.send(msg)
@@ -728,7 +729,7 @@ class Language(commands.Cog):
 
         if lesson_number:
             vocab = self.get_lesson_vocab(level_lesson_number)
-            await interaction.followup.send(f"Lesson {level_lesson_number}]")
+            await interaction.followup.send(f"Lesson {level_lesson_number}")
         else:
             vocab = self.get_review_vocab(ws_log, level_number, interaction.user.name)
             await interaction.followup.send(f"Review session: {session_number}")
