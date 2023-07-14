@@ -132,12 +132,11 @@ class Language(commands.Cog):
     def get_level_lesson(self, interaction, level_lesson_number):
         """Gets level and lesson numbers with validation checks.
 
-        If the given level_lesson_number is invalid, it return zeros
+        If the given level_lesson_number is invalid, it returns zeros.
         There are 3 types of level_lesson_number:
-         - One ("1") finds the next user's unknown lesson
+         - One ("1") finds the next user's unknown lesson (also prints words)
          - Pure hundreds ("100", ..., "400") review session of one levels words
          - Hundreds up to 30 ("101", ..., "130") specific lesson number
-        
 
         Args:
             interaction (discord.interactions.Interaction): slash cmd context
@@ -169,6 +168,7 @@ class Language(commands.Cog):
                 if unknown_set:
                     unknown_word_lessons = df.loc[df["Korean"].isin(unknown_set), "Lesson"]
                     level_lesson_number = int(sorted(unknown_word_lessons)[0])
+                    print(f"Unknown word lessons in level {i}: {unknown_word_lessons}")
                     break
 
             if level_lesson_number == 1:
