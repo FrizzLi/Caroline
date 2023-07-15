@@ -9,12 +9,12 @@ vocab_listening
     get_session_number
     get_lesson_vocab
     get_review_vocab
-        get_users_level_score
+        create_users_level_score_ws
             get_score_distribution
             get_time_penalty_data
         get_random_words
     async run_vocab_session_loop
-        get_ending_session_stats
+        create_ending_session_stats
 
 listening
     async get_voice
@@ -69,10 +69,10 @@ class Language(commands.Cog):
             pandas.core.frame.DataFrame: worksheet dataframe table
         """
 
-        _, ws_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
+        _, vocab_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
 
         # ignore rows with no Lesson cell filled (duplicates)
-        vocab_df = ws_dfs[0]
+        vocab_df = vocab_dfs[0]
         vocab_df["Lesson"].replace("", np.nan, inplace=True)
         vocab_df.dropna(subset=["Lesson"], inplace=True)
 
@@ -156,11 +156,11 @@ class Language(commands.Cog):
                 f"{user_name}-score-4"
             )
             try:
-                _, scores_df_list = utils.get_worksheets("Korea - Users stats", ws_names)
+                _, scores_dfs = utils.get_worksheets("Korea - Users stats", ws_names)
             except WorksheetNotFound:
                 level_lesson_number = 101
 
-            for i, scores_df in enumerate(scores_df_list, 1):
+            for i, scores_df in enumerate(scores_dfs, 1):
                 known_set = set(scores_df[scores_df.columns[0]])
                 level_set = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
                 unknown_set = level_set - known_set
@@ -171,7 +171,7 @@ class Language(commands.Cog):
                     break
 
             if level_lesson_number == 1:
-                level_lesson_number += 100 + len(scores_df_list) * 100
+                level_lesson_number += 100 + len(scores_dfs) * 100
 
         # get level and lesson number with validation check
         level_number = level_lesson_number // 100
@@ -230,11 +230,10 @@ class Language(commands.Cog):
 
         return vocab
 
-    def get_review_vocab(self, ws_log, level_number, user_name):
+    def get_review_vocab(self, level_number, user_name):
         """Gets vocabulary review of all guessed words for a given level.
 
         Args:
-            ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             level_number (int): level number
             user_name (str): user name (used for worksheet name)
 
@@ -246,22 +245,14 @@ class Language(commands.Cog):
             ]
         """
 
-        score_data = self.get_users_level_score(ws_log)
-
-        # create worksheet of scores
-        # TODO: do this after review/lesson!, not before review!
-        ws_scores_list, _ = utils.get_worksheets(
+        # get guessed words
+        _, scores_dfs = utils.get_worksheets(
             "Korea - Users stats",
             (f"{user_name}-score-{level_number}",),
-            create=True,
-            size=(10_000, 4)
         )
-        ws_scores = ws_scores_list[0]
-        ws_scores.clear()
-        score_data.insert(0, ["Word", "Score", "Knowledge", "Last_time"])
-        ws_scores.append_rows(score_data)
+        scores_df = scores_dfs[0]
+        guessed_words = tuple(scores_df[scores_df.columns[0]])
 
-        guessed_words = [row[0] for row in score_data[1:]]
         picked_words = self.get_random_words(guessed_words)
 
         # getting english data from worksheet
@@ -283,7 +274,7 @@ class Language(commands.Cog):
 
         return vocab
 
-    def get_users_level_score(self, ws_log):
+    def create_users_level_score_ws(self, ws_log, user_name, level_number):
         """Gets score of words and visualizing list of rows for worksheet.
 
         Scoring system takes into account: 
@@ -293,6 +284,8 @@ class Language(commands.Cog):
 
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
+            user_name (str): user name (used for worksheet name)
+            level_number (int): level number
 
         Returns:
             Tuple[List[str, int, str, str]]: (
@@ -353,7 +346,17 @@ class Language(commands.Cog):
 
         table_rows = sorted(table_rows, key=lambda x:x[1], reverse=True)
 
-        return table_rows
+        # create worksheet of scores
+        ws_scores_list, _ = utils.get_worksheets(
+            "Korea - Users stats",
+            (f"{user_name}-score-{level_number}",),
+            create=True,
+            size=(10_000, 4)
+        )
+        ws_scores = ws_scores_list[0]
+        ws_scores.clear()
+        table_rows.insert(0, ["Word", "Score", "Knowledge", "Last_time"])
+        ws_scores.append_rows(table_rows)
 
     def get_score_distribution(self, amount=10, reducer=0.8):
         """Gets score distribution for vocabulary picking.
@@ -406,7 +409,7 @@ class Language(commands.Cog):
         randomly from the most unknown ones to the more known ones.
 
         Args:
-            words (List[str]): words that were guessed
+            words (List[str]): words that were guessed in a level
             consider_amount (int, optional): Amount of words to consider into
                 random picking. Defaults to 150.
             pick_amount (int, optional): Amount of words to pick.
@@ -473,6 +476,7 @@ class Language(commands.Cog):
             await msg.edit(content=content, view=view)
 
             # wait for interaction
+            i += 1
             interaction = await self.bot.wait_for(
                 "interaction",
                 check=lambda inter: "custom_id" in inter.data.keys()
@@ -494,13 +498,12 @@ class Language(commands.Cog):
             elif button_id == "hard":
                 vocab.insert(- len(vocab) // 5, word_to_move)
             elif button_id == "end":
-                stats_str = self.get_ending_session_stats(stats)
+                stats_str = self.create_ending_session_stats(stats)
                 content = f"{msg_str}\n{stats_str}"
                 await msg.edit(content=content, view=view)
                 ws_log.append_rows(stats)
                 break
 
-            i += 1
             time = datetime.now(pytz.timezone(self.timezone))
             time_str = time.strftime("%Y-%m-%d %H:%M:%S")
             stats.append(
@@ -512,7 +515,7 @@ class Language(commands.Cog):
                 ]
             )
 
-    def get_ending_session_stats(self, stats):
+    def create_ending_session_stats(self, stats):
         """Gets stats that will be displayed when the session ends.
 
         Contains top 5 wrongly guessed words and overall percentages for each
@@ -558,7 +561,7 @@ class Language(commands.Cog):
             f"   {marks_count['❌']}%"
         )
 
-        stats = f"Total guesses: {total}\nHardest words: {hardest_words_string}\n{percentages_summary}"
+        stats = f"Total guesses: {len(stats)}\nHardest words: {hardest_words_string}\n{percentages_summary}"
 
         return stats
 
@@ -574,8 +577,8 @@ class Language(commands.Cog):
         """
 
         src_dir = Path(__file__).parents[0]
-        level, lesson = self.get_level_lesson(interaction, level_lesson_number)
-        lesson_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
+        level_number, lesson_number = self.get_level_lesson(interaction, level_lesson_number)
+        lesson_path = f"{src_dir}/data/level_{level_number}/lesson_{lesson_number}"
         audio_path = Path(f"{lesson_path}/listening_audio")
         text_path = Path(f"{lesson_path}/listening_text.txt")
 
@@ -731,10 +734,12 @@ class Language(commands.Cog):
             vocab = self.get_lesson_vocab(level_lesson_number)
             await interaction.followup.send(f"Lesson {level_lesson_number}")
         else:
-            vocab = self.get_review_vocab(ws_log, level_number, interaction.user.name)
+            vocab = self.get_review_vocab(level_number, interaction.user.name)
             await interaction.followup.send(f"Review session: {session_number}")
 
         await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, vocab)
+
+        self.create_users_level_score_ws(ws_log, interaction.user.name, level_number)
 
         await self.bot.change_presence(
             activity=discord.Activity(
