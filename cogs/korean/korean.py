@@ -145,7 +145,7 @@ class Language(commands.Cog):
             Tuple[int, int]: (level_number, lesson_number)
         """
 
-        # get next level_lesson_number
+        # get next not fully known level_lesson_number
         if level_lesson_number == 1:
             df = self.vocab_df
             user_name = interaction.user.name
@@ -158,18 +158,24 @@ class Language(commands.Cog):
             try:
                 _, scores_dfs = utils.get_worksheets("Korea - Users stats", ws_names)
             except WorksheetNotFound:
+                # going for first level
                 level_lesson_number = 101
+                scores_dfs = []
 
+            # going for next levels' lessons
             for i, scores_df in enumerate(scores_dfs, 1):
-                known_set = set(scores_df[scores_df.columns[0]])
-                level_set = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
-                unknown_set = level_set - known_set
-                if unknown_set:
-                    unknown_word_lessons = df.loc[df["Korean"].isin(unknown_set), "Lesson"]
-                    level_lesson_number = int(sorted(unknown_word_lessons)[0])
-                    print(f"Unknown words in lesson {level_lesson_number}: {unknown_set}")
+                known_words = set(scores_df[scores_df.columns[0]])
+                level_words = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
+                unknown_words = level_words - known_words
+                if unknown_words:
+                    df = df.loc[df["Korean"].isin(unknown_words), ["Lesson", "Korean"]]
+                    level_lesson_number = df.Lesson.min()
+                    rows = df[df.Lesson == level_lesson_number].values
+                    unknown_words = ", ".join([row[1] for row in rows])
+                    print(f"Unknown words in lesson {level_lesson_number}: {unknown_words}")
                     break
 
+            # going for next level
             if level_lesson_number == 1:
                 level_lesson_number += 100 + len(scores_dfs) * 100
 
