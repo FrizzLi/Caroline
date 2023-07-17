@@ -44,6 +44,7 @@ import pytz
 from discord import app_commands
 from discord.ext import commands
 from gspread.exceptions import WorksheetNotFound
+from scipy.stats import halfnorm
 
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
@@ -169,7 +170,7 @@ class Language(commands.Cog):
                 unknown_words = level_words - known_words
                 if unknown_words:
                     df = df.loc[df["Korean"].isin(unknown_words), ["Lesson", "Korean"]]
-                    level_lesson_number = df.Lesson.min()
+                    level_lesson_number = int(df.Lesson.min())
                     rows = df[df.Lesson == level_lesson_number].values
                     unknown_words = ", ".join([row[1] for row in rows])
                     print(f"Unknown words in lesson {level_lesson_number}: {unknown_words}")
@@ -364,7 +365,7 @@ class Language(commands.Cog):
         table_rows.insert(0, ["Word", "Score", "Knowledge", "Last_time"])
         ws_scores.append_rows(table_rows)
 
-    def get_score_distribution(self, amount=10, reducer=0.8):
+    def get_score_distribution(self, amount=5, reducer=0.8):
         """Gets score distribution for vocabulary picking.
 
         Args:
@@ -383,7 +384,7 @@ class Language(commands.Cog):
 
         return distribution_vals
 
-    def get_time_penalty_data(self, row_date, now_date, coefficient = 0.005):
+    def get_time_penalty_data(self, row_date, now_date, coefficient = 0.01):
         """Gets time score penalty and emoji visualization for worksheet.
 
         Args:
@@ -426,10 +427,16 @@ class Language(commands.Cog):
         """
 
         consider_amount = len(words) if len(words) < consider_amount else consider_amount
-        size = consider_amount if consider_amount < pick_amount else pick_amount
-        weights = np.linspace(1, 0, consider_amount)
-        weights /= weights.sum()
-        picked_words = np.random.choice(words[:consider_amount], p=weights, size=size, replace=False)
+        pick_amount = consider_amount if consider_amount < pick_amount else pick_amount
+
+        mean = 0
+        std = 0.5
+        half_norm_distribution = np.abs(np.random.normal(loc=mean, scale=std, size=consider_amount))
+        half_norm_distribution.sort()
+        half_norm_distribution = half_norm_distribution[::-1]
+        weights = half_norm_distribution / half_norm_distribution.sum()
+
+        picked_words = np.random.choice(words[:consider_amount], p=weights, size=pick_amount, replace=False)
 
         return picked_words
 
