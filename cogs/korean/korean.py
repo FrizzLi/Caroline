@@ -31,7 +31,6 @@ import json
 import os
 import pickle
 import random
-from collections import defaultdict
 from datetime import datetime
 from glob import glob
 from pathlib import Path
@@ -598,7 +597,7 @@ class Language(commands.Cog):
             audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
             # sorted it because linux system reverses it
         except Exception as exc:
-            msg = f"{level_lesson_number} lesson's files were not found!"
+            msg = f"{level_lesson_number} lesson's audio files were not found!"
             await interaction.followup.send(msg)
             raise commands.CommandError(msg) from exc
 
@@ -759,7 +758,7 @@ class Language(commands.Cog):
 
         audio_texts, audio_paths = await self.get_listening_files(interaction, level_lesson_number)
 
-        await interaction.followup.send(f"Lesson {level_lesson_number}]")
+        await interaction.followup.send(f"Lesson {level_lesson_number}")
 
         await self.run_listening_session_loop(interaction, voice, audio_texts, audio_paths)
 
@@ -772,35 +771,29 @@ class Language(commands.Cog):
         )
 
     @app_commands.command(name="r")
-    async def reading(self, interaction, lesson_number: int):
-        """Start listening exercise."""
+    async def reading(self, interaction, level_lesson_number: int):
+        """Start reading exercise."""
 
         await interaction.response.send_message(
             "...Setting up listening session..."
         )
 
-        # TODO READING: NOT Have to be connected to turn on reading lesson
-        # load audio files
+        level_number, lesson_number = self.get_level_lesson(interaction, level_lesson_number)
+
+        # load text file
         src_dir = Path(__file__).parents[0]
-        level = lesson_number // 100
-        lesson = lesson_number % 100
-        data_path = f"{src_dir}/data/level_{level}/lesson_{lesson}"
-        audio_paths = glob(f"{data_path}/*")
-        name_to_path_dict = {}
-
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            name_to_path_dict[word] = audio_path
-
-        if "reading_text" in name_to_path_dict:
-            with open(name_to_path_dict["reading_text"], encoding="utf-8") as f:
+        lesson_path = f"{src_dir}/data/level_{level_number}/lesson_{lesson_number}"
+        text_path = Path(f"{lesson_path}/reading_text.txt")
+        try:
+            with open(text_path, encoding="utf-8") as f:
                 reading_text = f.read()
-        else:
-            return
+        except Exception as exc:
+            msg = f"{level_lesson_number} lesson's text files were not found!"
+            await interaction.followup.send(msg)
+            raise commands.CommandError(msg) from exc
 
-        await interaction.followup.send(f"[Lesson {lesson_number}]")
-        # view = SessionListenView()
-        await interaction.followup.send(f"```{reading_text}```")
+        await interaction.followup.send(f"Lesson {level_lesson_number}")
+        await interaction.channel.send(f"```{reading_text}```")
 
 
 async def setup(bot):
