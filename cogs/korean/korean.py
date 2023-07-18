@@ -44,7 +44,6 @@ import pytz
 from discord import app_commands
 from discord.ext import commands
 from gspread.exceptions import WorksheetNotFound
-from scipy.stats import halfnorm
 
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
@@ -59,9 +58,6 @@ class Language(commands.Cog):
             "C:/ffmpeg/ffmpeg.exe" if os.name == "nt" else "/usr/bin/ffmpeg"
         )
         self.timezone = ""
-
-    personalization = True  # NotImplemented
-    show_eng_word = 1  # works for writing exercise
 
     def _get_vocab_table(self):
         """Gets the whole vocabulary table dataframed from google spreadsheet.
@@ -644,7 +640,7 @@ class Language(commands.Cog):
             button_id = interaction.data["custom_id"]
             # TODO ADD another button for 10s backwards
             if button_id == "pauseplay":
-                # TODO LISTEN: this doesn't work
+                # TODO FIX: this doesn't work
                 # need to add player, pause NN crucially atm
                 button_id2 = None
                 while button_id2 != "pauseplay":
@@ -805,118 +801,6 @@ class Language(commands.Cog):
         await interaction.followup.send(f"[Lesson {lesson_number}]")
         # view = SessionListenView()
         await interaction.followup.send(f"```{reading_text}```")
-
-    @app_commands.command(name="vw")
-    async def vocab_writing(self, interaction):
-        """Start vocab exercise."""
-
-        # TODO WRITING: opt, remake (TODO.MD stuff)
-        src_dir = Path(__file__).parents[0]
-        level_path = Path(f"{src_dir}/data/{self.level}.json")
-        await interaction.response.send_message('Exit by "EXIT"')
-        await self.bot.change_presence(
-            activity=discord.Game(name="Vocab typing")
-        )
-
-        with open(level_path, encoding="utf-8") as file:
-
-            # set vocab
-            level_vocab = json.load(file)
-            lesson_vocab = list(level_vocab[self.lesson].items())
-            random.shuffle(lesson_vocab)
-            if not self.show_eng_word:
-                lesson_vocab = [word[::-1] for word in lesson_vocab]
-
-        # personalization
-        if self.personalization:
-            stats = defaultdict(list)
-
-            name = interaction.user.name
-            file_name = f"{name}-{self.level}-{self.lesson}.json"
-            users_dir = Path(f"{src_dir}/data/users")
-            Path(users_dir).mkdir(parents=True, exist_ok=True)
-            file_score_path = Path(f"{users_dir}/{file_name}")
-            if os.path.exists(file_score_path):
-                with open(file_score_path, encoding="utf-8") as file:
-                    json_content = json.load(file)
-                    stats = defaultdict(list, json_content)
-
-        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
-        user_voice = interaction.user.voice
-        if not voice and not user_voice:  # slash commands?!
-            msg = "No bot nor you is connected."
-            await interaction.followup.send(msg)
-            raise commands.CommandError(msg)
-        elif not voice:
-            await user_voice.channel.connect()
-        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
-
-        # session starts
-        attempts = 0
-        corrects = 0
-        incorrect_words = set()
-        while True:
-            guessing, answer = lesson_vocab[0]
-            await interaction.followup.send(guessing)
-            response = await self.bot.wait_for(
-                "message",
-                check=lambda msg: msg.author == interaction.user
-                and msg.channel == interaction.channel,
-            )
-            if response.content == "EXIT":
-                break
-
-            if response.content.lower() == answer.lower():
-                await interaction.followup.send("Correct!")
-                stats[answer].append(True)
-                corrects += 1
-                lesson_vocab.append(lesson_vocab.pop(0))
-            else:
-                await interaction.followup.send(f"Incorrect! It is {answer}")
-                stats[answer].append(False)
-                incorrect_words.add(guessing)
-                new_index = len(lesson_vocab) // 5
-                lesson_vocab.insert(new_index, lesson_vocab.pop(0))
-            attempts += 1
-
-            # play sound
-            if answer in self.vocab_audio_paths:
-                voice.play(
-                    discord.FFmpegPCMAudio(
-                        self.vocab_audio_paths[answer],
-                        executable=self.ffmpeg_path,
-                    )
-                )
-
-            if not all(stats[answer][-1:-3:-1]):
-                continue_ = True
-
-            # check if last two answers are correct in stats, if not, continue
-            continue_ = False
-            for word in stats.values():
-                if not all(word[-1:-3:-1]):
-                    continue_ = True
-
-            if not continue_ and len(lesson_vocab) <= attempts:
-                await interaction.followup.send(
-                    f"You answered all words correctly twice in a row! \
-                    (or once if you only guessed once). \
-                    Incorrect words were: {incorrect_words}"
-                )
-                break
-
-        # print and save stats
-        accuracy = corrects / attempts * 100
-        msg = f"{corrects} answers were right out of {attempts}! \
-            ({accuracy:.2f}%)"
-        await interaction.followup.send(msg)
-
-        if self.personalization:
-            with open(file_score_path, "w", encoding="utf-8") as file:
-                json.dump(stats, file, sort_keys=True, ensure_ascii=False)
-            await interaction.followup.send("Score has been saved.")
-
-        await interaction.followup.send(f"Exiting {self.lesson} exercise..")
 
 
 async def setup(bot):
