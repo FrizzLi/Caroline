@@ -18,7 +18,7 @@ vocab_listening
 
 listening
     async get_voice
-    async get_listening_files
+    get_listening_files
         get_level_lesson
     async run_listening_session_loop
 
@@ -573,7 +573,7 @@ class Language(commands.Cog):
 
         return stats
 
-    async def get_listening_files(self, interaction, level_lesson_number):
+    def get_listening_files(self, interaction, level_lesson_number):
         """Gets listening contents text and path to audio files.
 
         Args:
@@ -596,10 +596,8 @@ class Language(commands.Cog):
             audio_texts = text.split("\n\n")
             audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
             # sorted it because linux system reverses it
-        except Exception as exc:
-            msg = f"{level_lesson_number} lesson's audio files were not found!"
-            await interaction.followup.send(msg)
-            raise commands.CommandError(msg) from exc
+        except Exception:
+            return [], []
 
         return audio_texts, audio_paths
 
@@ -637,9 +635,9 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
-            # TODO ADD another button for 10s backwards
+            # TODO ADD backward button (10s)
             if button_id == "pauseplay":
-                # TODO FIX: this doesn't work
+                # TODO FIX: pauseplay button
                 # need to add player, pause NN crucially atm
                 button_id2 = None
                 while button_id2 != "pauseplay":
@@ -707,7 +705,7 @@ class Language(commands.Cog):
         level_number, lesson_number = self.get_level_lesson(interaction, level_lesson_number)
         level_lesson_number = level_number * 100 + lesson_number
         if not level_number and not lesson_number:
-            msg = "Wrong lesson number!"
+            msg = "Wrong level lesson number!"
             await interaction.followup.send(msg)
             assert False, msg
 
@@ -756,7 +754,11 @@ class Language(commands.Cog):
             activity=discord.Game(name="Listening")
         )
 
-        audio_texts, audio_paths = await self.get_listening_files(interaction, level_lesson_number)
+        audio_texts, audio_paths = self.get_listening_files(interaction, level_lesson_number)
+        if not audio_texts and not audio_paths:
+            msg = f"{level_lesson_number} lesson's audio files were not found!"
+            await interaction.followup.send(msg)
+            assert False, msg
 
         await interaction.followup.send(f"Lesson {level_lesson_number}")
 
