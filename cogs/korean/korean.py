@@ -609,15 +609,13 @@ class Language(commands.Cog):
         return audio_texts, audio_paths
 
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
-        # TODO LISTEN: Error when long time no use.. (listening)
-        # TODO LISTEN: Pause for listening + 10s backwards
+
         i = 0
         count_n = len(audio_paths)
-
-        counter_text = f"{i+1}. lesson out of {count_n}."
-        msg = await interaction.followup.send(counter_text)
         view = SessionListenView()
+        msg_str = f"{i+1}. track out of {count_n}."
 
+        msg = await interaction.channel.send(msg_str)
         while True:
             if i >= count_n:
                 i = 0
@@ -631,15 +629,9 @@ class Language(commands.Cog):
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            content = f"```{counter_text}\n{audio_texts[i]}```"
-
-            try:
-                await msg.edit(content=content, view=view)
-            except discord.errors.HTTPException as err:
-                # TODO LISTEN: err resolve, cannot delete or edit msg, workarounded (TODO.MD stuff)
-                print(err)
-                msg = await interaction.followup.send(content)
-                await msg.edit(content=content, view=view)
+            msg_str = f"{i+1}. lesson out of {count_n}"
+            content = f"```{msg_str}\n{audio_texts[i]}```"
+            await msg.edit(content=content, view=view)
 
             # wait for interaction
             interaction = await self.bot.wait_for(
@@ -650,6 +642,7 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
+            # TODO ADD another button for 10s backwards
             if button_id == "pauseplay":
                 # TODO LISTEN: this doesn't work
                 # need to add player, pause NN crucially atm
@@ -664,17 +657,11 @@ class Language(commands.Cog):
             elif button_id == "next":
                 i += 1
             elif button_id == "repeat":
-                pass
+                continue
             elif button_id == "end":
-                content = f"```{counter_text}\nEnding listening session.```"
-                try:
-                    await msg.edit(content=content, view=view)
-                except discord.errors.HTTPException as err:
-                    print(str(err).encode("utf-8"))
-                    break
+                content = f"```{msg_str}\nEnding listening session.```"
+                await msg.edit(content=content, view=view)
                 break
-
-            counter_text = f"{i+1}. lesson out of {count_n}"
 
     # Button commands
     async def pause(self, interaction):
