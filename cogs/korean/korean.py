@@ -45,6 +45,7 @@ import pytz
 from discord import app_commands
 from discord.ext import commands
 from gspread.exceptions import WorksheetNotFound
+from gtts import gTTS
 
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
@@ -119,7 +120,9 @@ class Language(commands.Cog):
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:
-            await interaction.followup.send("No bot nor you is connected.")
+            msg = "No bot nor you is connected."
+            await interaction.followup.send(msg)
+            assert False, msg
         elif not voice:
             await user_voice.channel.connect()
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
@@ -460,6 +463,9 @@ class Language(commands.Cog):
         view = SessionVocabView()
         stats = []
 
+        src_dir = Path(__file__).parents[0]
+        vocab_path = f"{src_dir}/data/vocab_sources/lessonlol/vocabulary_audio/"
+
         msg = await interaction.channel.send(msg_str)
         while True:
             eng, kor, ex = vocab[-1]
@@ -469,19 +475,22 @@ class Language(commands.Cog):
             # handling word with audio
             spoil_spacing = " " * (i % max_spaces)
             eng_part = f"{eng:20}{spoil_spacing}{example}"
-            if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {eng_part}||"
-                try:
-                    voice.play(
-                        discord.FFmpegPCMAudio(
-                            self.vocab_audio_paths[kor_no_num],
-                            executable=self.ffmpeg_path,
-                        )
+            if kor_no_num not in self.vocab_audio_paths:
+                path = f'{vocab_path}/{kor_no_num}.mp3'
+                tts = gTTS(kor_no_num, lang='ko')
+                tts.save(path)
+                self.vocab_audio_paths[kor_no_num] = path
+
+            msg_display = f"||{kor} = {eng_part}||"
+            try:
+                voice.play(
+                    discord.FFmpegPCMAudio(
+                        self.vocab_audio_paths[kor_no_num],
+                        executable=self.ffmpeg_path,
                     )
-                except Exception as err:
-                    print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
-            else:
-                msg_display = f"{kor} = ||{eng_part}||"
+                )
+            except Exception as err:
+                print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
             msg_str = f"{len(unchecked)} words remaining"
             content = f"{msg_str}\n{msg_display}"
@@ -565,7 +574,7 @@ class Language(commands.Cog):
         # get mark percentages
         total = sum(marks_count.values())
         for mark in marks_count:
-            marks_count[mark] = round(marks_count[mark] * 100 / total, 1)
+            marks_count[mark] = round(marks_count[mark] * 100 / total)
 
         percentages_summary = (
             f"{marks_count['✅']}%,"
