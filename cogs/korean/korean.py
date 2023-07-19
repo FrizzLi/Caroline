@@ -732,7 +732,7 @@ class Language(commands.Cog):
             await interaction.followup.send(f"Lesson {level_lesson_number}")
         else:
             vocab = self.get_review_vocab(level_number, interaction.user.name)
-            await interaction.followup.send(f"Review session: {session_number}")
+            await interaction.followup.send(f"Level {level_number} Review session: {session_number}")
 
         await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, vocab)
 
