@@ -467,8 +467,10 @@ class Language(commands.Cog):
             kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
             # handling word with audio
+            spoil_spacing = " " * (i % max_spaces)
+            eng_part = f"{eng:20}{spoil_spacing}{example}"
             if kor_no_num in self.vocab_audio_paths:
-                msg_display = f"||{kor} = {eng:20}" + " " * (i % max_spaces) + f"{example}||"
+                msg_display = f"||{kor} = {eng_part}||"
                 try:
                     voice.play(
                         discord.FFmpegPCMAudio(
@@ -479,7 +481,7 @@ class Language(commands.Cog):
                 except Exception as err:
                     print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
             else:
-                msg_display = f"{kor} = ||{eng:20}" + " " * (i % max_spaces) + f"{example}||"
+                msg_display = f"{kor} = ||{eng_part}||"
 
             msg_str = f"{len(unchecked)} words remaining"
             content = f"{msg_str}\n{msg_display}"
