@@ -21,10 +21,12 @@ listening
     get_listening_files
         get_level_lesson
     async run_listening_session_loop
+    ?async pause
+    ?async resume
+    async on_ready
 
 reading
 
-vocab_writing
 """
 
 import json
@@ -635,6 +637,7 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
+            # TODO polish whole module + apply pylint
             # TODO ADD backward button (10s)
             if button_id == "pauseplay":
                 # TODO FIX: pauseplay button
