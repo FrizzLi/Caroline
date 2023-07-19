@@ -555,8 +555,8 @@ class Language(commands.Cog):
         # get hardest words
         word_scores_sorted = sorted(word_scores.items(), key=lambda x:x[1], reverse=True)
         hardest_words = []
-        for word, _ in word_scores_sorted[:5]:
-            if word:
+        for word, score in word_scores_sorted[:5]:
+            if score:
                 hardest_words.append(word)
         hardest_words_string = ", ".join(hardest_words)
 
@@ -637,6 +637,7 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
+            # TODO ChatGPT Tokens first use!
             # TODO polish whole module + apply pylint
             # TODO ADD backward button (10s)
             if button_id == "pauseplay":
