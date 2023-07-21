@@ -120,9 +120,7 @@ class Language(commands.Cog):
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
         user_voice = interaction.user.voice
         if not voice and not user_voice:
-            msg = "No bot nor you is connected."
-            await interaction.followup.send(msg)
-            assert False, msg
+            await interaction.followup.send("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
@@ -440,7 +438,7 @@ class Language(commands.Cog):
 
         return picked_words
 
-    async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, vocab):
+    async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, lesson_number, vocab):
         """Runs session loop for vocabulary words.
 
         Args:
@@ -448,11 +446,13 @@ class Language(commands.Cog):
             voice (discord.voice_client.VoiceClient): voice client channel
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             session_number (int): session number
+            lesson_number (int): indicates whether session is lesson or review
             vocab (List[Tuple[str, str, Tuple[str, str]]]): [
                 english word,
                 korean word,
                 (english usage example, korean usage example)
             ]
+            
         """
 
         i = 1
@@ -465,6 +465,58 @@ class Language(commands.Cog):
 
         src_dir = Path(__file__).parents[0]
         vocab_path = f"{src_dir}/data/vocab_sources/lessonlol/vocabulary_audio/"
+
+
+        # colour = "lolko"
+        # button for additional info
+        # not seen word
+        # url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        # url_word = f"{url}편하다"
+        # embed = discord.Embed(
+        #     author = "author",
+        #     color = discord.Color.green(),
+        #     description = "description",
+        #     fields = "fields",
+        #     footer = "footer",
+        #     image = "image",
+        #     provider = "provider",
+        #     thumbnail = "thumbnail",
+        #     timestamp = "timestamp",
+        #     title = "title",
+        #     type = "type",
+        #     url = "url",
+        #     video = "video",
+        # )
+        # await interaction.response.send_message(embed=embed)
+
+        """
+        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        word = "편하다"
+        await interaction.response.send_message(
+            "...Setting up vocab session..."
+        )
+        # Example_EN	Example_KR
+        # Example_EN2	Example_KR2
+        # Explanation	Syllables	
+        embed = discord.Embed(
+            title = word + " - book, apple, to be good",
+            description = "**Explanation. Lorem ipsum.Explanation. Lorem ipsum.Explanation. Lorem ipsum**",
+            url = url + word,
+        )
+        # color = discord.Color.green(),
+
+        file = discord.File("감사하다e.png", filename="image.png")
+        embed.set_thumbnail(url="attachment://image.png")
+        embed.set_footer(text="Rank 342")
+        embed.add_field(name="", value="강강 ||강강강강강|| 강강강강 강강강강 (inline ~~with~~ Field  with Field 1)", inline=False)
+        embed.add_field(name="", value="**강**It is `inline` with Field 1\n**한** (It _is_ inline __with__ Field) 2\nasdads")
+        # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
+        # embed.set_image(url="attachment://image.png")
+        # embed.set_footer(text="Nonee", icon_url="attachment://image.png")
+        # > {text} >
+        # await interaction.response.send_message(file=file, embed=embed)
+        await interaction.channel.send(file=file, embed=embed)
+        """
 
         msg = await interaction.channel.send(msg_str)
         while True:
@@ -508,6 +560,9 @@ class Language(commands.Cog):
             button_id = interaction.data["custom_id"]
             if button_id == "repeat":
                 continue
+            elif button_id == "info":
+                # vocab./
+                continue
 
             word_to_move = vocab.pop()
             if button_id == "easy":
@@ -535,6 +590,34 @@ class Language(commands.Cog):
                     session_number,
                 ]
             )
+    @app_commands.command(name="lel")
+    async def embedmsg(self, interaction):
+        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        word = "편하다"
+        await interaction.response.send_message(
+            "...Setting up vocab session..."
+        )
+        # Example_EN	Example_KR
+        # Example_EN2	Example_KR2
+        # Explanation	Syllables	
+        embed = discord.Embed(
+            title = word + " - book, apple, to be good",
+            description = "**Explanation. Lorem ipsum.Explanation. Lorem ipsum.Explanation. Lorem ipsum**",
+            url = url + word,
+        )
+        # color = discord.Color.green(),
+
+        file = discord.File("감사하다e.png", filename="image.png")
+        embed.set_thumbnail(url="attachment://image.png")
+        embed.set_footer(text="Rank 342")
+        embed.add_field(name="", value="강강 ||강강강강강|| 강강강강 강강강강 (inline ~~with~~ Field  with Field 1)", inline=False)
+        embed.add_field(name="", value="**강**It is `inline` with Field 1\n**한** (It _is_ inline __with__ Field) 2\nasdads")
+        # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
+        # embed.set_image(url="attachment://image.png")
+        # embed.set_footer(text="Nonee", icon_url="attachment://image.png")
+        # > {text} >
+        # await interaction.response.send_message(file=file, embed=embed)
+        await interaction.channel.send(file=file, embed=embed)
 
     def create_ending_session_stats(self, stats):
         """Gets stats that will be displayed when the session ends.
@@ -574,7 +657,7 @@ class Language(commands.Cog):
         # get mark percentages
         total = sum(marks_count.values())
         for mark in marks_count:
-            marks_count[mark] = round(marks_count[mark] * 100 / total)
+            marks_count[mark] = round(marks_count[mark] * 100 / total, 1)
 
         percentages_summary = (
             f"{marks_count['✅']}%,"
@@ -745,7 +828,7 @@ class Language(commands.Cog):
             vocab = self.get_review_vocab(level_number, interaction.user.name)
             await interaction.followup.send(f"Level {level_number} Review session: {session_number}")
 
-        await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, vocab)
+        await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, lesson_number, vocab)
 
         self.create_users_level_score_ws(ws_log, interaction.user.name, level_number)
 
