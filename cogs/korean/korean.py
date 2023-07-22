@@ -120,7 +120,7 @@ class Language(commands.Cog):
         image_pickle_path = f"{src_dir}/data/vocab_image_path.pickle"
         if os.path.isfile(image_pickle_path):
             with open(image_pickle_path, "rb") as handle:
-                image_paths_labelled = pickle.loads(handle.read())    
+                image_paths_labelled = pickle.loads(handle.read())
         else:
             audio_paths = glob(f"{src_dir}/data/*/*/vocabulary_images/*")
             image_paths_labelled = {}
@@ -496,42 +496,57 @@ class Language(commands.Cog):
 
         return picked_words
 
-    def create_embed(self, word_data):
-        eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = word_data
-
+    def prepare_word_output(self, word_data, lesson, i=[0]):
+        i[0] += 1
+        max_spaces = 30  # using for discord bug with spoiled words
+        spoil_spacing = " " * (i[0] % max_spaces)
         url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        title = f"{kor} - {eng}; ({eng_add})"
-        embed = discord.Embed(
-            title = title,
-            url = url + kor,
-        )
-        examples = f"{ex[1]} = {ex[0]}\n{exs2kr} = {exs2en}"
 
-        korean_words = re.findall("[가-힣]+", syl)
-        for word in korean_words:
-            syl = syl.replace(word, f"\n**{word}**")
-        syl = syl[1:]
+        eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = word_data
+        kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
+        if kor_no_num not in self.vocab_audio_paths:
+            self.create_gtts_audio(kor_no_num)
 
-        text = f"**{expl}**\n\n{examples}"  # \n\n{syl}
-        embed.add_field(name="", value=text, inline=False)
+        content = f"**{kor} - {eng}; ({eng_add})**"
+        if not lesson:
+            content = f"||{content}{spoil_spacing}||"
+            file = None
         
-        kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a1.png"
-        file = discord.File(kk, filename="image.png")
-        # file = discord.File(f"{self.vocab_image_paths[f'{kor}']}", filename="image.png")
+        embed = discord.Embed(title=content, url=url+kor)
 
-        embed.set_image(url="attachment://image.png")
-        return embed, file
+        if lesson:
+            field = f"{ex[1]} ({ex[0]})" if ex[0] else ""
+            field = f"**{expl}**\n- {field}\n- {exs2kr} ({exs2en})"
+            embed.add_field(name="", value=field, inline=False)
+            kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a3.png"
+            file = discord.File(kk, filename="image.png")
+            # file = discord.File(f"{self.vocab_image_paths[f'{kor}']}", filename="image.png")
+            embed.set_image(url="attachment://image.png")
 
+        return embed, file, self.vocab_audio_paths[kor_no_num]
+
+        ######
+        # korean_words = re.findall("[가-힣]+", syl)
+        # for word in korean_words:
+        #     syl = syl.replace(word, f"\n**{word}**")
+        # syl = syl[1:]
+        # {examples}\n\n{syl}
         # color = discord.Color.green(),
         # embed.set_footer(text=f"Rank {rank}")
         # embed.set_thumbnail(url="attachment://image.png")
         # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
         # embed.set_image(url="attachment://image.png")
         # > {text} >
-        # await interaction.response.send_message(file=file, embed=embed)
-    
 
-    async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, lesson_number, vocab):
+    def create_gtts_audio(self, kor_no_num):
+        src_dir = Path(__file__).parents[0]
+        vocab_path = f"{src_dir}/data/vocab_sources/lessonlol/vocabulary_audio/"
+        path = f'{vocab_path}/{kor_no_num}.mp3'
+        tts = gTTS(kor_no_num, lang='ko')
+        tts.save(path)
+        self.vocab_audio_paths[kor_no_num] = path
+
+    async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, lesson, vocab):
         """Runs session loop for vocabulary words.
 
         Args:
@@ -539,7 +554,7 @@ class Language(commands.Cog):
             voice (discord.voice_client.VoiceClient): voice client channel
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             session_number (int): session number
-            lesson_number (int): indicates whether session is lesson or review
+            lesson (bool): indicates whether session is informational lesson or review
             vocab (List[Tuple[str, str, Tuple[str, str]]]): [
                 english word,
                 korean word,
@@ -548,54 +563,35 @@ class Language(commands.Cog):
             
         """
 
-        i = 1
-        max_spaces = 30  # using for discord bug with spoiled words
-        unchecked = set(vocab)
-        msg_str = f"{len(unchecked)} words remaining."
         stat_labels = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
         view = SessionVocabView()
+        guide = lesson
+
+        unchecked = set(vocab)
+        msg_str = f"{len(unchecked)} words remaining."
         stats = []
-
-        src_dir = Path(__file__).parents[0]
-        vocab_path = f"{src_dir}/data/vocab_sources/lessonlol/vocabulary_audio/"
-
-        embed, file = self.create_embed(vocab[-1])
-
-        await interaction.channel.send(file=file, embed=embed)
 
         msg = await interaction.channel.send(msg_str)
         while True:
-            embed, file = self.create_embed(vocab[-1])
-            eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = vocab[-1]
-            example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
-            kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
-
-            # handling word with audio
-            spoil_spacing = " " * (i % max_spaces)
-            eng_part = f"{eng:20}{spoil_spacing}{example}"
-            if kor_no_num not in self.vocab_audio_paths:
-                path = f'{vocab_path}/{kor_no_num}.mp3'
-                tts = gTTS(kor_no_num, lang='ko')
-                tts.save(path)
-                self.vocab_audio_paths[kor_no_num] = path
-
-            msg_display = f"||{kor} = {eng_part}||"
+            embed, file, audio_path = self.prepare_word_output(vocab[-1], lesson)
+            guide = lesson
             try:
                 voice.play(
                     discord.FFmpegPCMAudio(
-                        self.vocab_audio_paths[kor_no_num],
+                        audio_path,
                         executable=self.ffmpeg_path,
                     )
                 )
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            msg_str = f"{len(unchecked)} words remaining"
-            content = f"{msg_str}\n{msg_display}"
-            await msg.edit(content=content, view=view)
+            # content = f"{len(unchecked)} words remaining\n{content}"
+            embed.set_footer(text=f"{len(unchecked)} words remaining")
+            await msg.edit(embed=embed, view=view)
+            if file:
+                await msg.add_files(file)
 
             # wait for interaction
-            i += 1
             interaction = await self.bot.wait_for(
                 "interaction",
                 check=lambda inter: "custom_id" in inter.data.keys()
@@ -607,6 +603,7 @@ class Language(commands.Cog):
             if button_id == "repeat":
                 continue
             elif button_id == "info":
+                lesson = True
                 continue
 
             # partial
@@ -617,6 +614,7 @@ class Language(commands.Cog):
                     unchecked.remove(word_to_move)
             elif button_id == "effort":
                 vocab.insert(len(vocab) // 2, word_to_move)
+            
             elif button_id == "forgot":
                 vocab.insert(- len(vocab) // 5, word_to_move)
             elif button_id == "end":
@@ -884,7 +882,7 @@ class Language(commands.Cog):
             vocab = self.get_review_vocab(level_number, interaction.user.name)
             await interaction.followup.send(f"Level {level_number} Review session: {session_number}")
 
-        await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, lesson_number, vocab)
+        await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, bool(lesson_number), vocab)
 
         self.create_users_level_score_ws(ws_log, interaction.user.name, level_number)
 
