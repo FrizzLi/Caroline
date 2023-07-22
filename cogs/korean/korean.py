@@ -33,6 +33,7 @@ import json
 import os
 import pickle
 import random
+import re
 from datetime import datetime
 from glob import glob
 from pathlib import Path
@@ -50,10 +51,19 @@ from gtts import gTTS
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
 
+# class Word:
+#     def __init__(self, row):
 
+#     row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)
+#     Rank
+#     English_Add
+#     Explanation
+#     Syllables
+#     Example_EN2
+#     Example_KR2
 class Language(commands.Cog):
     def __init__(self, bot):
-        self.vocab_audio_paths = self._get_vocab_audio_paths()
+        self.vocab_audio_paths, self.vocab_image_paths = self._get_vocab_audio_paths()
         self.vocab_df = self._get_vocab_table()
         self.bot = bot
         self.ffmpeg_path = (
@@ -86,14 +96,16 @@ class Language(commands.Cog):
         module is loaded, the audio paths are stored in pickle file. (cached)
         Audio files are located in data/level_x/lesson_x/vocabulary_audio dir.
 
+        ALSO IMAGES
+
         Returns:
             Dict[str, str]: words and their audio paths (word being the key)
         """
 
         src_dir = Path(__file__).parents[0]
-        pickle_path = f"{src_dir}/data/vocab_audio_path.pickle"
-        if os.path.isfile(pickle_path):
-            with open(pickle_path, "rb") as handle:
+        audio_pickle_path = f"{src_dir}/data/vocab_audio_path.pickle"
+        if os.path.isfile(audio_pickle_path):
+            with open(audio_pickle_path, "rb") as handle:
                 audio_paths_labelled = pickle.loads(handle.read())
         else:
             audio_paths = glob(f"{src_dir}/data/*/*/vocabulary_audio/*")
@@ -102,10 +114,25 @@ class Language(commands.Cog):
                 word = Path(audio_path).stem
                 audio_paths_labelled[word] = audio_path
 
-            with open(pickle_path, "wb") as file:
+            with open(audio_pickle_path, "wb") as file:
                 pickle.dump(audio_paths_labelled, file)
 
-        return audio_paths_labelled
+        image_pickle_path = f"{src_dir}/data/vocab_image_path.pickle"
+        if os.path.isfile(image_pickle_path):
+            with open(image_pickle_path, "rb") as handle:
+                image_paths_labelled = pickle.loads(handle.read())    
+        else:
+            audio_paths = glob(f"{src_dir}/data/*/*/vocabulary_images/*")
+            image_paths_labelled = {}
+            for audio_path in audio_paths:
+                word = Path(audio_path).stem
+                word = word[:-1]
+                image_paths_labelled[word] = audio_path
+
+            with open(image_pickle_path, "wb") as file:
+                pickle.dump(image_paths_labelled, file)
+
+        return audio_paths_labelled, image_paths_labelled
 
     async def get_voice(self, interaction):
         """Gets or connects to the voice channel.
@@ -229,8 +256,22 @@ class Language(commands.Cog):
             if row.Lesson > level_lesson_number:
                 break
             if row.Lesson == level_lesson_number:
-                vocab.append((row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)))
+                vocab.append(
+                    (
+                        row.Book_English, 
+                        row.Korean, 
+                        (row.Example_EN, row.Example_KR), 
+                        row.English_Add, 
+                        row.Explanation, 
+                        row.Syllables, 
+                        row.Example_EN2, 
+                        row.Example_KR2,
+                        row.Rank
+                    )
+                )
 
+        # korean, english, explanation, syllables, rank
+        # English_Add	Explanation	Syllables	Example_EN2	Example_KR2
         random.shuffle(vocab)
 
         return vocab
@@ -265,17 +306,34 @@ class Language(commands.Cog):
             zip(
                 self.vocab_df.Book_English,
                 self.vocab_df.Example_EN,
-                self.vocab_df.Example_KR
+                self.vocab_df.Example_KR,
+                self.vocab_df.English_Add,
+                self.vocab_df.Explanation,
+                self.vocab_df.Syllables,
+                self.vocab_df.Example_EN2,
+                self.vocab_df.Example_KR2,
+                self.vocab_df.Rank
             ),
             index=self.vocab_df.Korean
             ).to_dict()
 
+        # korean, english, explanation, syllables, rank
+
         # creating vocab list with all of the content
         vocab = []
         for kor in picked_words:
-            eng = korean_word_data[kor][0]
-            exs = korean_word_data[kor][1:]
-            vocab.append((eng, kor, exs))
+            vocab.append(
+                (
+                    korean_word_data[kor][0],
+                    korean_word_data[kor][1:3],
+                    korean_word_data[kor][3],
+                    korean_word_data[kor][4],
+                    korean_word_data[kor][5],
+                    korean_word_data[kor][6],
+                    korean_word_data[kor][7],
+                    korean_word_data[kor][8]
+                )
+            )
 
         return vocab
 
@@ -438,6 +496,41 @@ class Language(commands.Cog):
 
         return picked_words
 
+    def create_embed(self, word_data):
+        eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = word_data
+
+        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        title = f"{kor} - {eng}; ({eng_add})"
+        embed = discord.Embed(
+            title = title,
+            url = url + kor,
+        )
+        examples = f"{ex[1]} = {ex[0]}\n{exs2kr} = {exs2en}"
+
+        korean_words = re.findall("[가-힣]+", syl)
+        for word in korean_words:
+            syl = syl.replace(word, f"\n**{word}**")
+        syl = syl[1:]
+
+        text = f"**{expl}**\n\n{examples}"  # \n\n{syl}
+        embed.add_field(name="", value=text, inline=False)
+        
+        kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a1.png"
+        file = discord.File(kk, filename="image.png")
+        # file = discord.File(f"{self.vocab_image_paths[f'{kor}']}", filename="image.png")
+
+        embed.set_image(url="attachment://image.png")
+        return embed, file
+
+        # color = discord.Color.green(),
+        # embed.set_footer(text=f"Rank {rank}")
+        # embed.set_thumbnail(url="attachment://image.png")
+        # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
+        # embed.set_image(url="attachment://image.png")
+        # > {text} >
+        # await interaction.response.send_message(file=file, embed=embed)
+    
+
     async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, lesson_number, vocab):
         """Runs session loop for vocabulary words.
 
@@ -466,61 +559,14 @@ class Language(commands.Cog):
         src_dir = Path(__file__).parents[0]
         vocab_path = f"{src_dir}/data/vocab_sources/lessonlol/vocabulary_audio/"
 
+        embed, file = self.create_embed(vocab[-1])
 
-        # colour = "lolko"
-        # button for additional info
-        # not seen word
-        # url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        # url_word = f"{url}편하다"
-        # embed = discord.Embed(
-        #     author = "author",
-        #     color = discord.Color.green(),
-        #     description = "description",
-        #     fields = "fields",
-        #     footer = "footer",
-        #     image = "image",
-        #     provider = "provider",
-        #     thumbnail = "thumbnail",
-        #     timestamp = "timestamp",
-        #     title = "title",
-        #     type = "type",
-        #     url = "url",
-        #     video = "video",
-        # )
-        # await interaction.response.send_message(embed=embed)
-
-        """
-        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        word = "편하다"
-        await interaction.response.send_message(
-            "...Setting up vocab session..."
-        )
-        # Example_EN	Example_KR
-        # Example_EN2	Example_KR2
-        # Explanation	Syllables	
-        embed = discord.Embed(
-            title = word + " - book, apple, to be good",
-            description = "**Explanation. Lorem ipsum.Explanation. Lorem ipsum.Explanation. Lorem ipsum**",
-            url = url + word,
-        )
-        # color = discord.Color.green(),
-
-        file = discord.File("감사하다e.png", filename="image.png")
-        embed.set_thumbnail(url="attachment://image.png")
-        embed.set_footer(text="Rank 342")
-        embed.add_field(name="", value="강강 ||강강강강강|| 강강강강 강강강강 (inline ~~with~~ Field  with Field 1)", inline=False)
-        embed.add_field(name="", value="**강**It is `inline` with Field 1\n**한** (It _is_ inline __with__ Field) 2\nasdads")
-        # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
-        # embed.set_image(url="attachment://image.png")
-        # embed.set_footer(text="Nonee", icon_url="attachment://image.png")
-        # > {text} >
-        # await interaction.response.send_message(file=file, embed=embed)
         await interaction.channel.send(file=file, embed=embed)
-        """
 
         msg = await interaction.channel.send(msg_str)
         while True:
-            eng, kor, ex = vocab[-1]
+            embed, file = self.create_embed(vocab[-1])
+            eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = vocab[-1]
             example = f"\n{ex[1]} = {ex[0]}" if ex[0] else ""
             kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
 
@@ -561,17 +607,17 @@ class Language(commands.Cog):
             if button_id == "repeat":
                 continue
             elif button_id == "info":
-                # vocab./
                 continue
 
+            # partial
             word_to_move = vocab.pop()
             if button_id == "easy":
                 vocab.insert(0, word_to_move)
                 if word_to_move in unchecked:
                     unchecked.remove(word_to_move)
-            elif button_id == "medium":
+            elif button_id == "effort":
                 vocab.insert(len(vocab) // 2, word_to_move)
-            elif button_id == "hard":
+            elif button_id == "forgot":
                 vocab.insert(- len(vocab) // 5, word_to_move)
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
@@ -592,26 +638,36 @@ class Language(commands.Cog):
             )
     @app_commands.command(name="lel")
     async def embedmsg(self, interaction):
-        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        word = "편하다"
+
         await interaction.response.send_message(
             "...Setting up vocab session..."
         )
         # Example_EN	Example_KR
         # Example_EN2	Example_KR2
-        # Explanation	Syllables	
+        # Explanation	Syllables
+        # korean, english, explanation, syllables, rank
+        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        korean = "편하다"
+        title = f"{korean} - {english}"
+        explanation = "**Explanation. Lorem ipsum.Explanation. Lorem ipsum.Explanation. Lorem ipsum**"
+        syllables = {"qwe": 123, "asd": 234}
+        rank = 234
         embed = discord.Embed(
-            title = word + " - book, apple, to be good",
-            description = "**Explanation. Lorem ipsum.Explanation. Lorem ipsum.Explanation. Lorem ipsum**",
-            url = url + word,
+            title = title,
+            description = explanation,
+            url = url + korean,
         )
+        for syllable in syllables:
+            embed.add_field(name="", value=f"**{syllable}** - {syllables[syllable]}")
+        embed.set_footer(text="Rank 342")
         # color = discord.Color.green(),
 
         file = discord.File("감사하다e.png", filename="image.png")
-        embed.set_thumbnail(url="attachment://image.png")
-        embed.set_footer(text="Rank 342")
-        embed.add_field(name="", value="강강 ||강강강강강|| 강강강강 강강강강 (inline ~~with~~ Field  with Field 1)", inline=False)
-        embed.add_field(name="", value="**강**It is `inline` with Field 1\n**한** (It _is_ inline __with__ Field) 2\nasdads")
+        # embed.set_thumbnail(url="attachment://image.png")
+        embed.set_image(url="attachment://image.png")
+        # embed.set_footer(text="Rank 342")
+        # embed.add_field(name="", value="강강 ||강강강강강|| 강강강강 강강강강 (inline ~~with~~ Field  with Field 1)", inline=False)
+        # embed.add_field(name="", value="**강**It is `inline` with Field 1\n**한** (It _is_ inline __with__ Field) 2\nasdads")
         # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
         # embed.set_image(url="attachment://image.png")
         # embed.set_footer(text="Nonee", icon_url="attachment://image.png")
