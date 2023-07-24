@@ -356,7 +356,8 @@ class Language(commands.Cog):
             )
         """
 
-        score_table = {"✅": 1, "⏭️": 2, "❌": 4}
+        # score_table = {"✅": 1, "⏭️": 2, "❌": 4}
+        score_table = {"✅": 1, "⏭️": 2, "🤔": 2, "🧩": 3, "❌": 4}
         distr_vals = self.get_score_distribution()
         considering_amount = len(distr_vals)
         table_rows = []
@@ -563,7 +564,7 @@ class Language(commands.Cog):
             
         """
 
-        stat_labels = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
+        stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
         view = SessionVocabView()
         guide = lesson
         # guide = False
