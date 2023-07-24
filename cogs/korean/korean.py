@@ -518,9 +518,9 @@ class Language(commands.Cog):
             field = f"{ex[1]} ({ex[0]})" if ex[0] else ""
             field = f"**{expl}**\n- {field}\n- {exs2kr} ({exs2en})"
             embed.add_field(name="", value=field, inline=False)
-            kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a3.png"
-            file = discord.File(kk, filename="image.png")
-            # file = discord.File(f"{self.vocab_image_paths[f'{kor}']}", filename="image.png")
+            # kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a3.png"
+            # file = discord.File(kk, filename="image.png")
+            file = discord.File(f"{self.vocab_image_paths[f'{kor_no_num}']}", filename="image.png")
             embed.set_image(url="attachment://image.png")
 
         return embed, file, self.vocab_audio_paths[kor_no_num]
@@ -566,6 +566,7 @@ class Language(commands.Cog):
         stat_labels = {"easy": "✅", "medium": "⏭️", "hard": "❌"}
         view = SessionVocabView()
         guide = lesson
+        # guide = False
 
         unchecked = set(vocab)
         msg_str = f"{len(unchecked)} words remaining."
@@ -573,7 +574,7 @@ class Language(commands.Cog):
 
         msg = await interaction.channel.send(msg_str)
         while True:
-            embed, file, audio_path = self.prepare_word_output(vocab[-1], lesson)
+            embed, file, audio_path = self.prepare_word_output(vocab[-1], guide)
             guide = lesson
             try:
                 voice.play(
@@ -603,7 +604,7 @@ class Language(commands.Cog):
             if button_id == "repeat":
                 continue
             elif button_id == "info":
-                lesson = True
+                guide = True
                 continue
 
             # partial
@@ -614,7 +615,8 @@ class Language(commands.Cog):
                     unchecked.remove(word_to_move)
             elif button_id == "effort":
                 vocab.insert(len(vocab) // 2, word_to_move)
-            
+            elif button_id == "partial":
+                vocab.insert(len(vocab) // 3, word_to_move)
             elif button_id == "forgot":
                 vocab.insert(- len(vocab) // 5, word_to_move)
             elif button_id == "end":
