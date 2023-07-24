@@ -325,6 +325,7 @@ class Language(commands.Cog):
             vocab.append(
                 (
                     korean_word_data[kor][0],
+                    kor,
                     korean_word_data[kor][1:3],
                     korean_word_data[kor][3],
                     korean_word_data[kor][4],
@@ -502,27 +503,31 @@ class Language(commands.Cog):
         max_spaces = 30  # using for discord bug with spoiled words
         spoil_spacing = " " * (i[0] % max_spaces)
         url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        file = None
 
         eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = word_data
         kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
         if kor_no_num not in self.vocab_audio_paths:
             self.create_gtts_audio(kor_no_num)
 
-        content = f"**{kor} - {eng}; ({eng_add})**"
+        eng_add = f"; ({eng_add})" if eng_add else ""
+        content = f"**{kor} - {eng}{eng_add}**"
         if not lesson:
             content = f"||{content}{spoil_spacing}||"
-            file = None
-        
+
         embed = discord.Embed(title=content, url=url+kor)
 
         if lesson:
-            field = f"{ex[1]} ({ex[0]})" if ex[0] else ""
-            field = f"**{expl}**\n- {field}\n- {exs2kr} ({exs2en})"
+            ex = f"- {ex[1]} ({ex[0]})\n" if ex[0] else ""
+            ex += f"- {exs2kr} ({exs2en})\n" if exs2kr else ""
+            ex = "\n" + ex if ex else ""
+            field = f"**{expl}**{ex}"
             embed.add_field(name="", value=field, inline=False)
             # kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a3.png"
             # file = discord.File(kk, filename="image.png")
-            file = discord.File(f"{self.vocab_image_paths[f'{kor_no_num}']}", filename="image.png")
-            embed.set_image(url="attachment://image.png")
+            if kor_no_num in self.vocab_image_paths:
+                file = discord.File(self.vocab_image_paths[kor_no_num], filename="image.png")
+                embed.set_image(url="attachment://image.png")
 
         return embed, file, self.vocab_audio_paths[kor_no_num]
 
@@ -693,8 +698,7 @@ class Language(commands.Cog):
             return "There weren't any words guessed."
 
         # get marks count and scoring per word
-        marks_count = {"✅": 0, "⏭️": 0, "❌": 0}
-        scoring = {"✅": 0, "⏭️": 1, "❌": 2}
+        score_table = {"✅": 0, "⏭️": 1, "🤔": 1, "🧩": 2, "❌": 3}
         word_scores = {}
         for _, word, mark, _ in stats:
             if word not in word_scores:
