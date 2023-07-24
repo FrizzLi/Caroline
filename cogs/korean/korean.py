@@ -502,7 +502,6 @@ class Language(commands.Cog):
         i[0] += 1
         max_spaces = 30  # using for discord bug with spoiled words
         spoil_spacing = " " * (i[0] % max_spaces)
-        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
         file = None
 
         eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = word_data
@@ -510,12 +509,15 @@ class Language(commands.Cog):
         if kor_no_num not in self.vocab_audio_paths:
             self.create_gtts_audio(kor_no_num)
 
+        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        url_kor = url + kor_no_num
+
         eng_add = f"; ({eng_add})" if eng_add else ""
         content = f"**{kor} - {eng}{eng_add}**"
         if not lesson:
             content = f"||{content}{spoil_spacing}||"
 
-        embed = discord.Embed(title=content, url=url+kor)
+        embed = discord.Embed(title=content, url=url_kor)
 
         if lesson:
             ex = f"- {ex[1]} ({ex[0]})\n" if ex[0] else ""
@@ -575,10 +577,10 @@ class Language(commands.Cog):
         # guide = False
 
         unchecked = set(vocab)
-        msg_str = f"{len(unchecked)} words remaining."
+        # msg_str = f"{len(unchecked)} words remaining."
         stats = []
-
-        msg = await interaction.channel.send(msg_str)
+        msg = None
+        
         while True:
             embed, file, audio_path = self.prepare_word_output(vocab[-1], guide)
             guide = lesson
@@ -594,7 +596,10 @@ class Language(commands.Cog):
 
             # content = f"{len(unchecked)} words remaining\n{content}"
             embed.set_footer(text=f"{len(unchecked)} words remaining")
-            await msg.edit(embed=embed, view=view)
+            if not msg:
+                msg = await interaction.channel.send(embed=embed, view=view)
+            else:
+                await msg.edit(embed=embed, view=view)
             if file:
                 await msg.add_files(file)
 
@@ -627,8 +632,8 @@ class Language(commands.Cog):
                 vocab.insert(- len(vocab) // 5, word_to_move)
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
-                content = f"{msg_str}\n{stats_str}"
-                await msg.edit(content=content, view=view)
+                content = f"{len(unchecked)} words remaining.\n{stats_str}"
+                await msg.edit(content=content, view=view, embed=None)  # , embed=None
                 ws_log.append_rows(stats)
                 break
 
@@ -642,44 +647,6 @@ class Language(commands.Cog):
                     session_number,
                 ]
             )
-    @app_commands.command(name="lel")
-    async def embedmsg(self, interaction):
-
-        await interaction.response.send_message(
-            "...Setting up vocab session..."
-        )
-        # Example_EN	Example_KR
-        # Example_EN2	Example_KR2
-        # Explanation	Syllables
-        # korean, english, explanation, syllables, rank
-        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        korean = "편하다"
-        title = f"{korean} - {english}"
-        explanation = "**Explanation. Lorem ipsum.Explanation. Lorem ipsum.Explanation. Lorem ipsum**"
-        syllables = {"qwe": 123, "asd": 234}
-        rank = 234
-        embed = discord.Embed(
-            title = title,
-            description = explanation,
-            url = url + korean,
-        )
-        for syllable in syllables:
-            embed.add_field(name="", value=f"**{syllable}** - {syllables[syllable]}")
-        embed.set_footer(text="Rank 342")
-        # color = discord.Color.green(),
-
-        file = discord.File("감사하다e.png", filename="image.png")
-        # embed.set_thumbnail(url="attachment://image.png")
-        embed.set_image(url="attachment://image.png")
-        # embed.set_footer(text="Rank 342")
-        # embed.add_field(name="", value="강강 ||강강강강강|| 강강강강 강강강강 (inline ~~with~~ Field  with Field 1)", inline=False)
-        # embed.add_field(name="", value="**강**It is `inline` with Field 1\n**한** (It _is_ inline __with__ Field) 2\nasdads")
-        # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
-        # embed.set_image(url="attachment://image.png")
-        # embed.set_footer(text="Nonee", icon_url="attachment://image.png")
-        # > {text} >
-        # await interaction.response.send_message(file=file, embed=embed)
-        await interaction.channel.send(file=file, embed=embed)
 
     def create_ending_session_stats(self, stats):
         """Gets stats that will be displayed when the session ends.
@@ -698,14 +665,15 @@ class Language(commands.Cog):
             return "There weren't any words guessed."
 
         # get marks count and scoring per word
-        score_table = {"✅": 0, "⏭️": 1, "🤔": 1, "🧩": 2, "❌": 3}
+        marks_count = {"✅": 0, "🤔": 0, "🧩": 0, "❌": 0}
+        score_table = {"✅": 0, "🤔": 1, "🧩": 2, "❌": 3}
         word_scores = {}
         for _, word, mark, _ in stats:
             if word not in word_scores:
-                word_scores[word] = scoring[mark]
+                word_scores[word] = score_table[mark]
                 marks_count[mark] += 1
             else:
-                word_scores[word] += scoring[mark]
+                word_scores[word] += score_table[mark]
 
         # get hardest words
         word_scores_sorted = sorted(word_scores.items(), key=lambda x:x[1], reverse=True)
@@ -718,11 +686,12 @@ class Language(commands.Cog):
         # get mark percentages
         total = sum(marks_count.values())
         for mark in marks_count:
-            marks_count[mark] = round(marks_count[mark] * 100 / total, 1)
+            marks_count[mark] = round(marks_count[mark] * 100 / total)
 
         percentages_summary = (
             f"{marks_count['✅']}%,"
-            f"   {marks_count['⏭️']}%,"
+            f"   {marks_count['🤔']}%,"
+            f"   {marks_count['🧩']}%,"
             f"   {marks_count['❌']}%"
         )
 
