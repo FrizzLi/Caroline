@@ -31,9 +31,7 @@ reading
 
 import json
 import os
-import pickle
 import random
-import re
 from datetime import datetime
 from glob import glob
 from pathlib import Path
@@ -63,8 +61,6 @@ from cogs.korean.session_views import SessionListenView, SessionVocabView
 #     Example_KR2
 class Language(commands.Cog):
     def __init__(self, bot):
-        # vocab_image_paths
-        # vocab_audio_paths
         self.vocab_audio_paths = self._get_labelled_file_paths(("data/*/*/vocabulary_audio/*", "data/vocabulary_global_gtts_audio/*"))
         self.vocab_image_paths = self._get_labelled_file_paths(("data/*/*/vocabulary_images/*"))
         self.vocab_df = self._get_vocab_table()
@@ -90,32 +86,37 @@ class Language(commands.Cog):
 
         return vocab_df
 
-    def _get_labelled_file_paths(self, paths, pickle=""):
-        """Gets vocab's local audio paths of all levels.
+    def _get_labelled_file_paths(self, glob_paths):
+        """Gets file names and their paths. Used for loading audio/image files.
 
         Not all words have audio file, it will load only the ones that are
         present in vocabulary_audio directory that is in each of the lessons.
+        Audio files are located in data/level_x/lesson_x/vocabulary_audio dir.
+        Audio files that are missing are now filled with GTTS that is in
+        data/vocabulary_global_gtts_audio dir.
+
+        [REMOVED] (pickle might be added once all image/audio data is ready)
         Just so we dont have to read through all the lessons every time this
         module is loaded, the audio paths are stored in pickle file. (cached)
-        Audio files are located in data/level_x/lesson_x/vocabulary_audio dir.
 
-        ALSO IMAGES
+        Args:
+            glob_paths (Tuple[str]): represents glob pathing with stars
 
         Returns:
             Dict[str, str]: words and their audio paths (word being the key)
         """
 
-        
         src_dir = Path(__file__).parents[0]
 
-        audio_paths = []
-        for path in paths:
-            audio_paths += glob(f"{src_dir}/{path}")
+        paths = []
+        for path in glob_paths:
+            paths += glob(f"{src_dir}/{path}")
+
         paths_labelled = {}
-        for audio_path in audio_paths:
-            word = Path(audio_path).stem
-            # word = word[:-1]  # TODO: word = word[:-1] - script to remove the last letter
-            paths_labelled[word] = audio_path
+        for path in paths:
+            file_name = Path(path).stem
+            # file_name = file_name[:-1]  # TODO: word = word[:-1] - script to remove the last letter
+            paths_labelled[file_name] = path
 
         return paths_labelled
 
@@ -830,6 +831,7 @@ class Language(commands.Cog):
             create=True,
             size=(10_000, columns)
         )
+        # create header if new was created
         ws_log = ws_logs[0]
         if not ws_log.get_values("A1"):
             ws_log.append_row(["Date", "Word", "Knowledge", "Session_number"])
