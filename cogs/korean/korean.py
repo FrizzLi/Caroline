@@ -3,7 +3,7 @@
 Function hierarchy:
 vocab_listening
     _get_vocab_table
-    _get_vocab_audio_paths
+    _get_labelled_file_paths
     async get_voice
     get_level_lesson
     get_session_number
@@ -63,7 +63,10 @@ from cogs.korean.session_views import SessionListenView, SessionVocabView
 #     Example_KR2
 class Language(commands.Cog):
     def __init__(self, bot):
-        self.vocab_audio_paths, self.vocab_image_paths = self._get_vocab_audio_paths()
+        # vocab_image_paths
+        # vocab_audio_paths
+        self.vocab_audio_paths = self._get_labelled_file_paths(("data/*/*/vocabulary_audio/*", "data/vocabulary_global_gtts_audio/*"))
+        self.vocab_image_paths = self._get_labelled_file_paths(("data/*/*/vocabulary_images/*"))
         self.vocab_df = self._get_vocab_table()
         self.bot = bot
         self.ffmpeg_path = (
@@ -80,14 +83,14 @@ class Language(commands.Cog):
 
         _, vocab_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
 
-        # ignore rows with no Lesson cell filled (duplicates)
+        # ignore rows with empty Lesson cells (duplicates)
         vocab_df = vocab_dfs[0]
         vocab_df["Lesson"].replace("", np.nan, inplace=True)
         vocab_df.dropna(subset=["Lesson"], inplace=True)
 
         return vocab_df
 
-    def _get_vocab_audio_paths(self):
+    def _get_labelled_file_paths(self, paths, pickle=""):
         """Gets vocab's local audio paths of all levels.
 
         Not all words have audio file, it will load only the ones that are
@@ -102,39 +105,27 @@ class Language(commands.Cog):
             Dict[str, str]: words and their audio paths (word being the key)
         """
 
+        
         src_dir = Path(__file__).parents[0]
-        audio_pickle_path = f"{src_dir}/data/vocab_audio_path.pickle"
-        if os.path.isfile(audio_pickle_path):
-            with open(audio_pickle_path, "rb") as handle:
-                audio_paths_labelled = pickle.loads(handle.read())
+        if pickle:
+            audio_pickle_path = f"{src_dir}/data/{pickle}.pickle"
+            if os.path.isfile(audio_pickle_path):
+                with open(audio_pickle_path, "rb") as handle:
+                    paths_labelled = pickle.loads(handle.read())
         else:
-            audio_paths = glob(f"{src_dir}/data/*/*/vocabulary_audio/*")
-            audio_paths += glob(f"{src_dir}/data/vocabulary_global_gtts_audio/*")
-
-            audio_paths_labelled = {}
+            audio_paths = []
+            for path in paths:
+                audio_paths += glob(f"{src_dir}/{path}")
+            paths_labelled = {}
             for audio_path in audio_paths:
                 word = Path(audio_path).stem
-                audio_paths_labelled[word] = audio_path
+                # word = word[:-1]  # TODO: word = word[:-1] - script to remove the last letter
+                paths_labelled[word] = audio_path
 
             with open(audio_pickle_path, "wb") as file:
-                pickle.dump(audio_paths_labelled, file)
+                pickle.dump(paths_labelled, file)
 
-        image_pickle_path = f"{src_dir}/data/vocab_image_path.pickle"
-        if os.path.isfile(image_pickle_path):
-            with open(image_pickle_path, "rb") as handle:
-                image_paths_labelled = pickle.loads(handle.read())
-        else:
-            audio_paths = glob(f"{src_dir}/data/*/*/vocabulary_images/*")
-            image_paths_labelled = {}
-            for audio_path in audio_paths:
-                word = Path(audio_path).stem
-                word = word[:-1]
-                image_paths_labelled[word] = audio_path
-
-            with open(image_pickle_path, "wb") as file:
-                pickle.dump(image_paths_labelled, file)
-
-        return audio_paths_labelled, image_paths_labelled
+        return paths_labelled
 
     async def get_voice(self, interaction):
         """Gets or connects to the voice channel.
