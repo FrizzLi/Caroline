@@ -109,6 +109,8 @@ class Language(commands.Cog):
                 audio_paths_labelled = pickle.loads(handle.read())
         else:
             audio_paths = glob(f"{src_dir}/data/*/*/vocabulary_audio/*")
+            audio_paths += glob(f"{src_dir}/data/vocabulary_global_gtts_audio/*")
+
             audio_paths_labelled = {}
             for audio_path in audio_paths:
                 word = Path(audio_path).stem
@@ -525,11 +527,11 @@ class Language(commands.Cog):
             ex = "\n" + ex if ex else ""
             field = f"**{expl}**{ex}"
             embed.add_field(name="", value=field, inline=False)
-            # kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a3.png"
-            # file = discord.File(kk, filename="image.png")
-            if kor_no_num in self.vocab_image_paths:
-                file = discord.File(self.vocab_image_paths[kor_no_num], filename="image.png")
-                embed.set_image(url="attachment://image.png")
+            kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a2.png"
+            file = discord.File(kk, filename="image.png")
+            # if kor_no_num in self.vocab_image_paths:
+            #     file = discord.File(self.vocab_image_paths[kor_no_num], filename="image.png")
+            embed.set_image(url="attachment://image.png")
 
         return embed, file, self.vocab_audio_paths[kor_no_num]
 
@@ -548,7 +550,7 @@ class Language(commands.Cog):
 
     def create_gtts_audio(self, kor_no_num):
         src_dir = Path(__file__).parents[0]
-        vocab_path = f"{src_dir}/data/vocab_sources/lessonlol/vocabulary_audio/"
+        vocab_path = f"{src_dir}/data/vocabulary_global_gtts_audio/"
         path = f'{vocab_path}/{kor_no_num}.mp3'
         tts = gTTS(kor_no_num, lang='ko')
         tts.save(path)
