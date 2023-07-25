@@ -107,23 +107,15 @@ class Language(commands.Cog):
 
         
         src_dir = Path(__file__).parents[0]
-        if pickle:
-            audio_pickle_path = f"{src_dir}/data/{pickle}.pickle"
-            if os.path.isfile(audio_pickle_path):
-                with open(audio_pickle_path, "rb") as handle:
-                    paths_labelled = pickle.loads(handle.read())
-        else:
-            audio_paths = []
-            for path in paths:
-                audio_paths += glob(f"{src_dir}/{path}")
-            paths_labelled = {}
-            for audio_path in audio_paths:
-                word = Path(audio_path).stem
-                # word = word[:-1]  # TODO: word = word[:-1] - script to remove the last letter
-                paths_labelled[word] = audio_path
 
-            with open(audio_pickle_path, "wb") as file:
-                pickle.dump(paths_labelled, file)
+        audio_paths = []
+        for path in paths:
+            audio_paths += glob(f"{src_dir}/{path}")
+        paths_labelled = {}
+        for audio_path in audio_paths:
+            word = Path(audio_path).stem
+            # word = word[:-1]  # TODO: word = word[:-1] - script to remove the last letter
+            paths_labelled[word] = audio_path
 
         return paths_labelled
 
