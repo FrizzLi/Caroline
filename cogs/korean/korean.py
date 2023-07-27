@@ -5,7 +5,7 @@ vocab_listening
     _get_vocab_table
     _get_labelled_file_paths
     async get_voice
-    get_level_lesson
+    get_unknown_lesson_number
     get_session_number
     get_lesson_vocab
     get_review_vocab
@@ -14,12 +14,14 @@ vocab_listening
             get_time_penalty_data
         get_random_words
     async run_vocab_session_loop
+        prepare_word_output
+            create_gtts_audio
         create_ending_session_stats
 
 listening
     async get_voice
     get_listening_files
-        get_level_lesson
+        get_unknown_lesson_number
     async run_listening_session_loop
     ?async pause
     ?async resume
@@ -100,7 +102,7 @@ class Language(commands.Cog):
         module is loaded, the audio paths are stored in pickle file. (cached)
 
         Args:
-            glob_paths (Tuple[str]): represents glob pathing with stars
+            glob_paths (Tuple[str]): string for glob pathing (with stars)
 
         Returns:
             Dict[str, str]: words and their audio paths (word being the key)
@@ -140,26 +142,17 @@ class Language(commands.Cog):
 
         return voice
 
-    def get_unknown_lesson_number(self, interaction):
-        """Gets level and lesson numbers with validation checks.
-
-        If the given level_lesson_number is invalid, it returns zeros.
-        There are 3 types of level_lesson_number:
-         - One ("1") finds the next user's unknown lesson (also prints words)
-         - Pure hundreds ("100", ..., "400") review session of one levels words
-         - Hundreds up to 30 ("101", ..., "130") specific lesson number
+    def get_unknown_lesson_number(self, user_name):
+        """Gets the next unknown level_lesson_number for an user.
 
         Args:
-            interaction (discord.interactions.Interaction): slash cmd context
-            level_lesson_number (int): level lesson number
+            user_name (str): user name (used for worksheet name)
 
         Returns:
-            Tuple[int, int]: (level_number, lesson_number)
+            int: level_lesson_number
         """
 
-        # get next not fully known level_lesson_number
         df = self.vocab_df
-        user_name = interaction.user.name
         ws_names = (
             f"{user_name}-score-1", 
             f"{user_name}-score-2",
@@ -184,6 +177,7 @@ class Language(commands.Cog):
                 rows = df[df.Lesson == level_lesson_number].values
                 unknown_words = ", ".join([row[1] for row in rows])
                 print(f"Unknown words in lesson {level_lesson_number}: {unknown_words}")
+                # TODO: printing, words in gspread changing...
                 break
 
         # going for next unknown level
@@ -212,9 +206,6 @@ class Language(commands.Cog):
 
     def get_lesson_vocab(self, level_lesson_number):
         """Gets vocabulary for a given lesson.
-
-        Hundred decimals represent level of the vocabulary. 
-        The other two numbers range from 1 to 30 that represent a lesson.
 
         Args:
             level_lesson_number (int): lesson number
@@ -317,25 +308,20 @@ class Language(commands.Cog):
         return vocab
 
     def create_users_level_score_ws(self, ws_log, user_name, level_number):
-        """Gets score of words and visualizing list of rows for worksheet.
+        """Creates scoring for level in the user's worksheet.
 
         Scoring system takes into account: 
-         - first guesses in a session, by each latter session, the importance
-           of score is being reduced by distribution values
+         - first guesses in a session, 
+         - by each latter session, the importance of score is being reduced 
+           by distribution values
          - time of the last guess of a certain word
 
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             user_name (str): user name (used for worksheet name)
             level_number (int): level number
-
-        Returns:
-            Tuple[List[str, int, str, str]]: (
-                word, score, (knowledge_marks, time_marks)
-            )
         """
 
-        # score_table = {"✅": 1, "⏭️": 2, "❌": 4}
         score_table = {"✅": 1, "⏭️": 2, "🤔": 2, "🧩": 3, "❌": 4}
         distr_vals = self.get_score_distribution()
         considering_amount = len(distr_vals)
@@ -343,11 +329,15 @@ class Language(commands.Cog):
 
         df = pd.DataFrame(ws_log.get_all_records())
         df = df.sort_values(["Word", "Date"])
+
+        # accessing first word individually because we need "previous_row"
         previous_row = df.iloc[0]
         knowledge_marks = [previous_row.Knowledge]
         knowledge_scores = [score_table[previous_row.Knowledge]]
         df.drop(0)
-        df = pd.concat([df, pd.DataFrame({"Word": ["NAN"], "Knowledge": ["❌"]})])  # for the last word
+
+        # need to encounter non-existent word for saving the last word's info
+        df = pd.concat([df, pd.DataFrame({"Word": ["X"], "Knowledge": ["❌"]})])
 
         for row in df.itertuples():
             if previous_row.Word != row.Word:
@@ -449,7 +439,7 @@ class Language(commands.Cog):
         """Gets randomly chosen words for session.
 
         Creates linear probability distribution and uses it to pick words
-        randomly from the most unknown ones to the more known ones.
+        randomly from the most unknown ones to known ones.
 
         Args:
             words (List[str]): words that were guessed in a level
@@ -798,7 +788,15 @@ class Language(commands.Cog):
 
     @app_commands.command(name="vl")
     async def vocab_listening(self, interaction, level_lesson_number: int):
-        """Start listening vocabulary exercise."""
+        """Start listening vocabulary exercise.
+
+        There are 3 types of level_lesson_number:
+         - One ("1") finds the next user's unknown lesson
+         - Pure hundreds ("100", ..., "400") review session of one levels words
+           (Hundred decimals represent level)
+         - Hundreds up to 30 ("101", ..., "130") specific lesson number
+           (Ten decimals represent level's lesson)
+        """
 
         await interaction.response.send_message(
             "...Setting up vocab session..."
@@ -809,8 +807,8 @@ class Language(commands.Cog):
         )
 
         if level_lesson_number == 1:
-            level_lesson_number = self.get_unknown_lesson_number(interaction)
-        
+            level_lesson_number = self.get_unknown_lesson_number(interaction.user.name)
+
         # get level and lesson number with validation check
         level_number, lesson_number = divmod(level_lesson_number, 100)
         if not (0 < level_number < 5 and lesson_number < 31):
