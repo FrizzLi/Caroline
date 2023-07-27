@@ -31,6 +31,7 @@ reading
 
 """
 
+import collections
 import json
 import os
 import random
@@ -51,16 +52,7 @@ from gtts import gTTS
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
 
-# class Word:
-#     def __init__(self, row):
 
-#     row.Book_English, row.Korean, (row.Example_EN, row.Example_KR)
-#     Rank
-#     English_Add
-#     Explanation
-#     Syllables
-#     Example_EN2
-#     Example_KR2
 class Language(commands.Cog):
     def __init__(self, bot):
         self.vocab_audio_paths = self._get_labelled_file_paths(("data/*/*/vocabulary_audio/*", "data/vocabulary_global_gtts_audio/*"))
@@ -118,7 +110,7 @@ class Language(commands.Cog):
         paths_labelled = {}
         for path in paths:
             file_name = Path(path).stem
-            # file_name = file_name[:-1]  # TODO: word = word[:-1] - script to remove the last letter
+            # file_name = file_name[:-1]  # TODO: AFTER IMAGES word = word[:-1] - script to remove the last letter
             paths_labelled[file_name] = path
 
         return paths_labelled
@@ -178,7 +170,7 @@ class Language(commands.Cog):
                 rows = df[df.Lesson == level_lesson_number].values
                 unknown_words = ", ".join([row[1] for row in rows])
                 print(f"Unknown words in lesson {level_lesson_number}: {unknown_words}")
-                # TODO: printing, words in gspread changing...
+                # TODO: LAST!!! "1" lesson tries. (fixing gspread) printing, words in gspread changing...
                 break
 
         # going for next unknown level
@@ -219,7 +211,7 @@ class Language(commands.Cog):
             ]
         """
 
-        # TODO
+        # TODO get_lesson_vocab
         vocab = []
         for row in self.vocab_df.itertuples():
             if not row.Lesson:
@@ -262,7 +254,7 @@ class Language(commands.Cog):
             ]
         """
 
-        # TODO
+        # TODO get_review_vocab
         # get guessed words
         _, scores_dfs = utils.get_worksheets(
             "Korea - Users stats",
@@ -483,7 +475,7 @@ class Language(commands.Cog):
             _type_: _description_
         """
 
-        # TODO
+        # TODO prepare_word_output
         max_spaces = 30  # using for discord bug with spoiled words
         i[0] += 1
         i[0] %= max_spaces
@@ -568,20 +560,16 @@ class Language(commands.Cog):
             
         """
 
-        # TODO opt
         stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
         view = SessionVocabView()
         guide = lesson
-        # guide = False
 
         unchecked = set(vocab)
-        # msg_str = f"{len(unchecked)} words remaining."
         stats = []
         msg = None
         
         while True:
             embed, file, audio_path = self.prepare_word_output(vocab[-1], guide)
-            guide = lesson
             try:
                 voice.play(
                     discord.FFmpegPCMAudio(
@@ -592,7 +580,6 @@ class Language(commands.Cog):
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            # content = f"{len(unchecked)} words remaining\n{content}"
             embed.set_footer(text=f"{len(unchecked)} words remaining")
             if not msg:
                 msg = await interaction.channel.send(embed=embed, view=view)
@@ -615,9 +602,10 @@ class Language(commands.Cog):
             elif button_id == "info":
                 guide = True
                 continue
+            guide = lesson
 
-            # partial
             word_to_move = vocab.pop()
+
             if button_id == "easy":
                 vocab.insert(0, word_to_move)
                 if word_to_move in unchecked:
@@ -631,7 +619,7 @@ class Language(commands.Cog):
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
                 content = f"{len(unchecked)} words remaining.\n{stats_str}"
-                await msg.edit(content=content, view=view, embed=None)  # , embed=None
+                await msg.edit(content=content, view=view, embed=None)
                 ws_log.append_rows(stats)
                 break
 
@@ -759,11 +747,11 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
-            # TODO ChatGPT Tokens first use!
-            # TODO polish whole module + apply pylint
-            # TODO ADD backward button (10s)
+            # TODO LISTEN ChatGPT Tokens first use!
+            # TODO LISTEN polish whole module + apply pylint
+            # TODO LISTEN ADD backward button (10s)
             if button_id == "pauseplay":
-                # TODO FIX: pauseplay button
+                # TODO LISTEN FIX: pauseplay button
                 # need to add player, pause NN crucially atm
                 button_id2 = None
                 while button_id2 != "pauseplay":
@@ -946,3 +934,5 @@ async def setup(bot):
     await bot.add_cog(
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
+
+# TODO Pylint
