@@ -93,9 +93,10 @@ class Language(commands.Cog):
 
         Not all words have audio file, it will load only the ones that are
         present in vocabulary_audio directory that is in each of the lessons.
-        Audio files are located in data/level_x/lesson_x/vocabulary_audio dir.
-        Audio files that are missing are now filled with GTTS that is in
-        data/vocabulary_global_gtts_audio dir.
+        Audio files are located in data/level_x/lesson_x/vocabulary_audio dir
+        and are downloaded from naver dictionary.
+        Audio files that are missing are replaced by audio files created by
+        GTTS. Those files are located in data/vocabulary_global_gtts_audio dir.
 
         [REMOVED] (pickle might be added once all image/audio data is ready)
         Just so we dont have to read through all the lessons every time this
@@ -218,6 +219,7 @@ class Language(commands.Cog):
             ]
         """
 
+        # TODO
         vocab = []
         for row in self.vocab_df.itertuples():
             if not row.Lesson:
@@ -260,6 +262,7 @@ class Language(commands.Cog):
             ]
         """
 
+        # TODO
         # get guessed words
         _, scores_dfs = utils.get_worksheets(
             "Korea - Users stats",
@@ -467,9 +470,24 @@ class Language(commands.Cog):
         return picked_words
 
     def prepare_word_output(self, word_data, lesson, i=[0]):
-        i[0] += 1
+        """Prepares variables needed for outputting word data.
+
+        _extended_summary_
+
+        Args:
+            word_data (_type_): _description_
+            lesson (_type_): _description_
+            i (list, optional): _description_. Defaults to [0].
+
+        Returns:
+            _type_: _description_
+        """
+
+        # TODO
         max_spaces = 30  # using for discord bug with spoiled words
-        spoil_spacing = " " * (i[0] % max_spaces)
+        i[0] += 1
+        i[0] %= max_spaces
+        spoil_spacing = " " * (i[0])
         file = None
 
         eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = word_data
@@ -514,13 +532,24 @@ class Language(commands.Cog):
         # embed.set_image(url="attachment://image.png")
         # > {text} >
 
-    def create_gtts_audio(self, kor_no_num):
+    def create_gtts_audio(self, korean_word):
+        """Creates an audio using google's TTS for a given korean word.
+
+        This is being used for all the words that have no audio from naver's
+        dictionary. 
+        Audio files are located in data/vocabulary_global_gtts_audio dir.
+
+        Args:
+            korean_word (str): korean word
+        """
+
         src_dir = Path(__file__).parents[0]
         vocab_path = f"{src_dir}/data/vocabulary_global_gtts_audio/"
-        path = f'{vocab_path}/{kor_no_num}.mp3'
-        tts = gTTS(kor_no_num, lang='ko')
+        path = f'{vocab_path}/{korean_word}.mp3'
+        tts = gTTS(korean_word, lang='ko')
         tts.save(path)
-        self.vocab_audio_paths[kor_no_num] = path
+
+        self.vocab_audio_paths[korean_word] = path
 
     async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, lesson, vocab):
         """Runs session loop for vocabulary words.
@@ -539,6 +568,7 @@ class Language(commands.Cog):
             
         """
 
+        # TODO opt
         stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
         view = SessionVocabView()
         guide = lesson
