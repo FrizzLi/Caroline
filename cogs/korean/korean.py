@@ -31,7 +31,6 @@ reading
 
 """
 
-import collections
 import json
 import os
 import random
@@ -211,30 +210,8 @@ class Language(commands.Cog):
             ]
         """
 
-        # TODO get_lesson_vocab
-        vocab = []
-        for row in self.vocab_df.itertuples():
-            if not row.Lesson:
-                continue
-            if row.Lesson > level_lesson_number:
-                break
-            if row.Lesson == level_lesson_number:
-                vocab.append(
-                    (
-                        row.Book_English, 
-                        row.Korean, 
-                        (row.Example_EN, row.Example_KR), 
-                        row.English_Add, 
-                        row.Explanation, 
-                        row.Syllables, 
-                        row.Example_EN2, 
-                        row.Example_KR2,
-                        row.Rank
-                    )
-                )
-
-        # korean, english, explanation, syllables, rank
-        # English_Add	Explanation	Syllables	Example_EN2	Example_KR2
+        filtered_df = self.vocab_df.loc[self.vocab_df['Lesson'] == level_lesson_number]
+        vocab = list(filtered_df.itertuples(name='Row', index=False))
         random.shuffle(vocab)
 
         return vocab
@@ -254,8 +231,6 @@ class Language(commands.Cog):
             ]
         """
 
-        # TODO get_review_vocab
-        # get guessed words
         _, scores_dfs = utils.get_worksheets(
             "Korea - Users stats",
             (f"{user_name}-score-{level_number}",),
@@ -264,41 +239,8 @@ class Language(commands.Cog):
         guessed_words = tuple(scores_df[scores_df.columns[0]])
 
         picked_words = self.get_random_words(guessed_words)
-
-        # getting english data from worksheet
-        korean_word_data = pd.Series(
-            zip(
-                self.vocab_df.Book_English,
-                self.vocab_df.Example_EN,
-                self.vocab_df.Example_KR,
-                self.vocab_df.English_Add,
-                self.vocab_df.Explanation,
-                self.vocab_df.Syllables,
-                self.vocab_df.Example_EN2,
-                self.vocab_df.Example_KR2,
-                self.vocab_df.Rank
-            ),
-            index=self.vocab_df.Korean
-            ).to_dict()
-
-        # korean, english, explanation, syllables, rank
-
-        # creating vocab list with all of the content
-        vocab = []
-        for kor in picked_words:
-            vocab.append(
-                (
-                    korean_word_data[kor][0],
-                    kor,
-                    korean_word_data[kor][1:3],
-                    korean_word_data[kor][3],
-                    korean_word_data[kor][4],
-                    korean_word_data[kor][5],
-                    korean_word_data[kor][6],
-                    korean_word_data[kor][7],
-                    korean_word_data[kor][8]
-                )
-            )
+        picked_words_df = self.vocab_df[self.vocab_df["Korean"].isin(picked_words)]
+        vocab = list(picked_words_df.itertuples(name='Row', index=False))
 
         return vocab
 
@@ -461,7 +403,7 @@ class Language(commands.Cog):
 
         return picked_words
 
-    def prepare_word_output(self, word_data, lesson, i=[0]):
+    def prepare_word_output(self, row, lesson, i=[0]):
         """Prepares variables needed for outputting word data.
 
         _extended_summary_
@@ -475,33 +417,31 @@ class Language(commands.Cog):
             _type_: _description_
         """
 
-        # TODO prepare_word_output
         max_spaces = 30  # using for discord bug with spoiled words
         i[0] += 1
         i[0] %= max_spaces
         spoil_spacing = " " * (i[0])
         file = None
 
-        eng, kor, ex, eng_add, expl, syl, exs2en, exs2kr, rank = word_data
-        kor_no_num = kor[:-1] if kor[-1].isdigit() else kor
+        kor_no_num = row.Korean[:-1] if row.Korean[-1].isdigit() else row.Korean
         if kor_no_num not in self.vocab_audio_paths:
             self.create_gtts_audio(kor_no_num)
 
         url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
         url_kor = url + kor_no_num
 
-        eng_add = f"; ({eng_add})" if eng_add else ""
-        content = f"**{kor} - {eng}{eng_add}**"
+        eng_add = f"; ({row.English_Add})" if row.English_Add else ""
+        content = f"**{row.Korean} - {row.Book_English}{eng_add}**"
         if not lesson:
             content = f"||{content}{spoil_spacing}||"
 
         embed = discord.Embed(title=content, url=url_kor)
 
         if lesson:
-            ex = f"- {ex[1]} ({ex[0]})\n" if ex[0] else ""
-            ex += f"- {exs2kr} ({exs2en})\n" if exs2kr else ""
+            ex = f"- {row.Example_KR} ({row.Example_EN})\n" if row.Example_KR else ""
+            ex += f"- {row.Example_KR2} ({row.Example_EN2})\n" if row.Example_KR2 else ""
             ex = "\n" + ex if ex else ""
-            field = f"**{expl}**{ex}"
+            field = f"**{row.Explanation}**{ex}"
             embed.add_field(name="", value=field, inline=False)
             kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a2.png"
             file = discord.File(kk, filename="image.png")
@@ -560,11 +500,12 @@ class Language(commands.Cog):
             
         """
 
+        # TODO update types of vocab!
         stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
         view = SessionVocabView()
         guide = lesson
 
-        unchecked = set(vocab)
+        unchecked_words = {row.Korean for row in vocab}
         stats = []
         msg = None
         
@@ -580,7 +521,7 @@ class Language(commands.Cog):
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            embed.set_footer(text=f"{len(unchecked)} words remaining")
+            embed.set_footer(text=f"{len(unchecked_words)} words remaining")
             if not msg:
                 msg = await interaction.channel.send(embed=embed, view=view)
             else:
@@ -604,21 +545,21 @@ class Language(commands.Cog):
                 continue
             guide = lesson
 
-            word_to_move = vocab.pop()
+            row_to_move = vocab.pop()
 
             if button_id == "easy":
-                vocab.insert(0, word_to_move)
-                if word_to_move in unchecked:
-                    unchecked.remove(word_to_move)
+                vocab.insert(0, row_to_move)
+                if row_to_move in unchecked_words:
+                    unchecked_words.remove(row_to_move)
             elif button_id == "effort":
-                vocab.insert(len(vocab) // 2, word_to_move)
+                vocab.insert(len(vocab) // 2, row_to_move)
             elif button_id == "partial":
-                vocab.insert(len(vocab) // 3, word_to_move)
+                vocab.insert(len(vocab) // 3, row_to_move)
             elif button_id == "forgot":
-                vocab.insert(- len(vocab) // 5, word_to_move)
+                vocab.insert(- len(vocab) // 5, row_to_move)
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
-                content = f"{len(unchecked)} words remaining.\n{stats_str}"
+                content = f"{len(unchecked_words)} words remaining.\n{stats_str}"
                 await msg.edit(content=content, view=view, embed=None)
                 ws_log.append_rows(stats)
                 break
@@ -628,7 +569,7 @@ class Language(commands.Cog):
             stats.append(
                 [
                     time_str,
-                    word_to_move[1],
+                    row_to_move.Korean,
                     stat_labels[button_id],
                     session_number,
                 ]
