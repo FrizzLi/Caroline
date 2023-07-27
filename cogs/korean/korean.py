@@ -140,7 +140,7 @@ class Language(commands.Cog):
 
         return voice
 
-    def get_level_lesson(self, interaction, level_lesson_number):
+    def get_unknown_lesson_number(self, interaction):
         """Gets level and lesson numbers with validation checks.
 
         If the given level_lesson_number is invalid, it returns zeros.
@@ -158,59 +158,51 @@ class Language(commands.Cog):
         """
 
         # get next not fully known level_lesson_number
+        df = self.vocab_df
+        user_name = interaction.user.name
+        ws_names = (
+            f"{user_name}-score-1", 
+            f"{user_name}-score-2",
+            f"{user_name}-score-3",
+            f"{user_name}-score-4"
+        )
+        try:
+            _, scores_dfs = utils.get_worksheets("Korea - Users stats", ws_names)
+        except WorksheetNotFound:
+            # going for first level
+            level_lesson_number = 101
+            scores_dfs = []
+
+        # going for next unknown levels' lessons
+        for i, scores_df in enumerate(scores_dfs, 1):
+            known_words = set(scores_df[scores_df.columns[0]])
+            level_words = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
+            unknown_words = level_words - known_words
+            if unknown_words:
+                df = df.loc[df["Korean"].isin(unknown_words), ["Lesson", "Korean"]]
+                level_lesson_number = int(df.Lesson.min())
+                rows = df[df.Lesson == level_lesson_number].values
+                unknown_words = ", ".join([row[1] for row in rows])
+                print(f"Unknown words in lesson {level_lesson_number}: {unknown_words}")
+                break
+
+        # going for next unknown level
         if level_lesson_number == 1:
-            df = self.vocab_df
-            user_name = interaction.user.name
-            ws_names = (
-                f"{user_name}-score-1", 
-                f"{user_name}-score-2",
-                f"{user_name}-score-3",
-                f"{user_name}-score-4"
-            )
-            try:
-                _, scores_dfs = utils.get_worksheets("Korea - Users stats", ws_names)
-            except WorksheetNotFound:
-                # going for first level
-                level_lesson_number = 101
-                scores_dfs = []
+            level_lesson_number += 100 + len(scores_dfs) * 100
+        
+        return level_lesson_number
 
-            # going for next levels' lessons
-            for i, scores_df in enumerate(scores_dfs, 1):
-                known_words = set(scores_df[scores_df.columns[0]])
-                level_words = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
-                unknown_words = level_words - known_words
-                if unknown_words:
-                    df = df.loc[df["Korean"].isin(unknown_words), ["Lesson", "Korean"]]
-                    level_lesson_number = int(df.Lesson.min())
-                    rows = df[df.Lesson == level_lesson_number].values
-                    unknown_words = ", ".join([row[1] for row in rows])
-                    print(f"Unknown words in lesson {level_lesson_number}: {unknown_words}")
-                    break
-
-            # going for next level
-            if level_lesson_number == 1:
-                level_lesson_number += 100 + len(scores_dfs) * 100
-
-        # get level and lesson number with validation check
-        level_number = level_lesson_number // 100
-        lesson_number = level_lesson_number % 100
-        if not (0 < level_number < 5 and lesson_number < 31):
-            return 0, 0
-
-        return level_number, lesson_number
-
-    def get_session_number(self, ws_log, session_column):
+    def get_session_number(self, ws_log):
         """Gets ordinal number of lesson or review of session. Begins with 1.
 
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
-            session_column (int): column index used to retrieve session number
 
         Returns:
             int: ordinal session number
         """
 
-        session_numbers = ws_log.col_values(session_column)
+        session_numbers = ws_log.col_values(4)
         if len(session_numbers) > 1:
             session_number = int(session_numbers[-1]) + 1
         else:
@@ -816,34 +808,36 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
-        level_number, lesson_number = self.get_level_lesson(interaction, level_lesson_number)
-        level_lesson_number = level_number * 100 + lesson_number
-        if not level_number and not lesson_number:
+        if level_lesson_number == 1:
+            level_lesson_number = self.get_unknown_lesson_number(interaction)
+        
+        # get level and lesson number with validation check
+        level_number, lesson_number = divmod(level_lesson_number, 100)
+        if not (0 < level_number < 5 and lesson_number < 31):
             msg = "Wrong level lesson number!"
             await interaction.followup.send(msg)
             assert False, msg
 
         # get users stats worksheet
-        columns = 4
         ws_logs, _ = utils.get_worksheets(
             "Korea - Users stats",
             (f"{interaction.user.name}-{level_number}",),
             create=True,
-            size=(10_000, columns)
+            size=(10_000, 4)
         )
-        # create header if new was created
         ws_log = ws_logs[0]
-        if not ws_log.get_values("A1"):
+        if not ws_log.get_values("A1"):  # create header if missing
             ws_log.append_row(["Date", "Word", "Knowledge", "Session_number"])
 
-        session_number = self.get_session_number(ws_log, columns)
+        session_number = self.get_session_number(ws_log)
 
         if lesson_number:
             vocab = self.get_lesson_vocab(level_lesson_number)
-            await interaction.followup.send(f"Lesson {level_lesson_number}")
+            msg = f"Lesson {level_lesson_number}, session: {session_number}"
         else:
             vocab = self.get_review_vocab(level_number, interaction.user.name)
-            await interaction.followup.send(f"Level {level_number} Review session: {session_number}")
+            msg = f"Review level {level_number}, session: {session_number}"
+        await interaction.followup.send(msg)
 
         await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, bool(lesson_number), vocab)
 
