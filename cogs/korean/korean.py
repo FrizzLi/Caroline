@@ -203,11 +203,7 @@ class Language(commands.Cog):
             level_lesson_number (int): lesson number
 
         Returns:
-            List[Tuple[str, str, Tuple[str, str]]]: [
-                english word,
-                korean word,
-                (english usage example, korean usage example)
-            ]
+            List[pandas.core.frame.Row]: word data (row in ws table)
         """
 
         filtered_df = self.vocab_df.loc[self.vocab_df['Lesson'] == level_lesson_number]
@@ -224,11 +220,7 @@ class Language(commands.Cog):
             user_name (str): user name (used for worksheet name)
 
         Returns:
-            List[Tuple[str, str, Tuple[str, str]]]: [
-                english word,
-                korean word,
-                (english usage example, korean usage example)
-            ]
+            List[pandas.core.frame.Row]: word data (row in ws table)
         """
 
         _, scores_dfs = utils.get_worksheets(
@@ -403,21 +395,20 @@ class Language(commands.Cog):
 
         return picked_words
 
-    def prepare_word_output(self, row, lesson, i=[0]):
+    def prepare_word_output(self, row, guide, i=[0]):
         """Prepares variables needed for outputting word data.
 
-        _extended_summary_
-
         Args:
-            word_data (_type_): _description_
-            lesson (_type_): _description_
-            i (list, optional): _description_. Defaults to [0].
+            List[pandas.core.frame.Row]: word data (row in ws table)
+            guide (bool): determines whether we want additional word info
+            i (list, optional): using for discord bug with spoiled words.
+                Defaults to [0].
 
         Returns:
-            _type_: _description_
+            Tuple[discord.embeds.Embed, discord.file.File, str]: word data
         """
 
-        max_spaces = 30  # using for discord bug with spoiled words
+        max_spaces = 30
         i[0] += 1
         i[0] %= max_spaces
         spoil_spacing = " " * (i[0])
@@ -432,21 +423,21 @@ class Language(commands.Cog):
 
         eng_add = f"; ({row.English_Add})" if row.English_Add else ""
         content = f"**{row.Korean} - {row.Book_English}{eng_add}**"
-        if not lesson:
+        if not guide:
             content = f"||{content}{spoil_spacing}||"
 
         embed = discord.Embed(title=content, url=url_kor)
 
-        if lesson:
+        if guide:
             ex = f"- {row.Example_KR} ({row.Example_EN})\n" if row.Example_KR else ""
             ex += f"- {row.Example_KR2} ({row.Example_EN2})\n" if row.Example_KR2 else ""
             ex = "\n" + ex if ex else ""
             field = f"**{row.Explanation}**{ex}"
             embed.add_field(name="", value=field, inline=False)
-            kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a2.png"
-            file = discord.File(kk, filename="image.png")
-            # if kor_no_num in self.vocab_image_paths:
-            #     file = discord.File(self.vocab_image_paths[kor_no_num], filename="image.png")
+            # kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a2.png"
+            # file = discord.File(kk, filename="image.png")
+            if kor_no_num in self.vocab_image_paths:
+                file = discord.File(self.vocab_image_paths[kor_no_num], filename="image.png")
             embed.set_image(url="attachment://image.png")
 
         return embed, file, self.vocab_audio_paths[kor_no_num]
@@ -492,12 +483,7 @@ class Language(commands.Cog):
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             session_number (int): session number
             lesson (bool): indicates whether session is informational lesson or review
-            vocab (List[Tuple[str, str, Tuple[str, str]]]): [
-                english word,
-                korean word,
-                (english usage example, korean usage example)
-            ]
-            
+            List[pandas.core.frame.Row]: word data (row in ws table)
         """
 
         # TODO update types of vocab!
