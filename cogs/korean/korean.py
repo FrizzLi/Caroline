@@ -460,7 +460,8 @@ class Language(commands.Cog):
 
         This is being used for all the words that have no audio from naver's
         dictionary. 
-        Audio files are located in data/vocabulary_global_gtts_audio dir.
+        Audio files are saved in data/vocabulary_global_gtts_audio dir, a new
+        audio path is added for the given korean word.
 
         Args:
             korean_word (str): korean word
