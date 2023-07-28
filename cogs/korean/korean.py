@@ -421,7 +421,7 @@ class Language(commands.Cog):
             self.create_gtts_audio(kor_no_num)
 
         url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        url_kor = url + kor_no_num
+        url_kor = url + kor_no_num.replace(" ", "%20")
 
         eng_add = f"; ({row.English_Add})" if row.English_Add else ""
         content = f"**{row.Korean} - {row.Book_English}{eng_add}**"
