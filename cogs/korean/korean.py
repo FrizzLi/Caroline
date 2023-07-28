@@ -432,10 +432,11 @@ class Language(commands.Cog):
 
         if guide:
             ex = f"- {row.Example_KR} ({row.Example_EN})\n" if row.Example_KR else ""
+            # NOTE: nn conditions when data is fully filled
             ex += f"- {row.Example_KR2} ({row.Example_EN2})\n" if row.Example_KR2 else ""
             ex = "\n" + ex if ex else ""
-            field = f"**{row.Explanation}**{ex}"
-            embed.add_field(name="", value=field, inline=False)
+            if row.Explanation:
+                embed.add_field(name="", value=f"**{row.Explanation}**{ex}", inline=False)
             # kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a2.png"
             # file = discord.File(kk, filename="image.png")
             if kor_no_num in self.vocab_image_paths:
