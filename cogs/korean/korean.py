@@ -109,7 +109,7 @@ class Language(commands.Cog):
         paths_labelled = {}
         for path in paths:
             file_name = Path(path).stem
-            # file_name = file_name[:-1]  # TODO: AFTER IMAGES word = word[:-1] - script to remove the last letter
+            # file_name = file_name[:-1]  # TODO: 1 AFTER IMAGES PICKED word = word[:-1] - script to remove the last letter
             paths_labelled[file_name] = path
 
         return paths_labelled
@@ -159,17 +159,19 @@ class Language(commands.Cog):
             scores_dfs = []
 
         # going for next unknown levels' lessons
-        for i, scores_df in enumerate(scores_dfs, 1):
-            known_words = set(scores_df[scores_df.columns[0]])
+        for i, level_scores_df in enumerate(scores_dfs, 1):
+            known_words = set(level_scores_df[level_scores_df.columns[0]])
             level_words = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
             unknown_words = level_words - known_words
+            ws_missing_words = known_words - level_words
+            if ws_missing_words:
+                print(f"Level {i} has no words that are in user's score: {ws_missing_words}")
             if unknown_words:
                 df = df.loc[df["Korean"].isin(unknown_words), ["Lesson", "Korean"]]
                 level_lesson_number = int(df.Lesson.min())
                 rows = df[df.Lesson == level_lesson_number].values
                 unknown_words = ", ".join([row[1] for row in rows])
                 print(f"Unknown words in lesson {level_lesson_number}: {unknown_words}")
-                # TODO: LAST!!! "1" lesson tries. (fixing gspread) printing, words in gspread changing...
                 break
 
         # going for next unknown level
@@ -487,7 +489,6 @@ class Language(commands.Cog):
             List[pandas.core.frame.Row]: word data (row in ws table)
         """
 
-        # TODO update types of vocab!
         stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
         view = SessionVocabView()
         guide = lesson
@@ -863,4 +864,4 @@ async def setup(bot):
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
 
-# TODO Pylint
+# TODO: 3 Pylint, alt+shift
