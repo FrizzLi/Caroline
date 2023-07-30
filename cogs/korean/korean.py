@@ -539,8 +539,8 @@ class Language(commands.Cog):
 
             if button_id == "easy":
                 vocab.insert(0, row_to_move)
-                if row_to_move in unchecked_words:
-                    unchecked_words.remove(row_to_move)
+                if row_to_move.Korean in unchecked_words:
+                    unchecked_words.remove(row_to_move.Korean)
             elif button_id == "effort":
                 vocab.insert(len(vocab) // 2, row_to_move)
             elif button_id == "partial":
