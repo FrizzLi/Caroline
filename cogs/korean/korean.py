@@ -532,8 +532,8 @@ class Language(commands.Cog):
             elif button_id == "info":
                 guide = True
                 continue
-            guide = lesson
 
+            guide = lesson
             row_to_move = vocab.pop()
 
             if button_id == "easy":
@@ -550,19 +550,18 @@ class Language(commands.Cog):
                 stats_str = self.create_ending_session_stats(stats)
                 content = f"{len(unchecked_words)} words remaining.\n{stats_str}"
                 await msg.edit(content=content, view=view, embed=None)
-                ws_log.append_rows(stats)
                 break
 
             time = datetime.now(pytz.timezone(self.timezone))
             time_str = time.strftime("%Y-%m-%d %H:%M:%S")
-            stats.append(
-                [
-                    time_str,
-                    row_to_move.Korean,
-                    stat_labels[button_id],
-                    session_number,
-                ]
-            )
+            stat = [
+                time_str,
+                row_to_move.Korean,
+                stat_labels[button_id],
+                session_number
+            ]
+            stats.append(stat)
+            ws_log.append_row(stat)
 
     def create_ending_session_stats(self, stats):
         """Gets stats that will be displayed when the session ends.
