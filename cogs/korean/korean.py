@@ -472,7 +472,8 @@ class Language(commands.Cog):
 
         src_dir = Path(__file__).parents[0]
         vocab_path = f"{src_dir}/data/vocabulary_global_gtts_audio/"
-        path = f'{vocab_path}/{korean_word}.mp3'
+        stripped_korean_word = korean_word.replace("?", "")
+        path = f'{vocab_path}/{stripped_korean_word}.mp3'
         tts = gTTS(korean_word, lang='ko')
         tts.save(path)
 
