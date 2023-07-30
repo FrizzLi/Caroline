@@ -373,7 +373,7 @@ class Language(commands.Cog):
         randomly from the most unknown ones to known ones.
 
         Args:
-            words (List[str]): words that were guessed in a level
+            words (Tuple[str]): words that were guessed in a level
             consider_amount (int, optional): Amount of words to consider into
                 random picking. Defaults to 150.
             pick_amount (int, optional): Amount of words to pick.
@@ -864,5 +864,3 @@ async def setup(bot):
     await bot.add_cog(
         Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
     )
-
-# TODO: 3 Pylint, alt+shift
