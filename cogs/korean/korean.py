@@ -177,7 +177,7 @@ class Language(commands.Cog):
         # going for next unknown level
         if level_lesson_number == 1:
             level_lesson_number += 100 + len(scores_dfs) * 100
-        
+
         return level_lesson_number
 
     def get_session_number(self, ws_log):
@@ -214,23 +214,15 @@ class Language(commands.Cog):
 
         return vocab
 
-    def get_review_vocab(self, level_number, user_name):
-        """Gets vocabulary review of all guessed words for a given level.
+    def get_review_vocab(self, guessed_words):
+        """Gets vocabulary to review for a given level.
 
         Args:
-            level_number (int): level number
-            user_name (str): user name (used for worksheet name)
+            guessed_words (Tuple[str]): level number
 
         Returns:
             List[pandas.core.frame.Row]: word data (row in ws table)
         """
-
-        _, scores_dfs = utils.get_worksheets(
-            "Korea - Users stats",
-            (f"{user_name}-score-{level_number}",),
-        )
-        scores_df = scores_dfs[0]
-        guessed_words = tuple(scores_df[scores_df.columns[0]])
 
         picked_words = self.get_random_words(guessed_words)
         picked_words_df = self.vocab_df[self.vocab_df["Korean"].isin(picked_words)]
@@ -373,7 +365,7 @@ class Language(commands.Cog):
         randomly from the most unknown ones to known ones.
 
         Args:
-            words (Tuple[str]): words that were guessed in a level
+            guessed_words (Tuple[str]): words that were guessed in a level
             consider_amount (int, optional): Amount of words to consider into
                 random picking. Defaults to 150.
             pick_amount (int, optional): Amount of words to pick.
@@ -402,7 +394,7 @@ class Language(commands.Cog):
 
         Args:
             List[pandas.core.frame.Row]: word data (row in ws table)
-            guide (bool): determines whether we want additional word info
+            guide (bool): determines whether additional should be displayed
             i (list, optional): using for discord bug with spoiled words.
                 Defaults to [0].
 
@@ -431,8 +423,8 @@ class Language(commands.Cog):
         embed = discord.Embed(title=content, url=url_kor)
 
         if guide:
-            ex = f"- {row.Example_KR} ({row.Example_EN})\n" if row.Example_KR else ""
             # NOTE: nn conditions when data is fully filled
+            ex = f"- {row.Example_KR} ({row.Example_EN})\n" if row.Example_KR else ""
             ex += f"- {row.Example_KR2} ({row.Example_EN2})\n" if row.Example_KR2 else ""
             ex = "\n" + ex if ex else ""
             if row.Explanation:
@@ -479,7 +471,7 @@ class Language(commands.Cog):
 
         self.vocab_audio_paths[korean_word] = path
 
-    async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, lesson, vocab):
+    async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, guessed_words, vocab):
         """Runs session loop for vocabulary words.
 
         Args:
@@ -487,20 +479,23 @@ class Language(commands.Cog):
             voice (discord.voice_client.VoiceClient): voice client channel
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             session_number (int): session number
-            lesson (bool): indicates whether session is informational lesson or review
+            guessed_words (Tuple[str]): words that were previously guessed
             List[pandas.core.frame.Row]: word data (row in ws table)
         """
 
+        # too many args... try to fix
         stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
         view = SessionVocabView()
-        guide = lesson
 
         unchecked_words = {row.Korean for row in vocab}
+        unvisited_words = unchecked_words - guessed_words
         stats = []
         msg = None
-        
+
         while True:
-            embed, file, audio_path = self.prepare_word_output(vocab[-1], guide)
+            row = vocab[-1]
+            guide = row.Korean in unvisited_words
+            embed, file, audio_path = self.prepare_word_output(row, guide)
             try:
                 voice.play(
                     discord.FFmpegPCMAudio(
@@ -531,11 +526,16 @@ class Language(commands.Cog):
             if button_id == "repeat":
                 continue
             elif button_id == "info":
-                guide = True
+                unvisited_words.add(row.Korean)
                 continue
+            elif button_id == "end":
+                stats_str = self.create_ending_session_stats(stats)
+                content = f"{len(unchecked_words)} words remaining.\n{stats_str}"
+                await msg.edit(content=content, view=view, embed=None)
+                break
 
-            guide = lesson
             row_to_move = vocab.pop()
+            unvisited_words.remove(row_to_move.Korean)
 
             if button_id == "easy":
                 vocab.insert(0, row_to_move)
@@ -547,11 +547,6 @@ class Language(commands.Cog):
                 vocab.insert(len(vocab) // 3, row_to_move)
             elif button_id == "forgot":
                 vocab.insert(- len(vocab) // 5, row_to_move)
-            elif button_id == "end":
-                stats_str = self.create_ending_session_stats(stats)
-                content = f"{len(unchecked_words)} words remaining.\n{stats_str}"
-                await msg.edit(content=content, view=view, embed=None)
-                break
 
             time = datetime.now(pytz.timezone(self.timezone))
             time_str = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -754,8 +749,10 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
+        user_name = interaction.user.name
+
         if level_lesson_number == 1:
-            level_lesson_number = self.get_unknown_lesson_number(interaction.user.name)
+            level_lesson_number = self.get_unknown_lesson_number(user_name)
 
         # get level and lesson number with validation check
         level_number, lesson_number = divmod(level_lesson_number, 100)
@@ -765,9 +762,9 @@ class Language(commands.Cog):
             assert False, msg
 
         # get users stats worksheet
-        ws_logs, _ = utils.get_worksheets(
+        ws_logs, scores_dfs = utils.get_worksheets(
             "Korea - Users stats",
-            (f"{interaction.user.name}-{level_number}",),
+            (f"{user_name}-{level_number}", f"{user_name}-score-{level_number}"),
             create=True,
             size=(10_000, 4)
         )
@@ -775,19 +772,22 @@ class Language(commands.Cog):
         if not ws_log.get_values("A1"):  # create header if missing
             ws_log.append_row(["Date", "Word", "Knowledge", "Session_number"])
 
+        scores_df = scores_dfs[1]
+        guessed_words = tuple(scores_df[scores_df.columns[0]])
+
         session_number = self.get_session_number(ws_log)
 
         if lesson_number:
             vocab = self.get_lesson_vocab(level_lesson_number)
             msg = f"Lesson {level_lesson_number}, session: {session_number}"
         else:
-            vocab = self.get_review_vocab(level_number, interaction.user.name)
+            vocab = self.get_review_vocab(guessed_words)
             msg = f"Review level {level_number}, session: {session_number}"
         await interaction.followup.send(msg)
 
-        await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, bool(lesson_number), vocab)
+        await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, guessed_words, vocab)
 
-        self.create_users_level_score_ws(ws_log, interaction.user.name, level_number)
+        self.create_users_level_score_ws(ws_log, user_name, level_number)
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -862,5 +862,7 @@ async def setup(bot):
     """
 
     await bot.add_cog(
-        Language(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
+        Language(bot), guilds=[discord.Object(id=os.environ["GUILD_ID"])]
     )
+
+# TODO: 3 Pylint, alt+shift
