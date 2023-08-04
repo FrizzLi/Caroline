@@ -488,7 +488,7 @@ class Language(commands.Cog):
         view = SessionVocabView()
 
         unchecked_words = {row.Korean for row in vocab}
-        unvisited_words = unchecked_words - guessed_words
+        unvisited_words = unchecked_words - set(guessed_words)
         stats = []
         msg = None
 
@@ -506,7 +506,8 @@ class Language(commands.Cog):
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            embed.set_footer(text=f"{len(unchecked_words)} words remaining")
+            footer_text = f"{len(unchecked_words)} words remaining."
+            embed.set_footer(text=footer_text)
             if not msg:
                 msg = await interaction.channel.send(embed=embed, view=view)
             else:
@@ -530,17 +531,19 @@ class Language(commands.Cog):
                 continue
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
-                content = f"{len(unchecked_words)} words remaining.\n{stats_str}"
+                content = f"{footer_text}\n{stats_str}"
                 await msg.edit(content=content, view=view, embed=None)
+                ws_log.append_rows(stats)
                 break
 
+            if guide:
+                unvisited_words.remove(row.Korean)
             row_to_move = vocab.pop()
-            unvisited_words.remove(row_to_move.Korean)
 
             if button_id == "easy":
                 vocab.insert(0, row_to_move)
-                if row_to_move.Korean in unchecked_words:
-                    unchecked_words.remove(row_to_move.Korean)
+                if row.Korean in unchecked_words:
+                    unchecked_words.remove(row.Korean)
             elif button_id == "effort":
                 vocab.insert(len(vocab) // 2, row_to_move)
             elif button_id == "partial":
@@ -550,14 +553,14 @@ class Language(commands.Cog):
 
             time = datetime.now(pytz.timezone(self.timezone))
             time_str = time.strftime("%Y-%m-%d %H:%M:%S")
-            stat = [
-                time_str,
-                row_to_move.Korean,
-                stat_labels[button_id],
-                session_number
-            ]
-            stats.append(stat)
-            ws_log.append_row(stat)
+            stats.append(
+                [
+                    time_str,
+                    row_to_move.Korean,
+                    stat_labels[button_id],
+                    session_number,
+                ]
+            )
 
     def create_ending_session_stats(self, stats):
         """Gets stats that will be displayed when the session ends.
