@@ -483,7 +483,6 @@ class Language(commands.Cog):
             List[pandas.core.frame.Row]: word data (row in ws table)
         """
 
-        # too many args... try to fix
         stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
         view = SessionVocabView()
 
@@ -493,6 +492,8 @@ class Language(commands.Cog):
         msg = None
 
         while True:
+
+            # generate discord message
             row = vocab[-1]
             guide = row.Korean in unvisited_words
             embed, file, audio_path = self.prepare_word_output(row, guide)
@@ -515,14 +516,13 @@ class Language(commands.Cog):
             if file:
                 await msg.add_files(file)
 
-            # wait for interaction
+            # button interactions
             interaction = await self.bot.wait_for(
                 "interaction",
                 check=lambda inter: "custom_id" in inter.data.keys()
                 and inter.user.name == interaction.user.name,
             )
 
-            # button interactions
             button_id = interaction.data["custom_id"]
             if button_id == "repeat":
                 continue
@@ -551,6 +551,7 @@ class Language(commands.Cog):
             elif button_id == "forgot":
                 vocab.insert(- len(vocab) // 5, row_to_move)
 
+            # save stats
             time = datetime.now(pytz.timezone(self.timezone))
             time_str = time.strftime("%Y-%m-%d %H:%M:%S")
             stats.append(
