@@ -17,13 +17,14 @@ class MyBot(commands.Bot):
             intents=discord.Intents().all(),
         )
         self.cog_blacklist = variables["cog_blacklist"]
+        self.activity_str = variables["activity"]
 
     @commands.Cog.listener()
     async def on_ready(self):
         await bot.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening,
-                name="/play",
+                name=self.activity_str,
             ),
             status=discord.Status.online,
         )
@@ -52,8 +53,8 @@ class MyBot(commands.Bot):
                 except Exception as err:
                     print(f"{dir_name} module cannot be loaded. [{err}]")
 
-        # is this necessary? SERVER_ID
-        await bot.tree.sync(guild=discord.Object(id=os.environ["SERVER_ID"]))
+        # is this necessary? GUILD_ID
+        await bot.tree.sync(guild=discord.Object(id=os.environ["GUILD_ID"]))
 
 def load_essentials():
     """Loads essential variables for launching the bot.
@@ -72,20 +73,23 @@ def load_essentials():
     else:
         error_msgs += "'config.json' not found!\n"
 
-    if os.name == "nt" and len(sys.argv) < 2:
-        bot_name = "Caroline"
+    if len(sys.argv) > 1:
+        bot_name = sys.argv[1]
     else:
-        bot_name = "GLaDOS"
+        bot_name = "caroline"
 
     token = os.environ[f"{bot_name}_TOKEN"]
     app_id = os.environ[f"{bot_name}_ID"]
     prefix = bots_settings[bot_name]["prefix"]
+    activity = bots_settings[bot_name]["activity"]
     if not token:
         error_msgs += f"{bot_name}'s token in .env file is not set!\n"
     if not app_id:
         error_msgs += f"{bot_name}'s app ID in .env file is not set!\n"
     if not prefix:
         error_msgs += "prefix in config.json is not set!\n"
+    if not activity:
+        error_msgs += "activity in config.json is not set!\n"
     if error_msgs:
         sys.exit(error_msgs)
 
@@ -93,6 +97,7 @@ def load_essentials():
         "token": token,
         "app_id": app_id,
         "prefix": prefix,
+        "activity": activity,
         "cog_blacklist": bots_settings[bot_name]["cog_blacklist"]
     }
 
@@ -104,3 +109,4 @@ bot.run(bot_vars["token"])
 
 # pylint: disable=<err_name> (pylint)
 # type: ignore (mypy)
+# TODO: wrap idea (logging function calls)..>!! (*EVERYWHERE)
