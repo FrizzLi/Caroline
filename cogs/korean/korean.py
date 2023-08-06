@@ -3,7 +3,7 @@
 Function hierarchy:
 vocab_listening
     _get_vocab_table
-    _get_labelled_file_paths
+    get_labelled_file_paths
     async get_voice
     get_unknown_lesson_number
     get_session_number
@@ -34,6 +34,7 @@ reading
 import json
 import os
 import random
+import shutil
 from datetime import datetime
 from glob import glob
 from pathlib import Path
@@ -54,8 +55,8 @@ from cogs.korean.session_views import SessionListenView, SessionVocabView
 
 class Language(commands.Cog):
     def __init__(self, bot):
-        self.vocab_audio_paths = self._get_labelled_file_paths(("data/*/*/vocabulary_audio/*", "data/vocabulary_global_gtts_audio/*"))
-        self.vocab_image_paths = self._get_labelled_file_paths(("data/*/*/vocabulary_images/*"))
+        self.vocab_audio_paths = self.get_labelled_file_paths(("data/*/*/vocabulary_audio/*", "data/vocabulary_global_gtts_audio/*"))
+        self.vocab_image_paths = self.get_labelled_file_paths(("data/*/*/vocabulary_images/*",), True)
         self.vocab_df = self._get_vocab_table()
         self.bot = bot
         self.ffmpeg_path = (
@@ -79,7 +80,7 @@ class Language(commands.Cog):
 
         return vocab_df
 
-    def _get_labelled_file_paths(self, glob_paths):
+    def get_labelled_file_paths(self, glob_paths, ignore_last_letter=False):
         """Gets file names and their paths. Used for loading audio/image files.
 
         Not all words have audio file, it will load only the ones that are
@@ -107,10 +108,15 @@ class Language(commands.Cog):
             paths += glob(f"{src_dir}/{path}")
 
         paths_labelled = {}
-        for path in paths:
-            file_name = Path(path).stem
-            # file_name = file_name[:-1]  # TODO: 1 AFTER IMAGES PICKED word = word[:-1] - script to remove the last letter
-            paths_labelled[file_name] = path
+        if ignore_last_letter:
+            for path in paths:
+                file_name = Path(path).stem
+                file_name = file_name[:-1]
+                paths_labelled[file_name] = path[:-5] + path[-4:]
+        else:
+            for path in paths:
+                file_name = Path(path).stem
+                paths_labelled[file_name] = path
 
         return paths_labelled
 
@@ -165,13 +171,13 @@ class Language(commands.Cog):
             unknown_words = level_words - known_words
             ws_missing_words = known_words - level_words
             if ws_missing_words:
-                print(f"Level {i} has no words that are in user's score: {ws_missing_words}")
+                print(f"Vocabulary is missing words in Level {i} that user has encountered: {ws_missing_words}\nRename those words for user! They're outdated.")
             if unknown_words:
                 df = df.loc[df["Korean"].isin(unknown_words), ["Lesson", "Korean"]]
                 level_lesson_number = int(df.Lesson.min())
                 rows = df[df.Lesson == level_lesson_number].values
                 unknown_words = ", ".join([row[1] for row in rows])
-                print(f"Unknown words in lesson {level_lesson_number}: {unknown_words}")
+                print(f"User is missing these words in lesson {level_lesson_number}: {unknown_words}")
                 break
 
         # going for next unknown level
@@ -434,6 +440,7 @@ class Language(commands.Cog):
             file_name_word = row.Korean.replace("?", "")  # shouldnt be kor_no_num if there are two 12 njumbers in lesson...
             if file_name_word in self.vocab_image_paths:
                 file = discord.File(self.vocab_image_paths[file_name_word], filename="image.png")
+
             embed.set_image(url="attachment://image.png")
 
         return embed, file, self.vocab_audio_paths[kor_no_num]
@@ -677,8 +684,6 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
-            # TODO LISTEN ChatGPT Tokens first use!
-            # TODO LISTEN polish whole module + apply pylint
             # TODO LISTEN ADD backward button (10s)
             if button_id == "pauseplay":
                 # TODO LISTEN FIX: pauseplay button
@@ -871,3 +876,13 @@ async def setup(bot):
     )
 
 # TODO: 3 Pylint, alt+shift
+
+# 104 밥1
+# 105 찾다1
+# 107 일2
+# 107 달1
+# 107 반1
+# 107 공1
+# 107 영1
+# 109 차1
+# 110 다리1
