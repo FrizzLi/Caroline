@@ -6,6 +6,8 @@ types-pytz
 gspread
 pytube
 python-dotenv
+gtts
+opencv-python
 
 pylint
 mypy
