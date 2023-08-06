@@ -1,2 +1,3 @@
 call .\venv\Scripts\activate.bat
-python -u main.py g
+start python -u main.py glados
+start python -u main.py wheatley
