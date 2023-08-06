@@ -431,8 +431,8 @@ class Language(commands.Cog):
                 embed.add_field(name="", value=f"**{row.Explanation}**{ex}", inline=False)
             # kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a2.png"
             # file = discord.File(kk, filename="image.png")
-            file_name_word = kor_no_num.replace("?", "")  # shouldnt be kor_no_num if there are two 12 njumbers in lesson...
-            if kor_no_num in self.vocab_image_paths:
+            file_name_word = row.Korean.replace("?", "")  # shouldnt be kor_no_num if there are two 12 njumbers in lesson...
+            if file_name_word in self.vocab_image_paths:
                 file = discord.File(self.vocab_image_paths[file_name_word], filename="image.png")
             embed.set_image(url="attachment://image.png")
 
