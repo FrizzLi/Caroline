@@ -442,6 +442,8 @@ class Language(commands.Cog):
                 file = discord.File(self.vocab_image_paths[file_name_word], filename="image.png")
 
             embed.set_image(url="attachment://image.png")
+        # else:
+        #     embed.set_image(url=None)
 
         return embed, file, self.vocab_audio_paths[kor_no_num]
 
@@ -520,7 +522,10 @@ class Language(commands.Cog):
             if not msg:
                 msg = await interaction.channel.send(embed=embed, view=view)
             else:
-                await msg.edit(embed=embed, view=view)
+                if guide:
+                    await msg.edit(embed=embed, view=view)
+                else:
+                    await msg.edit(embed=embed, view=view, attachments=[])
             if file:
                 await msg.add_files(file)
 
@@ -546,6 +551,7 @@ class Language(commands.Cog):
 
             if guide:
                 unvisited_words.remove(row.Korean)
+
             row_to_move = vocab.pop()
 
             if button_id == "easy":
