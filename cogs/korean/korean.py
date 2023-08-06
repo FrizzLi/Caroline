@@ -34,7 +34,6 @@ reading
 import json
 import os
 import random
-import shutil
 from datetime import datetime
 from glob import glob
 from pathlib import Path
@@ -96,6 +95,8 @@ class Language(commands.Cog):
 
         Args:
             glob_paths (Tuple[str]): string for glob pathing (with stars)
+            ignore_last_letter (bool, optional): ignore last letter in the
+                filename (for image pickings). Defaults to False.
 
         Returns:
             Dict[str, str]: words and their audio paths (word being the key)
@@ -187,13 +188,13 @@ class Language(commands.Cog):
         return level_lesson_number
 
     def get_session_number(self, ws_log):
-        """Gets ordinal number of lesson or review of session. Begins with 1.
+        """Gets the next number in a row for session. Begins with 1.
 
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
 
         Returns:
-            int: ordinal session number
+            int: session number
         """
 
         session_numbers = ws_log.col_values(4)
@@ -208,7 +209,7 @@ class Language(commands.Cog):
         """Gets vocabulary for a given lesson.
 
         Args:
-            level_lesson_number (int): lesson number
+            level_lesson_number (int): level lesson number
 
         Returns:
             List[pandas.core.frame.Row]: word data (row in ws table)
@@ -224,7 +225,7 @@ class Language(commands.Cog):
         """Gets vocabulary to review for a given level.
 
         Args:
-            guessed_words (Tuple[str]): level number
+            guessed_words (Tuple[str]): guessed words in a level
 
         Returns:
             List[pandas.core.frame.Row]: word data (row in ws table)
@@ -239,9 +240,9 @@ class Language(commands.Cog):
     def create_users_level_score_ws(self, ws_log, user_name, level_number):
         """Creates scoring for level in the user's worksheet.
 
-        Scoring system takes into account: 
-         - first guesses in a session, 
-         - by each latter session, the importance of score is being reduced 
+        Scoring system takes into account:
+         - first guesses in a session
+         - by each latter session, the importance of score is being reduced
            by distribution values
          - time of the last guess of a certain word
 
@@ -323,6 +324,9 @@ class Language(commands.Cog):
     def get_score_distribution(self, amount=5, reducer=0.8):
         """Gets score distribution for vocabulary picking.
 
+        The value starts at 1. By each iteration the value is reduced by the
+        <reducer>, <amount> tells us how many values (iterations) to do.
+
         Args:
             amount (int, optional): amount of values. Defaults to 10.
             reducer (float, optional): reducing coefficient. Defaults to 0.8.
@@ -346,29 +350,29 @@ class Language(commands.Cog):
             row_date (str): row's (word's) guess date
             now_date (datetime.datetime): current date
             coefficient (float, optional): Penalty coefficient.
-                Defaults to 0.005.
+                Defaults to 0.01.
 
         Returns:
             Tuple[int, List[str]]: score penalty, time marks
         """
 
-        # score penalty
+        # score penalty number
         row_date = datetime.strptime(row_date, "%Y-%m-%d %H:%M:%S")
         days_diff = (now_date - row_date).days
         score_penalty = days_diff * coefficient
 
-        # emoji visualizations
+        # emoji visualization list
         months, days = divmod(days_diff, 30)
         weeks, days = divmod(days, 7)
         time_marks = ["🌙"] * months + ["📅"] * weeks + ["🌞"] * days
 
         return score_penalty, time_marks
 
-    def get_random_words(self, words, consider_amount=150, pick_amount=50):
+    def get_random_words(self, guessed_words, consider_amount=150, pick_amount=50):
         """Gets randomly chosen words for session.
 
-        Creates linear probability distribution and uses it to pick words
-        randomly from the most unknown ones to known ones.
+        Uses linear probability distribution to pick words randomly from
+        the most unknown ones to known ones.
 
         Args:
             guessed_words (Tuple[str]): words that were guessed in a level
@@ -378,10 +382,10 @@ class Language(commands.Cog):
                 Defaults to 50.
 
         Returns:
-            numpy.ndarray: (list of) picked words
+            numpy.ndarray: picked words
         """
 
-        consider_amount = len(words) if len(words) < consider_amount else consider_amount
+        consider_amount = len(guessed_words) if len(guessed_words) < consider_amount else consider_amount
         pick_amount = consider_amount if consider_amount < pick_amount else pick_amount
 
         mean = 0
@@ -391,7 +395,7 @@ class Language(commands.Cog):
         half_norm_distribution = half_norm_distribution[::-1]
         weights = half_norm_distribution / half_norm_distribution.sum()
 
-        picked_words = np.random.choice(words[:consider_amount], p=weights, size=pick_amount, replace=False)
+        picked_words = np.random.choice(guessed_words[:consider_amount], p=weights, size=pick_amount, replace=False)
 
         return picked_words
 
@@ -406,53 +410,49 @@ class Language(commands.Cog):
 
         Returns:
             Tuple[discord.embeds.Embed, discord.file.File, str]: word data
+                (embed message, file, path to audio)
         """
-
-        max_spaces = 30
-        i[0] += 1
-        i[0] %= max_spaces
-        spoil_spacing = " " * (i[0])
-        file = None
 
         kor_no_num = row.Korean[:-1] if row.Korean[-1].isdigit() else row.Korean
         if kor_no_num not in self.vocab_audio_paths:
             self.create_gtts_audio(kor_no_num)
 
-        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        url_kor = url + kor_no_num.replace(" ", "%20")
-
+        max_spaces = 30
+        i[0] += 1
+        i[0] %= max_spaces
+        spoil_spacing = " " * (i[0])
         eng_add = f"; ({row.English_Add})" if row.English_Add else ""
         content = f"**{row.Korean} - {row.Book_English}{eng_add}**"
         if not guide:
             content = f"||{content}{spoil_spacing}||"
 
+        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        url_kor = url + kor_no_num.replace(" ", "%20")
         embed = discord.Embed(title=content, url=url_kor)
 
+        file = None
         if guide:
-            # NOTE: nn conditions when data is fully filled
             ex = f"- {row.Example_KR} ({row.Example_EN})\n" if row.Example_KR else ""
             ex += f"- {row.Example_KR2} ({row.Example_EN2})\n" if row.Example_KR2 else ""
             ex = "\n" + ex if ex else ""
             if row.Explanation:
                 embed.add_field(name="", value=f"**{row.Explanation}**{ex}", inline=False)
-            # kk = "C:/Users/pmark/Desktop/Caroline-bot/cogs/korean/data/level_1/lesson_1/vocabulary_images/a2.png"
-            # file = discord.File(kk, filename="image.png")
-            file_name_word = row.Korean.replace("?", "")  # shouldnt be kor_no_num if there are two 12 njumbers in lesson...
+            file_name_word = row.Korean.replace("?", "")
             if file_name_word in self.vocab_image_paths:
                 file = discord.File(self.vocab_image_paths[file_name_word], filename="image.png")
 
             embed.set_image(url="attachment://image.png")
-        # else:
-        #     embed.set_image(url=None)
 
         return embed, file, self.vocab_audio_paths[kor_no_num]
 
-        ######
+        # syllables info
         # korean_words = re.findall("[가-힣]+", syl)
         # for word in korean_words:
         #     syl = syl.replace(word, f"\n**{word}**")
         # syl = syl[1:]
         # {examples}\n\n{syl}
+
+        # embed options:
         # color = discord.Color.green(),
         # embed.set_footer(text=f"Rank {rank}")
         # embed.set_thumbnail(url="attachment://image.png")
@@ -460,7 +460,7 @@ class Language(commands.Cog):
         # embed.set_image(url="attachment://image.png")
         # > {text} >
 
-    def create_gtts_audio(self, korean_word):
+    def create_gtts_audio(self, word):
         """Creates an audio using google's TTS for a given korean word.
 
         This is being used for all the words that have no audio from naver's
@@ -469,17 +469,17 @@ class Language(commands.Cog):
         audio path is added for the given korean word.
 
         Args:
-            korean_word (str): korean word
+            word (str): korean word
         """
 
         src_dir = Path(__file__).parents[0]
         vocab_path = f"{src_dir}/data/vocabulary_global_gtts_audio/"
-        stripped_korean_word = korean_word.replace("?", "")
-        path = f'{vocab_path}/{stripped_korean_word}.mp3'
-        tts = gTTS(korean_word, lang='ko')
+        stripped_word = word.replace("?", "")
+        path = f'{vocab_path}/{stripped_word}.mp3'
+        tts = gTTS(word, lang='ko')
         tts.save(path)
 
-        self.vocab_audio_paths[korean_word] = path
+        self.vocab_audio_paths[word] = path
 
     async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, guessed_words, vocab):
         """Runs session loop for vocabulary words.
@@ -490,7 +490,7 @@ class Language(commands.Cog):
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             session_number (int): session number
             guessed_words (Tuple[str]): words that were previously guessed
-            List[pandas.core.frame.Row]: word data (row in ws table)
+            vocab (List[pandas.core.frame.Row]): word data (row in ws table)
         """
 
         stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
@@ -503,7 +503,7 @@ class Language(commands.Cog):
 
         while True:
 
-            # generate discord message
+            # prepare output data
             row = vocab[-1]
             guide = row.Korean in unvisited_words
             embed, file, audio_path = self.prepare_word_output(row, guide)
@@ -519,6 +519,8 @@ class Language(commands.Cog):
 
             footer_text = f"{len(unchecked_words)} words remaining."
             embed.set_footer(text=footer_text)
+
+            # sending message
             if not msg:
                 msg = await interaction.channel.send(embed=embed, view=view)
             else:
@@ -551,7 +553,6 @@ class Language(commands.Cog):
 
             if guide:
                 unvisited_words.remove(row.Korean)
-
             row_to_move = vocab.pop()
 
             if button_id == "easy":
@@ -580,11 +581,12 @@ class Language(commands.Cog):
     def create_ending_session_stats(self, stats):
         """Gets stats that will be displayed when the session ends.
 
-        Contains top 5 wrongly guessed words and overall percentages for each
-        mark.
+        Contains total number of guesses, top 5 wrongly guessed words,
+        and overall percentages for each guessing mark (that takes only
+        the first guess into account).
 
         Args:
-            stats (List[str, str, str, int]): time, word, mark, session number
+            stats (List[str, str, str, int]): time, word, guess mark, session number
 
         Returns:
             str: stats
@@ -593,7 +595,7 @@ class Language(commands.Cog):
         if not stats:
             return "There weren't any words guessed."
 
-        # get marks count and scoring per word
+        # get guessing marks count and scoring per word
         marks_count = {"✅": 0, "🤔": 0, "🧩": 0, "❌": 0}
         score_table = {"✅": 0, "🤔": 1, "🧩": 2, "❌": 3}
         word_scores = {}
@@ -612,7 +614,7 @@ class Language(commands.Cog):
                 hardest_words.append(word)
         hardest_words_string = ", ".join(hardest_words)
 
-        # get mark percentages
+        # get guessing mark percentages
         total = sum(marks_count.values())
         for mark in marks_count:
             marks_count[mark] = round(marks_count[mark] * 100 / total)
@@ -633,7 +635,7 @@ class Language(commands.Cog):
 
         Args:
             interaction (discord.interactions.Interaction): slash cmd context
-            level_lesson_number (int): lesson number
+            level_lesson_number (int): level lesson number
 
         Returns:
             Tuple[List[str], List[str]]: (audio text, audio paths)
@@ -750,10 +752,10 @@ class Language(commands.Cog):
         """Start listening vocabulary exercise.
 
         There are 3 types of level_lesson_number:
-         - One ("1") finds the next user's unknown lesson
-         - Pure hundreds ("100", ..., "400") review session of one levels words
+         - One ("1") starts the next user's unknown lesson
+         - Pure hundreds ("100", ..., "400") starts review session of level's words
            (Hundred decimals represent level)
-         - Hundreds up to 30 ("101", ..., "130") specific lesson number
+         - Hundreds up to 30 ("101", ..., "130") starts session of specific lesson's words
            (Ten decimals represent level's lesson)
         """
 
@@ -770,7 +772,7 @@ class Language(commands.Cog):
         if level_lesson_number == 1:
             level_lesson_number = self.get_unknown_lesson_number(user_name)
 
-        # get level and lesson number with validation check
+        # get level and lesson number
         level_number, lesson_number = divmod(level_lesson_number, 100)
         if not (0 < level_number < 5 and lesson_number < 31):
             msg = "Wrong level lesson number!"
@@ -882,13 +884,3 @@ async def setup(bot):
     )
 
 # TODO: 3 Pylint, alt+shift
-
-# 104 밥1
-# 105 찾다1
-# 107 일2
-# 107 달1
-# 107 반1
-# 107 공1
-# 107 영1
-# 109 차1
-# 110 다리1
