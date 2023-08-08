@@ -8,6 +8,7 @@
 
 - [ ] Polish Discord related stuff: Pylint, Document, Optimize code, and Async, Logs
 - [ ] Pylint - resolve all errors (or at least have above 9.0 score)
+- [ ] Opts prompts: find mistakes in following code, Write a docstring for the following function
 
 - [ ] Integrate ChatGPT with my Discord server
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
@@ -20,12 +21,21 @@
   - [ ] Like button (to remember URL for next time)
 
 - [ ] korean.py
-  - [ ] ALL - create base forms
-  - [ ] UP TO 10 LESSON - count read/listen occurences + remove ;
+  - [ ] Bug - msg not removed, why (left the channel too soon maybe)
+  - [ ] IMP - when to go for new words or stick with review - automatically calculate
+  - [ ] FIX: left voice -> bot left, and forgot about session in text channel (no guesses(?))
+  - [ ] Check percentage calculation
+  - [ ] Add translations for reading/listening
+  - [ ] Calculate avg scores, whether there was improvement (watch time though, only at end update)
+  - [ ] Session time, unselect opt. (cannot select mistaken opt.)
+
+  - [ ] create spreadsheet for each user?
   - [ ] Publishing it: Make it in your server (networking) [UPON WEBSITE BUILDING], Elastic search for gsheet data for all users?
+  - [ ] Example sentences do not distinguish synonyms issue
 
   - [ ] Discarded:
     - [ ] Scoring system, vocab picking:
+      - [ ] Create longer expressions as partial listening idea
       - [ ] ~create stats before session..!? At the start of the day or sth? (after longer time, the scorings would be different, but its not that important)
       - [ ] ~Add visualization on worksheet, streak play, daily q, graph of practice intensity like on github
       - [ ] ~Buttons: Disable during play
@@ -40,7 +50,13 @@
       - [ ] Similarity: meanings(vs) / spelling / antonyms (level 2 and more); 대충, 정도, 주소, 조사
       - [ ] Listening, Reading: Sentence Click for exploration -> grammar, vocab, translation
       - [ ] Create questions for reading/listening
-      - [ ] Create dynamic adaptable content... (many ideas) - sth they can build on, commit
+      - [ ] Create dynamic adaptable content... (many ideas, brainstorming) - sth they can build on, commit
+         - [ ] DND idea of learning (inventory - nouns, adjs, etc. --- together/solo)
+         - [ ] Create your own learning vocab list! (getting the vocab - kdrama, sub.)
+         - [ ] Creating content with your Vocab
+         - [ ] Intercativity with button, ephimwral personalize (guide, line translate, words during reading)
+         - [ ] clustering words relations (similar words opts!)
+
 ### Done ✓
 
 - [x] Create my first TODO.md  
