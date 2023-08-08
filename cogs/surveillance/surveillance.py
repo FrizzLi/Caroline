@@ -204,5 +204,5 @@ async def setup(bot):
     """
 
     await bot.add_cog(
-        Surveillance(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
+        Surveillance(bot), guilds=[discord.Object(id=os.environ["GUILD_ID"])]
     )
