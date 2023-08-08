@@ -4,6 +4,7 @@ venv
 *.vscode
 *.gif
 *.pickle
+*.mp3
 cogs/ai_algo/data/knowledge/*facts.txt
 cogs/ai_algo/data/maps
 cogs/ai_algo/data/solutions
