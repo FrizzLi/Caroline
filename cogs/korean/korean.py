@@ -630,6 +630,7 @@ class Language(commands.Cog):
 
         return stats
 
+    # TODO Listen
     def get_listening_files(self, interaction, level_lesson_number):
         """Gets listening contents text and path to audio files.
 
@@ -658,6 +659,7 @@ class Language(commands.Cog):
 
         return audio_texts, audio_paths
 
+    # TODO Listen
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
 
         i = 0
@@ -692,9 +694,9 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
-            # TODO LISTEN ADD backward button (10s)
+            # TODO Listen ADD backward button (10s)
             if button_id == "pauseplay":
-                # TODO LISTEN FIX: pauseplay button
+                # TODO Listen FIX: pauseplay button
                 # need to add player, pause NN crucially atm
                 button_id2 = None
                 while button_id2 != "pauseplay":
@@ -713,6 +715,7 @@ class Language(commands.Cog):
                 await msg.edit(content=content, view=view)
                 break
 
+    # TODO Listen
     # Button commands
     async def pause(self, interaction):
         """Pause the currently playing song."""
@@ -725,6 +728,7 @@ class Language(commands.Cog):
 
         vc.pause()
 
+    # TODO Listen
     async def resume(self, interaction):
         """Resume the currently paused song."""
 
@@ -751,7 +755,7 @@ class Language(commands.Cog):
     async def vocab_listening(self, interaction, level_lesson_number: int):
         """Start listening vocabulary exercise.
 
-        There are 3 types of level_lesson_number:
+        There are 3 types of level_lesson_number in vocab_listening session:
          - One ("1") starts the next user's unknown lesson
          - Pure hundreds ("100", ..., "400") starts review session of level's words
            (Hundred decimals represent level)
@@ -815,9 +819,16 @@ class Language(commands.Cog):
             status=discord.Status.online,
         )
 
+    # TODO
     @app_commands.command(name="l")
     async def listening(self, interaction, level_lesson_number: int):
-        """Start listening exercise."""
+        """Start listening exercise.
+
+        There are 2 types of level_lesson_number in listening sessions:
+         - One ("1") starts the latest lesson which has all words visited
+         - Hundreds up to 30 ("101", ..., "130") starts specific lesson
+           (Hundred decimals represent level)
+           (Ten decimals represent level's lesson)"""
 
         await interaction.response.send_message(
             "...Setting up listening session..."
@@ -826,6 +837,27 @@ class Language(commands.Cog):
         await self.bot.change_presence(
             activity=discord.Game(name="Listening")
         )
+
+        # getting the level and lesson number
+        user_name = interaction.user.name
+        if level_lesson_number == 1:
+            level_lesson_number = self.get_unknown_lesson_number(user_name)
+
+        if level_lesson_number-1 == 100:
+            msg = "You haven't even guessed words of the first lesson!"
+            await interaction.followup.send(msg)
+            assert False, msg
+        elif not level_lesson_number % 100:  # get lesson from prev. lvl
+            level_number = (level_lesson_number // 100) - 1
+            level_lesson_number = (level_number * 100) + 30
+        else:                               # latest fully word guessed lesson
+            level_lesson_number -= 1
+
+        level_number, lesson_number = divmod(level_lesson_number, 100)
+        if not (0 < level_number < 5 and lesson_number < 31):
+            msg = "Wrong level lesson number!"
+            await interaction.followup.send(msg)
+            assert False, msg
 
         audio_texts, audio_paths = self.get_listening_files(interaction, level_lesson_number)
         if not audio_texts and not audio_paths:
@@ -850,10 +882,29 @@ class Language(commands.Cog):
         """Start reading exercise."""
 
         await interaction.response.send_message(
-            "...Setting up listening session..."
+            "...Setting up reading session..."
         )
 
-        level_number, lesson_number = self.get_level_lesson(interaction, level_lesson_number)
+        # getting the level and lesson number
+        user_name = interaction.user.name
+        if level_lesson_number == 1:
+            level_lesson_number = self.get_unknown_lesson_number(user_name)
+
+        if level_lesson_number-1 == 100:
+            msg = "You haven't even guessed words of the first lesson!"
+            await interaction.followup.send(msg)
+            assert False, msg
+        elif not level_lesson_number % 100:  # get lesson from prev. lvl
+            level_number = (level_lesson_number // 100) - 1
+            level_lesson_number = (level_number * 100) + 30
+        else:                               # latest fully word guessed lesson
+            level_lesson_number -= 1
+
+        level_number, lesson_number = divmod(level_lesson_number, 100)
+        if not (0 < level_number < 5 and lesson_number < 31):
+            msg = "Wrong level lesson number!"
+            await interaction.followup.send(msg)
+            assert False, msg
 
         # load text file
         src_dir = Path(__file__).parents[0]
