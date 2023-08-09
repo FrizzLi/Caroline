@@ -234,5 +234,5 @@ async def setup(bot):
     """
 
     await bot.add_cog(
-        AiAlgo(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
+        AiAlgo(bot), guilds=[discord.Object(id=os.environ["GUILD_ID"])]
     )
