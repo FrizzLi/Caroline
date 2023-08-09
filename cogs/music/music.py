@@ -38,23 +38,6 @@ class Music(commands.Cog):
         self.players = {}
         self.timezone = ""
 
-    async def cleanup(self, guild):
-        """Deletes guild player if one exists.
-
-        Args:
-            guild (discord.guild.Guild): discord server the bot is currently in
-        """
-
-        try:
-            await guild.voice_client.disconnect()
-        except AttributeError:
-            pass
-
-        try:
-            del self.players[guild.id]
-        except KeyError:
-            pass
-
     def get_player(self, interaction):
         """Retrieves guild player, or generates one if one does not exist.
 
@@ -149,28 +132,6 @@ class Music(commands.Cog):
 
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
-
-    @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
-        """Leave the channel when all the other members leave.
-
-        Args:
-            member (discord.member.Member): the bot
-            before (discord.member.VoiceState): state before certain
-                (anyone's) action [unused]
-            after (discord.member.VoiceState): state after certain
-                (anyone's) action [unused]
-        """
-
-        voice_state = member.guild.voice_client
-        if not voice_state:
-            return
-        members_amount = len(voice_state.channel.members)
-
-        # Checks if the bot is connected in the voice channel and
-        # whether theres only 1 member connected to it (the bot itself)
-        if voice_state is not None and members_amount == 1:
-            await self.cleanup(member.guild)
 
     # General commands (with no slash)  [!beware to have enough rows!!!]
     @commands.command()
@@ -418,75 +379,6 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="join")
-    async def connect(
-        self, interaction, *, channel: discord.VoiceChannel = None
-    ):
-        """Connect to voice.
-        This command also handles moving the bot to different channels.
-
-        Args:
-            channel: discord.VoiceChannel [Optional]
-                The channel to connect to. If a channel is not specified,
-                an attempt to join the voice channel you are in will be made.
-        """
-
-        if channel is None:
-            try:
-                channel = interaction.user.voice.channel
-            except AttributeError:
-                msg = "Specify voice channel or join one first."
-                return await interaction.response.send_message(msg)
-
-        vc = interaction.guild.voice_client
-        if vc:
-            if vc.channel.id == channel.id:
-                msg = "I'm already in the channel."
-                return await interaction.response.send_message(msg)
-            try:
-                await vc.move_to(channel)
-                embed = discord.Embed(
-                    description=f"Moved to channel: **{channel}**.",
-                    color=discord.Color.green(),
-                )
-                await interaction.response.send_message(embed=embed)
-            except TimeoutError:
-                msg = f"Moving to channel: <{channel}> timed out."
-                await interaction.response.send_message(msg)
-        else:
-            try:
-                await channel.connect()
-                embed = discord.Embed(
-                    description=f"Connected to channel: **{channel}**.",
-                    color=discord.Color.green(),
-                )
-                await interaction.response.send_message(embed=embed)
-            except TimeoutError:
-                msg = f"Connecting to channel: <{channel}> timed out."
-                await interaction.response.send_message(msg)
-
-    @app_commands.command()
-    async def leave(self, interaction):
-        """Stop the currently playing song, clears queue and disconnects from
-        voice.
-        """
-
-        voice = discord.utils.get(
-            self.bot.voice_clients, guild=interaction.guild
-        )
-        # vc = interaction.guild.voice_client
-        if not voice:
-            msg = "I'm not connected to a voice channel."
-            return await interaction.response.send_message(msg)
-
-        await self.cleanup(interaction.guild)
-
-        embed = discord.Embed(
-            description=f"Left **{voice.channel.name}** channel.",
-            color=discord.Color.green(),
-        )
-        await interaction.response.send_message(embed=embed)
-
     # Invoked commands with voice check
     @app_commands.command()
     async def jump(self, interaction, index: int):
@@ -620,8 +512,8 @@ class Music(commands.Cog):
         view = SearchView(player, entries)
         await interaction.channel.send(view.msg, view=view)
 
-    @app_commands.command(name="pick_from_playlist")
-    async def pick_from_playlist(self, interaction, search: str):
+    @app_commands.command(name="playlist")
+    async def playlist(self, interaction, playlist_url: str):
         """Display all songs from a playlist to pick from."""
 
         # making sure interaction timeout does not expire
@@ -632,7 +524,7 @@ class Music(commands.Cog):
         # get entries
         try:
             entries = await YTDLSource.create_source(
-                interaction, search, loop=self.bot.loop, playlist=True
+                interaction, playlist_url, loop=self.bot.loop, playlist=True
             )
         except youtube_dl.utils.DownloadError as err:
             await interaction.followup.send(err)
@@ -641,6 +533,7 @@ class Music(commands.Cog):
         # load it into view
         player = self.get_player(interaction)
         view = SearchView(player, entries)
+        player.view.update_msg()
         await interaction.channel.send(view.msg, view=view)
 
     # Button commands
@@ -699,5 +592,9 @@ async def setup(bot):
     """
 
     await bot.add_cog(
-        Music(bot), guilds=[discord.Object(id=os.environ["SERVER_ID"])]
+        Music(bot), guilds=[discord.Object(id=os.environ["GUILD_ID"])]
     )
+
+# TODO: fix seek command, pause-timestamp bug, player did not update, playlist takes non playlist, add example gif vid into github
+#   reqs
+  
