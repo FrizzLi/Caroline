@@ -5,7 +5,8 @@ vocab_listening
     _get_vocab_table
     get_labelled_file_paths
     async get_voice
-    get_unknown_lesson_number
+    async get_level_lesson_numbers
+        get_unknown_lesson_number
     get_session_number
     get_lesson_vocab
     get_review_vocab
@@ -140,6 +141,44 @@ class Language(commands.Cog):
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
 
         return voice
+
+
+    async def get_level_lesson_numbers(self, interaction, level_lesson_number, previous_lesson=False):
+        """Gets level lesson numbers for all types of sessions.
+
+        Args:
+            interaction (discord.interactions.Interaction): slash cmd context
+            level_lesson_number (int): level lesson number
+            previous_lesson (bool, optional): determiens whether we want the
+                latest lesson which has all words visited. This is set to True
+                for listening and reading sessions. Defaults to False.
+
+        Returns:
+            Tuple[int, int, int]: level lesson numbers
+        """
+
+        user_name = interaction.user.name
+        if level_lesson_number == 1:
+            level_lesson_number = self.get_unknown_lesson_number(user_name)
+
+        if previous_lesson:
+            if level_lesson_number-1 == 100:
+                msg = "You haven't even guessed words of the first lesson!"
+                await interaction.followup.send(msg)
+                assert False, msg
+            elif not level_lesson_number % 100:  # get lesson from prev. lvl
+                level_number = (level_lesson_number // 100) - 1
+                level_lesson_number = (level_number * 100) + 30
+            else:                               # latest fully word guessed lesson
+                level_lesson_number -= 1
+
+        level_number, lesson_number = divmod(level_lesson_number, 100)
+        if not (0 < level_number < 5 and lesson_number < 31):
+            msg = "Wrong level lesson number!"
+            await interaction.followup.send(msg)
+            assert False, msg
+
+        return level_number, lesson_number, level_lesson_number
 
     def get_unknown_lesson_number(self, user_name):
         """Gets the next unknown level_lesson_number for an user.
@@ -751,9 +790,10 @@ class Language(commands.Cog):
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
 
+
     @app_commands.command(name="vl")
     async def vocab_listening(self, interaction, level_lesson_number: int):
-        """Start listening vocabulary exercise.
+        """Starts listening vocabulary exercise.
 
         There are 3 types of level_lesson_number in vocab_listening session:
          - One ("1") starts the next user's unknown lesson
@@ -771,19 +811,10 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
-        user_name = interaction.user.name
-
-        if level_lesson_number == 1:
-            level_lesson_number = self.get_unknown_lesson_number(user_name)
-
-        # get level and lesson number
-        level_number, lesson_number = divmod(level_lesson_number, 100)
-        if not (0 < level_number < 5 and lesson_number < 31):
-            msg = "Wrong level lesson number!"
-            await interaction.followup.send(msg)
-            assert False, msg
+        level_number, lesson_number, level_lesson_number = await self.get_level_lesson_numbers(interaction, level_lesson_number)
 
         # get users stats worksheet
+        user_name = interaction.user.name
         ws_logs, scores_dfs = utils.get_worksheets(
             "Korea - Users stats",
             (f"{user_name}-{level_number}", f"{user_name}-score-{level_number}"),
@@ -822,13 +853,14 @@ class Language(commands.Cog):
     # TODO
     @app_commands.command(name="l")
     async def listening(self, interaction, level_lesson_number: int):
-        """Start listening exercise.
+        """Starts listening exercise.
 
         There are 2 types of level_lesson_number in listening sessions:
          - One ("1") starts the latest lesson which has all words visited
          - Hundreds up to 30 ("101", ..., "130") starts specific lesson
            (Hundred decimals represent level)
-           (Ten decimals represent level's lesson)"""
+           (Ten decimals represent level's lesson)
+        """
 
         await interaction.response.send_message(
             "...Setting up listening session..."
@@ -838,26 +870,7 @@ class Language(commands.Cog):
             activity=discord.Game(name="Listening")
         )
 
-        # getting the level and lesson number
-        user_name = interaction.user.name
-        if level_lesson_number == 1:
-            level_lesson_number = self.get_unknown_lesson_number(user_name)
-
-        if level_lesson_number-1 == 100:
-            msg = "You haven't even guessed words of the first lesson!"
-            await interaction.followup.send(msg)
-            assert False, msg
-        elif not level_lesson_number % 100:  # get lesson from prev. lvl
-            level_number = (level_lesson_number // 100) - 1
-            level_lesson_number = (level_number * 100) + 30
-        else:                               # latest fully word guessed lesson
-            level_lesson_number -= 1
-
-        level_number, lesson_number = divmod(level_lesson_number, 100)
-        if not (0 < level_number < 5 and lesson_number < 31):
-            msg = "Wrong level lesson number!"
-            await interaction.followup.send(msg)
-            assert False, msg
+        level_number, lesson_number, level_lesson_number = await self.get_level_lesson_numbers(interaction, level_lesson_number, True)
 
         audio_texts, audio_paths = self.get_listening_files(interaction, level_lesson_number)
         if not audio_texts and not audio_paths:
@@ -879,32 +892,20 @@ class Language(commands.Cog):
 
     @app_commands.command(name="r")
     async def reading(self, interaction, level_lesson_number: int):
-        """Start reading exercise."""
+        """Starts reading exercise.
+
+        There are 2 types of level_lesson_number in listening sessions:
+         - One ("1") starts the latest lesson which has all words visited
+         - Hundreds up to 30 ("101", ..., "130") starts specific lesson
+           (Hundred decimals represent level)
+           (Ten decimals represent level's lesson)
+        """
 
         await interaction.response.send_message(
             "...Setting up reading session..."
         )
 
-        # getting the level and lesson number
-        user_name = interaction.user.name
-        if level_lesson_number == 1:
-            level_lesson_number = self.get_unknown_lesson_number(user_name)
-
-        if level_lesson_number-1 == 100:
-            msg = "You haven't even guessed words of the first lesson!"
-            await interaction.followup.send(msg)
-            assert False, msg
-        elif not level_lesson_number % 100:  # get lesson from prev. lvl
-            level_number = (level_lesson_number // 100) - 1
-            level_lesson_number = (level_number * 100) + 30
-        else:                               # latest fully word guessed lesson
-            level_lesson_number -= 1
-
-        level_number, lesson_number = divmod(level_lesson_number, 100)
-        if not (0 < level_number < 5 and lesson_number < 31):
-            msg = "Wrong level lesson number!"
-            await interaction.followup.send(msg)
-            assert False, msg
+        level_number, lesson_number, level_lesson_number = await self.get_level_lesson_numbers(interaction, level_lesson_number, True)
 
         # load text file
         src_dir = Path(__file__).parents[0]
