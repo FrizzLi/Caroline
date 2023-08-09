@@ -15,13 +15,22 @@ create_gif
 
 import json
 import pickle
+import sys
 from functools import partial
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
-from cogs.ai_algo import stage_1_ai_evolution, stage_2_ai_pathfinding
+# executing via cog named ai_algo
+if Path(__file__).parents[0].name == "ai_algo":
+    sys.path.append(
+        str(Path(__file__).parents[2])
+    )  # for execution via main in cog
+    from cogs.ai_algo import stage_1_ai_evolution, stage_2_ai_pathfinding
+else:  # executing via main.py
+    import stage_1_ai_evolution
+    import stage_2_ai_pathfinding
 
 
 def _load_pickle(fname: str, suffix: str) -> Any:
