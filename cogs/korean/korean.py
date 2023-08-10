@@ -669,12 +669,13 @@ class Language(commands.Cog):
 
         return stats
 
-    # TODO Listen
-    def get_listening_files(self, interaction, level_lesson_number):
-        """Gets listening contents text and path to audio files.
+    def get_listening_files(self, interaction, level_number, lesson_number, level_lesson_number):
+        """Gets listening text and path to audio files.
 
         Args:
             interaction (discord.interactions.Interaction): slash cmd context
+            level_number (int): level number
+            lesson_number (int): lesson number
             level_lesson_number (int): level lesson number
 
         Returns:
@@ -682,7 +683,6 @@ class Language(commands.Cog):
         """
 
         src_dir = Path(__file__).parents[0]
-        level_number, lesson_number = self.get_level_lesson(interaction, level_lesson_number)
         lesson_path = f"{src_dir}/data/level_{level_number}/lesson_{lesson_number}"
         audio_path = Path(f"{lesson_path}/listening_audio")
         text_path = Path(f"{lesson_path}/listening_text.txt")
@@ -694,7 +694,9 @@ class Language(commands.Cog):
             audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
             # sorted it because linux system reverses it
         except Exception:
-            return [], []
+            msg = f"{level_lesson_number} lesson's text or audio files were not found!"
+            await interaction.followup.send(msg)
+            assert False, msg
 
         return audio_texts, audio_paths
 
@@ -754,7 +756,7 @@ class Language(commands.Cog):
                 await msg.edit(content=content, view=view)
                 break
 
-    # TODO Listen
+    # TODO Listen button
     # Button commands
     async def pause(self, interaction):
         """Pause the currently playing song."""
@@ -767,7 +769,7 @@ class Language(commands.Cog):
 
         vc.pause()
 
-    # TODO Listen
+    # TODO Listen button
     async def resume(self, interaction):
         """Resume the currently paused song."""
 
@@ -832,10 +834,10 @@ class Language(commands.Cog):
 
         if lesson_number:
             vocab = self.get_lesson_vocab(level_lesson_number)
-            msg = f"Lesson {level_lesson_number}, session: {session_number}"
+            msg = f"Vocabulary Lesson {level_lesson_number}, session: {session_number}"
         else:
             vocab = self.get_review_vocab(guessed_words)
-            msg = f"Review level {level_number}, session: {session_number}"
+            msg = f"Vocabulary Review level {level_number}, session: {session_number}"
         await interaction.followup.send(msg)
 
         await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, guessed_words, vocab)
@@ -850,7 +852,6 @@ class Language(commands.Cog):
             status=discord.Status.online,
         )
 
-    # TODO
     @app_commands.command(name="l")
     async def listening(self, interaction, level_lesson_number: int):
         """Starts listening exercise.
@@ -872,13 +873,9 @@ class Language(commands.Cog):
 
         level_number, lesson_number, level_lesson_number = await self.get_level_lesson_numbers(interaction, level_lesson_number, True)
 
-        audio_texts, audio_paths = self.get_listening_files(interaction, level_lesson_number)
-        if not audio_texts and not audio_paths:
-            msg = f"{level_lesson_number} lesson's audio files were not found!"
-            await interaction.followup.send(msg)
-            assert False, msg
+        audio_texts, audio_paths = await self.get_listening_files(level_number, lesson_number, level_lesson_number)
 
-        await interaction.followup.send(f"Lesson {level_lesson_number}")
+        await interaction.followup.send(f"Listening Lesson {level_lesson_number}")
 
         await self.run_listening_session_loop(interaction, voice, audio_texts, audio_paths)
 
@@ -919,7 +916,7 @@ class Language(commands.Cog):
             await interaction.followup.send(msg)
             raise commands.CommandError(msg) from exc
 
-        await interaction.followup.send(f"Lesson {level_lesson_number}")
+        await interaction.followup.send(f"Reading Lesson {level_lesson_number}")
         await interaction.channel.send(f"```{reading_text}```")
 
 
