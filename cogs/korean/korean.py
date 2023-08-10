@@ -21,7 +21,7 @@ vocab_listening
 
 listening
     async get_voice
-    get_listening_files
+    async get_listening_files
         get_unknown_lesson_number
     async run_listening_session_loop
     ?async pause
@@ -566,7 +566,7 @@ class Language(commands.Cog):
                 if guide:
                     await msg.edit(embed=embed, view=view)
                 else:
-                    await msg.edit(embed=embed, view=view, attachments=[])
+                    await msg.edit(embed=embed, view=view, attachments=[])  # remove files from previous word
             if file:
                 await msg.add_files(file)
 
@@ -669,7 +669,7 @@ class Language(commands.Cog):
 
         return stats
 
-    def get_listening_files(self, interaction, level_number, lesson_number, level_lesson_number):
+    async def get_listening_files(self, interaction, level_number, lesson_number, level_lesson_number):
         """Gets listening text and path to audio files.
 
         Args:
@@ -705,26 +705,30 @@ class Language(commands.Cog):
 
         i = 0
         count_n = len(audio_paths)
-        view = SessionListenView()
-        msg_str = f"{i+1}. track out of {count_n}."
+        view = SessionListenView(self)
 
-        msg = await interaction.channel.send(msg_str)
+        current_audio = None
+        msg = None
         while True:
             if i >= count_n:
                 i = 0
             try:
-                voice.play(
-                    discord.FFmpegPCMAudio(
-                        audio_paths[i],
-                        executable=self.ffmpeg_path,
-                    )
+                audio_source = discord.FFmpegPCMAudio(
+                    audio_paths[i],
+                    executable=self.ffmpeg_path,
                 )
+                for i in range(200):  # TODO 4 seconds skip TRY THIS TOMORROW
+                    audio_source.read()
+                current_audio = voice.play(audio_source)
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
             msg_str = f"{i+1}. lesson out of {count_n}"
             content = f"```{msg_str}\n{audio_texts[i]}```"
-            await msg.edit(content=content, view=view)
+            if not msg:
+                msg = await interaction.channel.send(content=content, view=view)
+            else:
+                await msg.edit(content=content, view=view)
 
             # wait for interaction
             interaction = await self.bot.wait_for(
@@ -735,10 +739,16 @@ class Language(commands.Cog):
 
             # button interactions
             button_id = interaction.data["custom_id"]
-            # TODO Listen ADD backward button (10s)
-            if button_id == "pauseplay":
-                # TODO Listen FIX: pauseplay button
-                # need to add player, pause NN crucially atm
+            if button_id == "backward":
+                if current_audio.is_playing():
+                    current_audio.stop()
+                    current_audio = None
+
+                # audio_source.seek(-10)
+                current_audio = voice_channel.play(audio_source)
+                pass
+            elif button_id == "pauseplay":
+                # TODO Listen FIX: pauseplay button TRY THIS NOW!
                 button_id2 = None
                 while button_id2 != "pauseplay":
                     interaction = await self.bot.wait_for(
@@ -873,7 +883,7 @@ class Language(commands.Cog):
 
         level_number, lesson_number, level_lesson_number = await self.get_level_lesson_numbers(interaction, level_lesson_number, True)
 
-        audio_texts, audio_paths = await self.get_listening_files(level_number, lesson_number, level_lesson_number)
+        audio_texts, audio_paths = await self.get_listening_files(interaction, level_number, lesson_number, level_lesson_number)
 
         await interaction.followup.send(f"Listening Lesson {level_lesson_number}")
 
