@@ -9,6 +9,7 @@
 - [ ] Polish Discord related stuff: Pylint, Document, Optimize code, and Async, Logs
 - [ ] Pylint - resolve all errors (or at least have above 9.0 score)
 - [ ] Opts prompts: find mistakes in following code, Write a docstring for the following function
+- [ ] Run pylint everywhere with command for scoring --> opt.
 
 - [ ] Integrate ChatGPT with my Discord server
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
