@@ -781,13 +781,18 @@ class Language(commands.Cog):
                 pause_end = time.time()
                 audio_start += (pause_end - pause_start)
                 continue
+            elif button_id == "next":
+                if voice.is_playing():
+                    voice.stop()
+                i += 1
+            elif button_id == "repeat":
+                if voice.is_playing():
+                    voice.stop()
             elif button_id == "end":
                 content = f"```{msg_str}\nEnding listening session.```"
                 await msg.edit(content=content, view=view)
                 break
 
-            elif button_id == "next":
-                i += 1            
             audio_start = time.time()
 
     # TODO Listen button
