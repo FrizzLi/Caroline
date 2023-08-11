@@ -149,7 +149,7 @@ class Language(commands.Cog):
         Args:
             interaction (discord.interactions.Interaction): slash cmd context
             level_lesson_number (int): level lesson number
-            previous_lesson (bool, optional): determiens whether we want the
+            previous_lesson (bool, optional): determines whether we want the
                 latest lesson which has all words visited. This is set to True
                 for listening and reading sessions. Defaults to False.
 
@@ -161,16 +161,16 @@ class Language(commands.Cog):
         if level_lesson_number == 1:
             level_lesson_number = self.get_unknown_lesson_number(user_name)
 
-        if previous_lesson:
-            if level_lesson_number-1 == 100:
-                msg = "You haven't even guessed words of the first lesson!"
-                await interaction.followup.send(msg)
-                assert False, msg
-            elif not level_lesson_number % 100:  # get lesson from prev. lvl
-                level_number = (level_lesson_number // 100) - 1
-                level_lesson_number = (level_number * 100) + 30
-            else:                               # latest fully word guessed lesson
-                level_lesson_number -= 1
+            if previous_lesson:
+                if level_lesson_number-1 == 100:
+                    msg = "You haven't even guessed words of the first lesson!"
+                    await interaction.followup.send(msg)
+                    assert False, msg
+                elif not level_lesson_number % 100:  # get lesson from prev. lvl
+                    level_number = (level_lesson_number // 100) - 1
+                    level_lesson_number = (level_number * 100) + 30
+                else:                               # latest fully word guessed lesson
+                    level_lesson_number -= 1
 
         level_number, lesson_number = divmod(level_lesson_number, 100)
         if not (0 < level_number < 5 and lesson_number < 31):
@@ -684,14 +684,14 @@ class Language(commands.Cog):
 
         src_dir = Path(__file__).parents[0]
         lesson_path = f"{src_dir}/data/level_{level_number}/lesson_{lesson_number}"
-        audio_path = Path(f"{lesson_path}/listening_audio")
+        audio_path = f"{lesson_path}/listening_audio/*"
         text_path = Path(f"{lesson_path}/listening_text.txt")
 
         try:
             with open(text_path, encoding="utf-8") as f:
                 text = f.read()
             audio_texts = text.split("\n\n")
-            audio_paths = sorted(glob(f"{audio_path}/listening_audio/*"))
+            audio_paths = sorted(glob(audio_path))
             # sorted it because linux system reverses it
         except Exception:
             msg = f"{level_lesson_number} lesson's text or audio files were not found!"
@@ -717,7 +717,7 @@ class Language(commands.Cog):
                     audio_paths[i],
                     executable=self.ffmpeg_path,
                 )
-                for i in range(200):  # TODO 4 seconds skip TRY THIS TOMORROW
+                for i in range(500):  # TODO 10 seconds skip
                     audio_source.read()
                 current_audio = voice.play(audio_source)
             except Exception as err:
