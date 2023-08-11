@@ -607,11 +607,11 @@ class Language(commands.Cog):
                 vocab.insert(- len(vocab) // 5, row_to_move)
 
             # save stats
-            time = datetime.now(pytz.timezone(self.timezone))
-            time_str = time.strftime("%Y-%m-%d %H:%M:%S")
+            stat_time = datetime.now(pytz.timezone(self.timezone))
+            stat_time_str = stat_time.strftime("%Y-%m-%d %H:%M:%S")
             stats.append(
                 [
-                    time_str,
+                    stat_time_str,
                     row_to_move.Korean,
                     stat_labels[button_id],
                     session_number,
@@ -702,6 +702,16 @@ class Language(commands.Cog):
         return audio_texts, audio_paths
 
     def move_timestamp(self, audio_start, audio_source):
+        """Moves timestamp (audio frames) in audio source. Updates start time.
+
+        Args:
+            audio_start (float): starting timestamp
+            audio_source (discord.player.FFmpegPCMAudio): audio source
+
+        Returns:
+            Tuple[float, discord.player.FFmpegPCMAudio]: new start time, audio source
+        """
+
         time_now = time.time()
         time_difference = time_now - audio_start
         if time_difference > 10:
@@ -711,15 +721,22 @@ class Language(commands.Cog):
             # one second is 50 read() calls, 1 read = 20ms   24s
             for _ in range(reads_amount):
                 audio_source.read()
-        
+
         # update audio_start, because next timestamp move
         # would not be consistent with the original one
         audio_start += 10
-        
+
         return audio_start, audio_source
 
-    # TODO Listen
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
+        """Runs session loop for audio files.
+
+        Args:
+            interaction (discord.interactions.Interaction): slash cmd context
+            voice (discord.voice_client.VoiceClient): voice client channel
+            audio_texts (List[str]): audio text
+            audio_paths (List[str]): audio paths
+        """
 
         i = 0
         count_n = len(audio_paths)
@@ -755,18 +772,18 @@ class Language(commands.Cog):
             else:
                 await msg.edit(content=content, view=view)
 
-            # wait for interaction
+            # button interactions
             interaction = await self.bot.wait_for(
                 "interaction",
                 check=lambda inter: "custom_id" in inter.data.keys()
                 and inter.user.name == interaction.user.name,
             )
 
-            # button interactions
             button_id = interaction.data["custom_id"]
             if button_id == "backward":
                 play_backwards = True
                 continue
+
             elif button_id == "pauseplay":
                 # stop, resume only.. if doesnt work
                 pause_start = time.time()
@@ -781,44 +798,24 @@ class Language(commands.Cog):
                 pause_end = time.time()
                 audio_start += (pause_end - pause_start)
                 continue
+
             elif button_id == "next":
                 if voice.is_playing():
                     voice.stop()
                 i += 1
+
             elif button_id == "repeat":
                 if voice.is_playing():
                     voice.stop()
+
             elif button_id == "end":
+                if voice.is_playing():
+                    voice.stop()
                 content = f"```{msg_str}\nEnding listening session.```"
                 await msg.edit(content=content, view=view)
                 break
 
             audio_start = time.time()
-
-    # TODO Listen button
-    # Button commands
-    async def pause(self, interaction):
-        """Pause the currently playing song."""
-
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_playing():
-            return
-        elif vc.is_paused():
-            return
-
-        vc.pause()
-
-    # TODO Listen button
-    async def resume(self, interaction):
-        """Resume the currently paused song."""
-
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_connected():
-            return
-        elif not vc.is_paused():
-            return
-
-        vc.resume()
 
     @commands.Cog.listener()
     async def on_ready(self):
