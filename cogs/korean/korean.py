@@ -35,6 +35,7 @@ reading
 import json
 import os
 import random
+import time
 from datetime import datetime
 from glob import glob
 from pathlib import Path
@@ -700,6 +701,23 @@ class Language(commands.Cog):
 
         return audio_texts, audio_paths
 
+    def move_timestamp(self, audio_start, audio_source):
+        time_now = time.time()
+        time_difference = time_now - audio_start
+        if time_difference > 10:
+            start_timestamp = time_difference - 10
+            reads_amount = int(start_timestamp * 50)
+
+            # one second is 50 read() calls, 1 read = 20ms   24s
+            for _ in range(reads_amount):
+                audio_source.read()
+        
+        # update audio_start, because next timestamp move
+        # would not be consistent with the original one
+        new_audio_start = audio_start + time_now
+        
+        return new_audio_start, audio_source
+
     # TODO Listen
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
 
@@ -707,8 +725,9 @@ class Language(commands.Cog):
         count_n = len(audio_paths)
         view = SessionListenView(self)
 
-        current_audio = None
+        play_backwards = False
         msg = None
+        audio_start = 0
         while True:
             if i >= count_n:
                 i = 0
@@ -717,9 +736,15 @@ class Language(commands.Cog):
                     audio_paths[i],
                     executable=self.ffmpeg_path,
                 )
-                for i in range(500):  # TODO 10 seconds skip
-                    audio_source.read()
-                current_audio = voice.play(audio_source)
+                if play_backwards:
+                    play_backwards = False
+                    if voice.is_playing():
+                        voice.stop()
+                    audio_start, audio_source = self.move_timestamp(audio_start, audio_source)
+                else:
+                    audio_start = time.time()
+
+                voice.play(audio_source)
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
@@ -740,15 +765,9 @@ class Language(commands.Cog):
             # button interactions
             button_id = interaction.data["custom_id"]
             if button_id == "backward":
-                if current_audio.is_playing():
-                    current_audio.stop()
-                    current_audio = None
-
-                # audio_source.seek(-10)
-                current_audio = voice_channel.play(audio_source)
-                pass
+                play_backwards = True
             elif button_id == "pauseplay":
-                # TODO Listen FIX: pauseplay button TRY THIS NOW!
+                # stop, resume only.. if doesnt work
                 button_id2 = None
                 while button_id2 != "pauseplay":
                     interaction = await self.bot.wait_for(
