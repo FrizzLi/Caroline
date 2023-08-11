@@ -714,9 +714,9 @@ class Language(commands.Cog):
         
         # update audio_start, because next timestamp move
         # would not be consistent with the original one
-        new_audio_start = audio_start + time_now
+        audio_start += 10
         
-        return new_audio_start, audio_source
+        return audio_start, audio_source
 
     # TODO Listen
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
@@ -728,6 +728,7 @@ class Language(commands.Cog):
         play_backwards = False
         msg = None
         audio_start = 0
+
         while True:
             if i >= count_n:
                 i = 0
@@ -741,8 +742,6 @@ class Language(commands.Cog):
                     if voice.is_playing():
                         voice.stop()
                     audio_start, audio_source = self.move_timestamp(audio_start, audio_source)
-                else:
-                    audio_start = time.time()
 
                 voice.play(audio_source)
             except Exception as err:
@@ -752,6 +751,7 @@ class Language(commands.Cog):
             content = f"```{msg_str}\n{audio_texts[i]}```"
             if not msg:
                 msg = await interaction.channel.send(content=content, view=view)
+                audio_start = time.time()
             else:
                 await msg.edit(content=content, view=view)
 
@@ -766,8 +766,10 @@ class Language(commands.Cog):
             button_id = interaction.data["custom_id"]
             if button_id == "backward":
                 play_backwards = True
+                continue
             elif button_id == "pauseplay":
                 # stop, resume only.. if doesnt work
+                pause_start = time.time()
                 button_id2 = None
                 while button_id2 != "pauseplay":
                     interaction = await self.bot.wait_for(
@@ -776,14 +778,17 @@ class Language(commands.Cog):
                         and inter.user.name == interaction.user.name,
                     )
                     button_id2 = interaction.data["custom_id"]
-            elif button_id == "next":
-                i += 1
-            elif button_id == "repeat":
+                pause_end = time.time()
+                audio_start += (pause_end - pause_start)
                 continue
             elif button_id == "end":
                 content = f"```{msg_str}\nEnding listening session.```"
                 await msg.edit(content=content, view=view)
                 break
+
+            elif button_id == "next":
+                i += 1            
+            audio_start = time.time()
 
     # TODO Listen button
     # Button commands
