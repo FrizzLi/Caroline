@@ -20,15 +20,15 @@ vocab_listening
         create_ending_session_stats
 
 listening
-    async get_voice
+    async get_voice~~~
     async get_listening_files
-        get_unknown_lesson_number
+        get_unknown_lesson_number~~~
     async run_listening_session_loop
-    ?async pause
-    ?async resume
+        move_timestamp
     async on_ready
 
 reading
+    get_level_lesson_numbers~~~
 
 """
 
@@ -439,88 +439,6 @@ class Language(commands.Cog):
 
         return picked_words
 
-    def prepare_word_output(self, row, guide, i=[0]):
-        """Prepares variables needed for outputting word data.
-
-        Args:
-            List[pandas.core.frame.Row]: word data (row in ws table)
-            guide (bool): determines whether additional should be displayed
-            i (list, optional): using for discord bug with spoiled words.
-                Defaults to [0].
-
-        Returns:
-            Tuple[discord.embeds.Embed, discord.file.File, str]: word data
-                (embed message, file, path to audio)
-        """
-
-        kor_no_num = row.Korean[:-1] if row.Korean[-1].isdigit() else row.Korean
-        if kor_no_num not in self.vocab_audio_paths:
-            self.create_gtts_audio(kor_no_num)
-
-        max_spaces = 30
-        i[0] += 1
-        i[0] %= max_spaces
-        spoil_spacing = " " * (i[0])
-        eng_add = f"; ({row.English_Add})" if row.English_Add else ""
-        content = f"**{row.Korean} - {row.Book_English}{eng_add}**"
-        if not guide:
-            content = f"||{content}{spoil_spacing}||"
-
-        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        url_kor = url + kor_no_num.replace(" ", "%20")
-        embed = discord.Embed(title=content, url=url_kor)
-
-        file = None
-        if guide:
-            ex = f"- {row.Example_KR} ({row.Example_EN})\n" if row.Example_KR else ""
-            ex += f"- {row.Example_KR2} ({row.Example_EN2})\n" if row.Example_KR2 else ""
-            ex = "\n" + ex if ex else ""
-            if row.Explanation:
-                embed.add_field(name="", value=f"**{row.Explanation}**{ex}", inline=False)
-            file_name_word = row.Korean.replace("?", "")
-            if file_name_word in self.vocab_image_paths:
-                file = discord.File(self.vocab_image_paths[file_name_word], filename="image.png")
-
-            embed.set_image(url="attachment://image.png")
-
-        return embed, file, self.vocab_audio_paths[kor_no_num]
-
-        # syllables info
-        # korean_words = re.findall("[가-힣]+", syl)
-        # for word in korean_words:
-        #     syl = syl.replace(word, f"\n**{word}**")
-        # syl = syl[1:]
-        # {examples}\n\n{syl}
-
-        # embed options:
-        # color = discord.Color.green(),
-        # embed.set_footer(text=f"Rank {rank}")
-        # embed.set_thumbnail(url="attachment://image.png")
-        # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
-        # embed.set_image(url="attachment://image.png")
-        # > {text} >
-
-    def create_gtts_audio(self, word):
-        """Creates an audio using google's TTS for a given korean word.
-
-        This is being used for all the words that have no audio from naver's
-        dictionary. 
-        Audio files are saved in data/vocabulary_global_gtts_audio dir, a new
-        audio path is added for the given korean word.
-
-        Args:
-            word (str): korean word
-        """
-
-        src_dir = Path(__file__).parents[0]
-        vocab_path = f"{src_dir}/data/vocabulary_global_gtts_audio/"
-        stripped_word = word.replace("?", "")
-        path = f'{vocab_path}/{stripped_word}.mp3'
-        tts = gTTS(word, lang='ko')
-        tts.save(path)
-
-        self.vocab_audio_paths[word] = path
-
     async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, guessed_words, vocab):
         """Runs session loop for vocabulary words.
 
@@ -618,6 +536,88 @@ class Language(commands.Cog):
                 ]
             )
 
+    def prepare_word_output(self, row, guide, i=[0]):
+        """Prepares variables needed for outputting word data.
+
+        Args:
+            List[pandas.core.frame.Row]: word data (row in ws table)
+            guide (bool): determines whether additional should be displayed
+            i (list, optional): using for discord bug with spoiled words.
+                Defaults to [0].
+
+        Returns:
+            Tuple[discord.embeds.Embed, discord.file.File, str]: word data
+                (embed message, file, path to audio)
+        """
+
+        kor_no_num = row.Korean[:-1] if row.Korean[-1].isdigit() else row.Korean
+        if kor_no_num not in self.vocab_audio_paths:
+            self.create_gtts_audio(kor_no_num)
+
+        max_spaces = 30
+        i[0] += 1
+        i[0] %= max_spaces
+        spoil_spacing = " " * (i[0])
+        eng_add = f"; ({row.English_Add})" if row.English_Add else ""
+        content = f"**{row.Korean} - {row.Book_English}{eng_add}**"
+        if not guide:
+            content = f"||{content}{spoil_spacing}||"
+
+        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
+        url_kor = url + kor_no_num.replace(" ", "%20")
+        embed = discord.Embed(title=content, url=url_kor)
+
+        file = None
+        if guide:
+            ex = f"- {row.Example_KR} ({row.Example_EN})\n" if row.Example_KR else ""
+            ex += f"- {row.Example_KR2} ({row.Example_EN2})\n" if row.Example_KR2 else ""
+            ex = "\n" + ex if ex else ""
+            if row.Explanation:
+                embed.add_field(name="", value=f"**{row.Explanation}**{ex}", inline=False)
+            file_name_word = row.Korean.replace("?", "")
+            if file_name_word in self.vocab_image_paths:
+                file = discord.File(self.vocab_image_paths[file_name_word], filename="image.png")
+
+            embed.set_image(url="attachment://image.png")
+
+        return embed, file, self.vocab_audio_paths[kor_no_num]
+
+        # syllables info
+        # korean_words = re.findall("[가-힣]+", syl)
+        # for word in korean_words:
+        #     syl = syl.replace(word, f"\n**{word}**")
+        # syl = syl[1:]
+        # {examples}\n\n{syl}
+
+        # embed options:
+        # color = discord.Color.green(),
+        # embed.set_footer(text=f"Rank {rank}")
+        # embed.set_thumbnail(url="attachment://image.png")
+        # embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData", icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
+        # embed.set_image(url="attachment://image.png")
+        # > {text} >
+
+    def create_gtts_audio(self, word):
+        """Creates an audio using google's TTS for a given korean word.
+
+        This is being used for all the words that have no audio from naver's
+        dictionary. 
+        Audio files are saved in data/vocabulary_global_gtts_audio dir, a new
+        audio path is added for the given korean word.
+
+        Args:
+            word (str): korean word
+        """
+
+        src_dir = Path(__file__).parents[0]
+        vocab_path = f"{src_dir}/data/vocabulary_global_gtts_audio/"
+        stripped_word = word.replace("?", "")
+        path = f'{vocab_path}/{stripped_word}.mp3'
+        tts = gTTS(word, lang='ko')
+        tts.save(path)
+
+        self.vocab_audio_paths[word] = path
+
     def create_ending_session_stats(self, stats):
         """Gets stats that will be displayed when the session ends.
 
@@ -700,33 +700,6 @@ class Language(commands.Cog):
             assert False, msg
 
         return audio_texts, audio_paths
-
-    def move_timestamp(self, audio_start, audio_source):
-        """Moves timestamp (audio frames) in audio source. Updates start time.
-
-        Args:
-            audio_start (float): starting timestamp
-            audio_source (discord.player.FFmpegPCMAudio): audio source
-
-        Returns:
-            Tuple[float, discord.player.FFmpegPCMAudio]: new start time, audio source
-        """
-
-        time_now = time.time()
-        time_difference = time_now - audio_start
-        if time_difference > 10:
-            start_timestamp = time_difference - 10
-            reads_amount = int(start_timestamp * 50)
-
-            # one second is 50 read() calls, 1 read = 20ms   24s
-            for _ in range(reads_amount):
-                audio_source.read()
-
-        # update audio_start, because next timestamp move
-        # would not be consistent with the original one
-        audio_start += 10
-
-        return audio_start, audio_source
 
     async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
         """Runs session loop for audio files.
@@ -816,6 +789,33 @@ class Language(commands.Cog):
                 break
 
             audio_start = time.time()
+
+    def move_timestamp(self, audio_start, audio_source):
+        """Moves timestamp (audio frames) in audio source. Updates start time.
+
+        Args:
+            audio_start (float): starting timestamp
+            audio_source (discord.player.FFmpegPCMAudio): audio source
+
+        Returns:
+            Tuple[float, discord.player.FFmpegPCMAudio]: new start time, audio source
+        """
+
+        time_now = time.time()
+        time_difference = time_now - audio_start
+        if time_difference > 10:
+            start_timestamp = time_difference - 10
+            reads_amount = int(start_timestamp * 50)
+
+            # one second is 50 read() calls, 1 read = 20ms   24s
+            for _ in range(reads_amount):
+                audio_source.read()
+
+        # update audio_start, because next timestamp move
+        # would not be consistent with the original one
+        audio_start += 10
+
+        return audio_start, audio_source
 
     @commands.Cog.listener()
     async def on_ready(self):
