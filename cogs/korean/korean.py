@@ -3,10 +3,10 @@
 Function hierarchy:
 vocab_listening
     _get_vocab_table
-    get_labelled_file_paths
+    _get_labelled_paths
     async get_voice
-    async get_level_lesson_numbers
-        get_unknown_lesson_number
+    async get_level_lesson_nums
+        get_unknown_lesson_num
     get_session_number
     get_lesson_vocab
     get_review_vocab
@@ -22,13 +22,13 @@ vocab_listening
 listening
     async get_voice~~~
     async get_listening_files
-        get_unknown_lesson_number~~~
+        get_unknown_lesson_num~~~
     async run_listening_session_loop
         move_timestamp
     async on_ready
 
 reading
-    get_level_lesson_numbers~~~
+    get_level_lesson_nums~~~
 
 """
 
@@ -45,19 +45,28 @@ import discord
 import numpy as np
 import pandas as pd
 import pytz
-from discord import app_commands
-from discord.ext import commands
 from gspread.exceptions import WorksheetNotFound
 from gtts import gTTS
 
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
 
+# TODO try GLOBAL paths
+V_IMAGE_PATHS = ("data/*/*/vocabulary_images/*",)
+V_AUDIO_PATHS = (
+    "data/*/*/vocabulary_audio/*",
+    "data/vocabulary_global_gtts_audio/*"
+)
+V_SPREADSHEET = "Korea - Vocabulary"
+V_WORKSHEETS = ("Level 1-2 (modified)",)
 
-class Language(commands.Cog):
+S_SPREADSHEET = "Korea - Users stats"
+
+
+class Language(discord.ext.commands.Cog):
     def __init__(self, bot):
-        self.vocab_audio_paths = self.get_labelled_file_paths(("data/*/*/vocabulary_audio/*", "data/vocabulary_global_gtts_audio/*"))
-        self.vocab_image_paths = self.get_labelled_file_paths(("data/*/*/vocabulary_images/*",), True)
+        self.vocab_audio_paths = self._get_labelled_paths(V_AUDIO_PATHS)
+        self.vocab_image_paths = self._get_labelled_paths(V_IMAGE_PATHS, True)
         self.vocab_df = self._get_vocab_table()
         self.bot = bot
         self.ffmpeg_path = (
@@ -72,7 +81,7 @@ class Language(commands.Cog):
             pandas.core.frame.DataFrame: worksheet dataframe table
         """
 
-        _, vocab_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
+        _, vocab_dfs = utils.get_worksheets(V_SPREADSHEET, V_WORKSHEETS)
 
         # ignore rows with empty Lesson cells (duplicates)
         vocab_df = vocab_dfs[0]
@@ -81,7 +90,7 @@ class Language(commands.Cog):
 
         return vocab_df
 
-    def get_labelled_file_paths(self, glob_paths, ignore_last_letter=False):
+    def _get_labelled_paths(self, glob_paths, ignore_last_letter=False):
         """Gets file names and their paths. Used for loading audio/image files.
 
         Not all words have audio file, it will load only the ones that are
@@ -133,23 +142,24 @@ class Language(commands.Cog):
             discord.voice_client.VoiceClient: voice channel
         """
 
-        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
+        guild = interaction.guild
         user_voice = interaction.user.voice
+        voice = discord.utils.get(self.bot.voice_clients, guild=guild)
         if not voice and not user_voice:
             await interaction.followup.send("No bot nor you is connected.")
         elif not voice:
             await user_voice.channel.connect()
-        voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
+        voice = discord.utils.get(self.bot.voice_clients, guild=guild)
 
         return voice
 
 
-    async def get_level_lesson_numbers(self, interaction, level_lesson_number, previous_lesson=False):
+    async def get_level_lesson_nums(self, interaction, level_lesson_num, previous_lesson=False):
         """Gets level lesson numbers for all types of sessions.
 
         Args:
             interaction (discord.interactions.Interaction): slash cmd context
-            level_lesson_number (int): level lesson number
+            level_lesson_num (int): level lesson number
             previous_lesson (bool, optional): determines whether we want the
                 latest lesson which has all words visited. This is set to True
                 for listening and reading sessions. Defaults to False.
@@ -159,36 +169,36 @@ class Language(commands.Cog):
         """
 
         user_name = interaction.user.name
-        if level_lesson_number == 1:
-            level_lesson_number = self.get_unknown_lesson_number(user_name)
+        if level_lesson_num == 1:
+            level_lesson_num = self.get_unknown_lesson_num(user_name)
 
-            if previous_lesson:
-                if level_lesson_number-1 == 100:
+            if previous_lesson: # getting latest fully word guessed lesson
+                if level_lesson_num-1 == 100:
                     msg = "You haven't even guessed words of the first lesson!"
                     await interaction.followup.send(msg)
                     assert False, msg
-                elif not level_lesson_number % 100:  # get lesson from prev. lvl
-                    level_number = (level_lesson_number // 100) - 1
-                    level_lesson_number = (level_number * 100) + 30
-                else:                               # latest fully word guessed lesson
-                    level_lesson_number -= 1
+                elif not level_lesson_num % 100: # get prev. lvl's lesson
+                    level_num = (level_lesson_num // 100) - 1
+                    level_lesson_num = (level_num * 100) + 30
+                else:                               # get prev. lesson
+                    level_lesson_num -= 1
 
-        level_number, lesson_number = divmod(level_lesson_number, 100)
-        if not (0 < level_number < 5 and lesson_number < 31):
+        level_num, lesson_num = divmod(level_lesson_num, 100)
+        if not (0 < level_num < 5 and lesson_num < 31):
             msg = "Wrong level lesson number!"
             await interaction.followup.send(msg)
             assert False, msg
 
-        return level_number, lesson_number, level_lesson_number
+        return level_num, lesson_num, level_lesson_num
 
-    def get_unknown_lesson_number(self, user_name):
-        """Gets the next unknown level_lesson_number for an user.
+    def get_unknown_lesson_num(self, user_name):
+        """Gets the next unknown level_lesson_num for an user.
 
         Args:
             user_name (str): user name (used for worksheet name)
 
         Returns:
-            int: level_lesson_number
+            int: level_lesson_num
         """
 
         df = self.vocab_df
@@ -199,10 +209,10 @@ class Language(commands.Cog):
             f"{user_name}-score-4"
         )
         try:
-            _, scores_dfs = utils.get_worksheets("Korea - Users stats", ws_names)
+            _, scores_dfs = utils.get_worksheets(S_SPREADSHEET, ws_names)
         except WorksheetNotFound:
             # going for first level
-            level_lesson_number = 101
+            level_lesson_num = 101
             scores_dfs = []
 
         # going for next unknown levels' lessons
@@ -212,20 +222,31 @@ class Language(commands.Cog):
             unknown_words = level_words - known_words
             ws_missing_words = known_words - level_words
             if ws_missing_words:
-                print(f"Vocabulary is missing words in Level {i} that user has encountered: {ws_missing_words}\nRename those words for user! They're outdated.")
+                update_needed_msg = (
+                    f"Vocabulary is missing words in Level {i} that user has"
+                    f"encountered: {ws_missing_words}\n"
+                    "Rename those words for user! They're outdated."
+                )
+                print(update_needed_msg)
             if unknown_words:
-                df = df.loc[df["Korean"].isin(unknown_words), ["Lesson", "Korean"]]
-                level_lesson_number = int(df.Lesson.min())
-                rows = df[df.Lesson == level_lesson_number].values
+                df = df.loc[
+                    df["Korean"].isin(unknown_words), ["Lesson", "Korean"]
+                ]
+                level_lesson_num = int(df.Lesson.min())
+                rows = df[df.Lesson == level_lesson_num].values
                 unknown_words = ", ".join([row[1] for row in rows])
-                print(f"User is missing these words in lesson {level_lesson_number}: {unknown_words}")
+                missing_words_msg = (
+                    "User is missing these words in lesson"
+                    f"{level_lesson_num}: {unknown_words}"
+                )
+                print(missing_words_msg)
                 break
 
         # going for next unknown level
-        if level_lesson_number == 1:
-            level_lesson_number += 100 + len(scores_dfs) * 100
+        if level_lesson_num == 1:
+            level_lesson_num += 100 + len(scores_dfs) * 100
 
-        return level_lesson_number
+        return level_lesson_num
 
     def get_session_number(self, ws_log):
         """Gets the next number in a row for session. Begins with 1.
@@ -245,17 +266,19 @@ class Language(commands.Cog):
 
         return session_number
 
-    def get_lesson_vocab(self, level_lesson_number):
+    def get_lesson_vocab(self, level_lesson_num):
         """Gets vocabulary for a given lesson.
 
         Args:
-            level_lesson_number (int): level lesson number
+            level_lesson_num (int): level lesson number
 
         Returns:
             List[pandas.core.frame.Row]: word data (row in ws table)
         """
 
-        filtered_df = self.vocab_df.loc[self.vocab_df['Lesson'] == level_lesson_number]
+        filtered_df = self.vocab_df.loc[
+            self.vocab_df["Lesson"] == level_lesson_num
+        ]
         vocab = list(filtered_df.itertuples(name='Row', index=False))
         random.shuffle(vocab)
 
@@ -272,12 +295,14 @@ class Language(commands.Cog):
         """
 
         picked_words = self.get_random_words(guessed_words)
-        picked_words_df = self.vocab_df[self.vocab_df["Korean"].isin(picked_words)]
+        picked_words_df = self.vocab_df[
+            self.vocab_df["Korean"].isin(picked_words)
+        ]
         vocab = list(picked_words_df.itertuples(name='Row', index=False))
 
         return vocab
 
-    def create_users_level_score_ws(self, ws_log, user_name, level_number):
+    def create_users_level_score_ws(self, ws_log, user_name, level_num):
         """Creates scoring for level in the user's worksheet.
 
         Scoring system takes into account:
@@ -289,7 +314,7 @@ class Language(commands.Cog):
         Args:
             ws_log (gspread.worksheet.Worksheet): worksheet table of logs
             user_name (str): user name (used for worksheet name)
-            level_number (int): level number
+            level_num (int): level number
         """
 
         score_table = {"✅": 1, "⏭️": 2, "🤔": 2, "🧩": 3, "❌": 4}
@@ -352,7 +377,7 @@ class Language(commands.Cog):
         # create worksheet of scores
         ws_scores_list, _ = utils.get_worksheets(
             "Korea - Users stats",
-            (f"{user_name}-score-{level_number}",),
+            (f"{user_name}-score-{level_num}",),
             create=True,
             size=(10_000, 4)
         )
@@ -425,17 +450,29 @@ class Language(commands.Cog):
             numpy.ndarray: picked words
         """
 
-        consider_amount = len(guessed_words) if len(guessed_words) < consider_amount else consider_amount
-        pick_amount = consider_amount if consider_amount < pick_amount else pick_amount
+        if len(guessed_words) < consider_amount:
+            consider_amount = len(guessed_words) 
+        else:
+            consider_amount
+        
+        if consider_amount < pick_amount:
+            pick_amount = consider_amount
 
         mean = 0
         std = 0.5
-        half_norm_distribution = np.abs(np.random.normal(loc=mean, scale=std, size=consider_amount))
+        half_norm_distribution = np.abs(
+            np.random.normal(loc=mean, scale=std, size=consider_amount)
+        )
         half_norm_distribution.sort()
         half_norm_distribution = half_norm_distribution[::-1]
         weights = half_norm_distribution / half_norm_distribution.sum()
 
-        picked_words = np.random.choice(guessed_words[:consider_amount], p=weights, size=pick_amount, replace=False)
+        picked_words = np.random.choice(
+            guessed_words[:consider_amount],
+            p=weights,
+            size=pick_amount,
+            replace=False,
+        )
 
         return picked_words
 
@@ -451,7 +488,12 @@ class Language(commands.Cog):
             vocab (List[pandas.core.frame.Row]): word data (row in ws table)
         """
 
-        stat_labels = {"easy": "✅", "effort": "🤔", "partial": "🧩", "forgot": "❌"}
+        stat_labels = {
+            "easy": "✅",
+            "effort": "🤔",
+            "partial": "🧩",
+            "forgot": "❌",
+        }
         view = SessionVocabView()
 
         unchecked_words = {row.Korean for row in vocab}
@@ -484,8 +526,8 @@ class Language(commands.Cog):
             else:
                 if guide:
                     await msg.edit(embed=embed, view=view)
-                else:
-                    await msg.edit(embed=embed, view=view, attachments=[])  # remove files from previous word
+                else:  # remove files from previous word
+                    await msg.edit(embed=embed, view=view, attachments=[])  
             if file:
                 await msg.add_files(file)
 
@@ -550,7 +592,9 @@ class Language(commands.Cog):
                 (embed message, file, path to audio)
         """
 
-        kor_no_num = row.Korean[:-1] if row.Korean[-1].isdigit() else row.Korean
+        kor_no_num = (
+            row.Korean[:-1] if row.Korean[-1].isdigit() else row.Korean
+        )
         if kor_no_num not in self.vocab_audio_paths:
             self.create_gtts_audio(kor_no_num)
 
@@ -563,8 +607,8 @@ class Language(commands.Cog):
         if not guide:
             content = f"||{content}{spoil_spacing}||"
 
-        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query="
-        url_kor = url + kor_no_num.replace(" ", "%20")
+        url = "https://korean.dict.naver.com/koendict/#/search?range=all&query"
+        url_kor = f"{url}={kor_no_num.replace(' ', '%20')}"
         embed = discord.Embed(title=content, url=url_kor)
 
         file = None
@@ -626,7 +670,9 @@ class Language(commands.Cog):
         the first guess into account).
 
         Args:
-            stats (List[str, str, str, int]): time, word, guess mark, session number
+            stats (List[str, str, str, int]): (
+                time, word, guess mark, session number
+            )
 
         Returns:
             str: stats
@@ -647,7 +693,9 @@ class Language(commands.Cog):
                 word_scores[word] += score_table[mark]
 
         # get hardest words
-        word_scores_sorted = sorted(word_scores.items(), key=lambda x:x[1], reverse=True)
+        word_scores_sorted = sorted(
+            word_scores.items(), key=lambda x: x[1], reverse=True
+        )
         hardest_words = []
         for word, score in word_scores_sorted[:5]:
             if score:
@@ -666,25 +714,27 @@ class Language(commands.Cog):
             f"   {marks_count['❌']}%"
         )
 
-        stats = f"Total guesses: {len(stats)}\nHardest words: {hardest_words_string}\n{percentages_summary}"
-
+        stats = (
+            f"Total guesses: {len(stats)}\nHardest words: "
+            f"{hardest_words_string}\n{percentages_summary}"
+        )
         return stats
 
-    async def get_listening_files(self, interaction, level_number, lesson_number, level_lesson_number):
+    async def get_listening_files(self, interaction, level_num, lesson_num, level_lesson_num):
         """Gets listening text and path to audio files.
 
         Args:
             interaction (discord.interactions.Interaction): slash cmd context
-            level_number (int): level number
-            lesson_number (int): lesson number
-            level_lesson_number (int): level lesson number
+            level_num (int): level number
+            lesson_num (int): lesson number
+            level_lesson_num (int): level lesson number
 
         Returns:
             Tuple[List[str], List[str]]: (audio text, audio paths)
         """
 
         src_dir = Path(__file__).parents[0]
-        lesson_path = f"{src_dir}/data/level_{level_number}/lesson_{lesson_number}"
+        lesson_path = f"{src_dir}/data/level_{level_num}/lesson_{lesson_num}"
         audio_path = f"{lesson_path}/listening_audio/*"
         text_path = Path(f"{lesson_path}/listening_text.txt")
 
@@ -695,7 +745,10 @@ class Language(commands.Cog):
             audio_paths = sorted(glob(audio_path))
             # sorted it because linux system reverses it
         except Exception:
-            msg = f"{level_lesson_number} lesson's text or audio files were not found!"
+            msg = (
+                f"{level_lesson_num} lesson's text or audio files "
+                "were not found!"
+            )
             await interaction.followup.send(msg)
             assert False, msg
 
@@ -731,7 +784,9 @@ class Language(commands.Cog):
                     play_backwards = False
                     if voice.is_playing():
                         voice.stop()
-                    audio_start, audio_source = self.move_timestamp(audio_start, audio_source)
+                    audio_start, audio_source = self.move_timestamp(
+                        audio_start, audio_source
+                    )
 
                 voice.play(audio_source)
             except Exception as err:
@@ -740,7 +795,9 @@ class Language(commands.Cog):
             msg_str = f"{i+1}. lesson out of {count_n}"
             content = f"```{msg_str}\n{audio_texts[i]}```"
             if not msg:
-                msg = await interaction.channel.send(content=content, view=view)
+                msg = await interaction.channel.send(
+                    content=content, view=view
+                )
                 audio_start = time.time()
             else:
                 await msg.edit(content=content, view=view)
@@ -798,7 +855,9 @@ class Language(commands.Cog):
             audio_source (discord.player.FFmpegPCMAudio): audio source
 
         Returns:
-            Tuple[float, discord.player.FFmpegPCMAudio]: new start time, audio source
+            Tuple[float, discord.player.FFmpegPCMAudio]: (
+                new start time, audio source
+            )
         """
 
         time_now = time.time()
@@ -817,7 +876,7 @@ class Language(commands.Cog):
 
         return audio_start, audio_source
 
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_ready(self):
         """Executes when the cog is loaded, it initializes timezone.
 
@@ -829,15 +888,15 @@ class Language(commands.Cog):
             self.timezone = json.load(file)["timezone"]
 
 
-    @app_commands.command(name="vl")
-    async def vocab_listening(self, interaction, level_lesson_number: int):
+    @discord.app_commands.command(name="vl")
+    async def vocab_listening(self, interaction, level_lesson_num: int):
         """Starts listening vocabulary exercise.
 
-        There are 3 types of level_lesson_number in vocab_listening session:
+        There are 3 types of level_lesson_num in vocab_listening session:
          - One ("1") starts the next user's unknown lesson
-         - Pure hundreds ("100", ..., "400") starts review session of level's words
+         - Pure hundreds ("100", ..., "400") starts review session of level
            (Hundred decimals represent level)
-         - Hundreds up to 30 ("101", ..., "130") starts session of specific lesson's words
+         - Hundreds up to 30 ("101", ..., "130") starts lesson session
            (Ten decimals represent level's lesson)
         """
 
@@ -849,13 +908,17 @@ class Language(commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
-        level_number, lesson_number, level_lesson_number = await self.get_level_lesson_numbers(interaction, level_lesson_number)
+        (
+            level_num,
+            lesson_num,
+            level_lesson_num,
+        ) = await self.get_level_lesson_nums(interaction, level_lesson_num)
 
         # get users stats worksheet
         user_name = interaction.user.name
         ws_logs, scores_dfs = utils.get_worksheets(
-            "Korea - Users stats",
-            (f"{user_name}-{level_number}", f"{user_name}-score-{level_number}"),
+            S_SPREADSHEET,
+            (f"{user_name}-{level_num}", f"{user_name}-score-{level_num}"),
             create=True,
             size=(10_000, 4)
         )
@@ -868,17 +931,25 @@ class Language(commands.Cog):
 
         session_number = self.get_session_number(ws_log)
 
-        if lesson_number:
-            vocab = self.get_lesson_vocab(level_lesson_number)
-            msg = f"Vocabulary Lesson {level_lesson_number}, session: {session_number}"
+        if lesson_num:
+            vocab = self.get_lesson_vocab(level_lesson_num)
+            msg = (
+                f"Vocabulary Lesson {level_lesson_num}, "
+                f"session: {session_number}"
+            )
         else:
             vocab = self.get_review_vocab(guessed_words)
-            msg = f"Vocabulary Review level {level_number}, session: {session_number}"
+            msg = (
+                f"Vocabulary Review Level {level_num}, "
+                f"session: {session_number}"
+            )
         await interaction.followup.send(msg)
 
-        await self.run_vocab_session_loop(interaction, voice, ws_log, session_number, guessed_words, vocab)
+        await self.run_vocab_session_loop(
+            interaction, voice, ws_log, session_number, guessed_words, vocab
+        )
 
-        self.create_users_level_score_ws(ws_log, user_name, level_number)
+        self.create_users_level_score_ws(ws_log, user_name, level_num)
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -888,11 +959,11 @@ class Language(commands.Cog):
             status=discord.Status.online,
         )
 
-    @app_commands.command(name="l")
-    async def listening(self, interaction, level_lesson_number: int):
+    @discord.app_commands.command(name="l")
+    async def listening(self, interaction, level_lesson_num: int):
         """Starts listening exercise.
 
-        There are 2 types of level_lesson_number in listening sessions:
+        There are 2 types of level_lesson_num in listening sessions:
          - One ("1") starts the latest lesson which has all words visited
          - Hundreds up to 30 ("101", ..., "130") starts specific lesson
            (Hundred decimals represent level)
@@ -907,13 +978,23 @@ class Language(commands.Cog):
             activity=discord.Game(name="Listening")
         )
 
-        level_number, lesson_number, level_lesson_number = await self.get_level_lesson_numbers(interaction, level_lesson_number, True)
+        (
+            level_num,
+            lesson_num,
+            level_lesson_num,
+        ) = await self.get_level_lesson_nums(
+            interaction, level_lesson_num, True
+        )
 
-        audio_texts, audio_paths = await self.get_listening_files(interaction, level_number, lesson_number, level_lesson_number)
+        audio_texts, audio_paths = await self.get_listening_files(
+            interaction, level_num, lesson_num, level_lesson_num
+        )
 
-        await interaction.followup.send(f"Listening Lesson {level_lesson_number}")
+        await interaction.followup.send(f"Listening Lesson {level_lesson_num}")
 
-        await self.run_listening_session_loop(interaction, voice, audio_texts, audio_paths)
+        await self.run_listening_session_loop(
+            interaction, voice, audio_texts, audio_paths
+        )
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -923,11 +1004,11 @@ class Language(commands.Cog):
             status=discord.Status.online,
         )
 
-    @app_commands.command(name="r")
-    async def reading(self, interaction, level_lesson_number: int):
+    @discord.app_commands.command(name="r")
+    async def reading(self, interaction, level_lesson_num: int):
         """Starts reading exercise.
 
-        There are 2 types of level_lesson_number in listening sessions:
+        There are 2 types of level_lesson_num in listening sessions:
          - One ("1") starts the latest lesson which has all words visited
          - Hundreds up to 30 ("101", ..., "130") starts specific lesson
            (Hundred decimals represent level)
@@ -938,21 +1019,27 @@ class Language(commands.Cog):
             "...Setting up reading session..."
         )
 
-        level_number, lesson_number, level_lesson_number = await self.get_level_lesson_numbers(interaction, level_lesson_number, True)
+        (
+            level_num,
+            lesson_num,
+            level_lesson_num,
+        ) = await self.get_level_lesson_nums(
+            interaction, level_lesson_num, True
+        )
 
         # load text file
         src_dir = Path(__file__).parents[0]
-        lesson_path = f"{src_dir}/data/level_{level_number}/lesson_{lesson_number}"
+        lesson_path = f"{src_dir}/data/level_{level_num}/lesson_{lesson_num}"
         text_path = Path(f"{lesson_path}/reading_text.txt")
         try:
             with open(text_path, encoding="utf-8") as f:
                 reading_text = f.read()
         except Exception as exc:
-            msg = f"{level_lesson_number} lesson's text files were not found!"
+            msg = f"{level_lesson_num} lesson's text files were not found!"
             await interaction.followup.send(msg)
-            raise commands.CommandError(msg) from exc
+            raise discord.ext.commands.CommandError(msg) from exc
 
-        await interaction.followup.send(f"Reading Lesson {level_lesson_number}")
+        await interaction.followup.send(f"Reading Lesson {level_lesson_num}")
         await interaction.channel.send(f"```{reading_text}```")
 
 
