@@ -51,15 +51,13 @@ from gtts import gTTS
 import utils
 from cogs.korean.session_views import SessionListenView, SessionVocabView
 
-# TODO try GLOBAL paths
 V_IMAGE_PATHS = ("data/*/*/vocabulary_images/*",)
 V_AUDIO_PATHS = (
     "data/*/*/vocabulary_audio/*",
-    "data/vocabulary_global_gtts_audio/*"
+    "data/vocabulary_global_gtts_audio/*",
 )
 V_SPREADSHEET = "Korea - Vocabulary"
 V_WORKSHEETS = ("Level 1-2 (modified)",)
-
 S_SPREADSHEET = "Korea - Users stats"
 
 
@@ -134,7 +132,7 @@ class Language(discord.ext.commands.Cog):
 
     async def get_voice(self, interaction):
         """Gets or connects to the voice channel.
-        
+
         Gets the voice channel in which the bot is currently in. If it is not
         connected, it connects to channel in which the user is currently in.
 
@@ -153,8 +151,9 @@ class Language(discord.ext.commands.Cog):
 
         return voice
 
-
-    async def get_level_lesson_nums(self, interaction, level_lesson_num, previous_lesson=False):
+    async def get_level_lesson_nums(
+        self, interaction, level_lesson_num, previous_lesson=False
+    ):
         """Gets level lesson numbers for all types of sessions.
 
         Args:
@@ -172,15 +171,15 @@ class Language(discord.ext.commands.Cog):
         if level_lesson_num == 1:
             level_lesson_num = self.get_unknown_lesson_num(user_name)
 
-            if previous_lesson: # getting latest fully word guessed lesson
-                if level_lesson_num-1 == 100:
+            if previous_lesson:  # getting latest fully word guessed lesson
+                if level_lesson_num - 1 == 100:
                     msg = "You haven't even guessed words of the first lesson!"
                     await interaction.followup.send(msg)
                     assert False, msg
-                elif not level_lesson_num % 100: # get prev. lvl's lesson
+                elif not level_lesson_num % 100:  # get prev. lvl's lesson
                     level_num = (level_lesson_num // 100) - 1
                     level_lesson_num = (level_num * 100) + 30
-                else:                               # get prev. lesson
+                else:  # get prev. lesson
                     level_lesson_num -= 1
 
         level_num, lesson_num = divmod(level_lesson_num, 100)
@@ -203,10 +202,10 @@ class Language(discord.ext.commands.Cog):
 
         df = self.vocab_df
         ws_names = (
-            f"{user_name}-score-1", 
+            f"{user_name}-score-1",
             f"{user_name}-score-2",
             f"{user_name}-score-3",
-            f"{user_name}-score-4"
+            f"{user_name}-score-4",
         )
         try:
             _, scores_dfs = utils.get_worksheets(S_SPREADSHEET, ws_names)
@@ -279,7 +278,7 @@ class Language(discord.ext.commands.Cog):
         filtered_df = self.vocab_df.loc[
             self.vocab_df["Lesson"] == level_lesson_num
         ]
-        vocab = list(filtered_df.itertuples(name='Row', index=False))
+        vocab = list(filtered_df.itertuples(name="Row", index=False))
         random.shuffle(vocab)
 
         return vocab
@@ -298,7 +297,7 @@ class Language(discord.ext.commands.Cog):
         picked_words_df = self.vocab_df[
             self.vocab_df["Korean"].isin(picked_words)
         ]
-        vocab = list(picked_words_df.itertuples(name='Row', index=False))
+        vocab = list(picked_words_df.itertuples(name="Row", index=False))
 
         return vocab
 
@@ -344,8 +343,7 @@ class Language(discord.ext.commands.Cog):
                 distr_score = np.array(knowledge_scores) * np.array(distr_vals)
 
                 time_score_penalty, time_marks = self.get_time_penalty_data(
-                    previous_row.Date,
-                    datetime.now()
+                    previous_row.Date, datetime.now()
                 )
 
                 knowledge_marks.reverse()
@@ -358,7 +356,7 @@ class Language(discord.ext.commands.Cog):
                         previous_row.Word,
                         final_score,
                         "".join(knowledge_marks),
-                        "".join(time_marks)
+                        "".join(time_marks),
                     ]
                 )
 
@@ -372,14 +370,14 @@ class Language(discord.ext.commands.Cog):
 
             previous_row = row
 
-        table_rows = sorted(table_rows, key=lambda x:x[1], reverse=True)
+        table_rows = sorted(table_rows, key=lambda x: x[1], reverse=True)
 
         # create worksheet of scores
         ws_scores_list, _ = utils.get_worksheets(
-            "Korea - Users stats",
+            S_SPREADSHEET,
             (f"{user_name}-score-{level_num}",),
             create=True,
-            size=(10_000, 4)
+            size=(10_000, 4),
         )
         ws_scores = ws_scores_list[0]
         ws_scores.clear()
@@ -408,7 +406,7 @@ class Language(discord.ext.commands.Cog):
 
         return distribution_vals
 
-    def get_time_penalty_data(self, row_date, now_date, coefficient = 0.01):
+    def get_time_penalty_data(self, row_date, now_date, coefficient=0.01):
         """Gets time score penalty and emoji visualization for worksheet.
 
         Args:
@@ -433,7 +431,9 @@ class Language(discord.ext.commands.Cog):
 
         return score_penalty, time_marks
 
-    def get_random_words(self, guessed_words, consider_amount=150, pick_amount=50):
+    def get_random_words(
+        self, guessed_words, consider_amount=150, pick_amount=50
+    ):
         """Gets randomly chosen words for session.
 
         Uses linear probability distribution to pick words randomly from
@@ -451,10 +451,10 @@ class Language(discord.ext.commands.Cog):
         """
 
         if len(guessed_words) < consider_amount:
-            consider_amount = len(guessed_words) 
+            consider_amount = len(guessed_words)
         else:
             consider_amount
-        
+
         if consider_amount < pick_amount:
             pick_amount = consider_amount
 
@@ -476,7 +476,9 @@ class Language(discord.ext.commands.Cog):
 
         return picked_words
 
-    async def run_vocab_session_loop(self, interaction, voice, ws_log, session_number, guessed_words, vocab):
+    async def run_vocab_session_loop(
+        self, interaction, voice, ws_log, session_number, guessed_words, vocab
+    ):
         """Runs session loop for vocabulary words.
 
         Args:
@@ -527,7 +529,7 @@ class Language(discord.ext.commands.Cog):
                 if guide:
                     await msg.edit(embed=embed, view=view)
                 else:  # remove files from previous word
-                    await msg.edit(embed=embed, view=view, attachments=[])  
+                    await msg.edit(embed=embed, view=view, attachments=[])
             if file:
                 await msg.add_files(file)
 
@@ -564,7 +566,7 @@ class Language(discord.ext.commands.Cog):
             elif button_id == "partial":
                 vocab.insert(len(vocab) // 3, row_to_move)
             elif button_id == "forgot":
-                vocab.insert(- len(vocab) // 5, row_to_move)
+                vocab.insert(-len(vocab) // 5, row_to_move)
 
             # save stats
             stat_time = datetime.now(pytz.timezone(self.timezone))
@@ -645,7 +647,7 @@ class Language(discord.ext.commands.Cog):
         """Creates an audio using google's TTS for a given korean word.
 
         This is being used for all the words that have no audio from naver's
-        dictionary. 
+        dictionary.
         Audio files are saved in data/vocabulary_global_gtts_audio dir, a new
         audio path is added for the given korean word.
 
@@ -656,8 +658,8 @@ class Language(discord.ext.commands.Cog):
         src_dir = Path(__file__).parents[0]
         vocab_path = f"{src_dir}/data/vocabulary_global_gtts_audio/"
         stripped_word = word.replace("?", "")
-        path = f'{vocab_path}/{stripped_word}.mp3'
-        tts = gTTS(word, lang='ko')
+        path = f"{vocab_path}/{stripped_word}.mp3"
+        tts = gTTS(word, lang="ko")
         tts.save(path)
 
         self.vocab_audio_paths[word] = path
@@ -720,7 +722,9 @@ class Language(discord.ext.commands.Cog):
         )
         return stats
 
-    async def get_listening_files(self, interaction, level_num, lesson_num, level_lesson_num):
+    async def get_listening_files(
+        self, interaction, level_num, lesson_num, level_lesson_num
+    ):
         """Gets listening text and path to audio files.
 
         Args:
@@ -754,7 +758,9 @@ class Language(discord.ext.commands.Cog):
 
         return audio_texts, audio_paths
 
-    async def run_listening_session_loop(self, interaction, voice, audio_texts, audio_paths):
+    async def run_listening_session_loop(
+        self, interaction, voice, audio_texts, audio_paths
+    ):
         """Runs session loop for audio files.
 
         Args:
@@ -826,7 +832,7 @@ class Language(discord.ext.commands.Cog):
                     )
                     button_id2 = interaction.data["custom_id"]
                 pause_end = time.time()
-                audio_start += (pause_end - pause_start)
+                audio_start += pause_end - pause_start
                 continue
 
             elif button_id == "next":
@@ -887,7 +893,6 @@ class Language(discord.ext.commands.Cog):
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
 
-
     @discord.app_commands.command(name="vl")
     async def vocab_listening(self, interaction, level_lesson_num: int):
         """Starts listening vocabulary exercise.
@@ -920,7 +925,7 @@ class Language(discord.ext.commands.Cog):
             S_SPREADSHEET,
             (f"{user_name}-{level_num}", f"{user_name}-score-{level_num}"),
             create=True,
-            size=(10_000, 4)
+            size=(10_000, 4),
         )
         ws_log = ws_logs[0]
         if not ws_log.get_values("A1"):  # create header if missing
@@ -974,9 +979,7 @@ class Language(discord.ext.commands.Cog):
             "...Setting up listening session..."
         )
         voice = await self.get_voice(interaction)
-        await self.bot.change_presence(
-            activity=discord.Game(name="Listening")
-        )
+        await self.bot.change_presence(activity=discord.Game(name="Listening"))
 
         (
             level_num,
@@ -1054,5 +1057,3 @@ async def setup(bot):
     await bot.add_cog(
         Language(bot), guilds=[discord.Object(id=os.environ["GUILD_ID"])]
     )
-
-# TODO: 3 Pylint, alt+shift
