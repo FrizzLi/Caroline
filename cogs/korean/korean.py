@@ -120,9 +120,10 @@ class Language(discord.ext.commands.Cog):
         paths_labelled = {}
         if ignore_last_letter:
             for path in paths:
-                file_name = Path(path).stem
-                file_name = file_name[:-1]
-                paths_labelled[file_name] = path[:-5] + path[-4:]
+                if path[-5].isalpha():
+                    file_name = Path(path).stem
+                    file_name = file_name[:-1]
+                    paths_labelled[file_name] = path[:-5] + path[-4:]
         else:
             for path in paths:
                 file_name = Path(path).stem
@@ -202,10 +203,10 @@ class Language(discord.ext.commands.Cog):
 
         df = self.vocab_df
         ws_names = (
-            f"{user_name}-score-1",
-            f"{user_name}-score-2",
-            f"{user_name}-score-3",
-            f"{user_name}-score-4",
+            f"{user_name}-Qscore-1",
+            f"{user_name}-Qscore-2",
+            f"{user_name}-Qscore-3",
+            f"{user_name}-Qscore-4",
         )
         try:
             _, scores_dfs = utils.get_worksheets(S_SPREADSHEET, ws_names)
@@ -375,7 +376,7 @@ class Language(discord.ext.commands.Cog):
         # create worksheet of scores
         ws_scores_list, _ = utils.get_worksheets(
             S_SPREADSHEET,
-            (f"{user_name}-score-{level_num}",),
+            (f"{user_name}-Qscore-{level_num}",),
             create=True,
             size=(10_000, 4),
         )
@@ -549,7 +550,7 @@ class Language(discord.ext.commands.Cog):
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
                 content = f"{footer_text}\n{stats_str}"
-                await msg.edit(content=content, view=view, embed=None)
+                await msg.edit(content=content, view=view, embed=None, attachments=[])
                 ws_log.append_rows(stats)
                 break
 
@@ -923,7 +924,7 @@ class Language(discord.ext.commands.Cog):
         user_name = interaction.user.name
         ws_logs, scores_dfs = utils.get_worksheets(
             S_SPREADSHEET,
-            (f"{user_name}-{level_num}", f"{user_name}-score-{level_num}"),
+            (f"{user_name}-Q{level_num}", f"{user_name}-Qscore-{level_num}"),
             create=True,
             size=(10_000, 4),
         )
@@ -932,7 +933,10 @@ class Language(discord.ext.commands.Cog):
             ws_log.append_row(["Date", "Word", "Knowledge", "Session_number"])
 
         scores_df = scores_dfs[1]
-        guessed_words = tuple(scores_df[scores_df.columns[0]])
+        if scores_df.empty:
+            guessed_words = ()
+        else:
+            guessed_words = tuple(scores_df[scores_df.columns[0]])
 
         session_number = self.get_session_number(ws_log)
 
