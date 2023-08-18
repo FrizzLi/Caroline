@@ -120,7 +120,7 @@ class Language(discord.ext.commands.Cog):
         paths_labelled = {}
         if ignore_last_letter:
             for path in paths:
-                if path[-5].isalpha():
+                if path[-5].islower():
                     file_name = Path(path).stem
                     file_name = file_name[:-1]
                     paths_labelled[file_name] = path[:-5] + path[-4:]
@@ -323,6 +323,8 @@ class Language(discord.ext.commands.Cog):
         table_rows = []
 
         df = pd.DataFrame(ws_log.get_all_records())
+        if df.empty:
+            return
         df = df.sort_values(["Word", "Date"])
 
         # accessing first word individually because we need "previous_row"
@@ -894,7 +896,7 @@ class Language(discord.ext.commands.Cog):
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
 
-    @discord.app_commands.command(name="vl")
+    @discord.app_commands.command(name="vocab")
     async def vocab_listening(self, interaction, level_lesson_num: int):
         """Starts listening vocabulary exercise.
 
@@ -910,6 +912,8 @@ class Language(discord.ext.commands.Cog):
             "...Setting up vocab session..."
         )
         voice = await self.get_voice(interaction)
+        if not voice:
+            return
         await self.bot.change_presence(
             activity=discord.Game(name="Vocabulary")
         )
@@ -968,7 +972,7 @@ class Language(discord.ext.commands.Cog):
             status=discord.Status.online,
         )
 
-    @discord.app_commands.command(name="l")
+    @discord.app_commands.command(name="listen")
     async def listening(self, interaction, level_lesson_num: int):
         """Starts listening exercise.
 
@@ -983,6 +987,8 @@ class Language(discord.ext.commands.Cog):
             "...Setting up listening session..."
         )
         voice = await self.get_voice(interaction)
+        if not voice:
+            return
         await self.bot.change_presence(activity=discord.Game(name="Listening"))
 
         (
@@ -1011,11 +1017,11 @@ class Language(discord.ext.commands.Cog):
             status=discord.Status.online,
         )
 
-    @discord.app_commands.command(name="r")
+    @discord.app_commands.command(name="read")
     async def reading(self, interaction, level_lesson_num: int):
         """Starts reading exercise.
 
-        There are 2 types of level_lesson_num in listening sessions:
+        There are 2 types of level_lesson_num in reading sessions:
          - One ("1") starts the latest lesson which has all words visited
          - Hundreds up to 30 ("101", ..., "130") starts specific lesson
            (Hundred decimals represent level)
