@@ -71,6 +71,7 @@ class Language(discord.ext.commands.Cog):
             "C:/ffmpeg/ffmpeg.exe" if os.name == "nt" else "/usr/bin/ffmpeg"
         )
         self.timezone = ""
+        self.busy_str = ""
 
     def _get_vocab_table(self):
         """Gets the whole vocabulary table dataframed from google spreadsheet.
@@ -140,6 +141,10 @@ class Language(discord.ext.commands.Cog):
         Returns:
             discord.voice_client.VoiceClient: voice channel
         """
+
+        # user_voice_channel = interaction.user.voice.channel
+        # if user_voice_channel and voice:
+        #     voice.move_to(user_voice_channel)
 
         guild = interaction.guild
         user_voice = interaction.user.voice
@@ -520,7 +525,7 @@ class Language(discord.ext.commands.Cog):
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            footer_text = f"{len(unchecked_words)} words remaining unchecked."
+            footer_text = f"{len(unchecked_words)} words unchecked remaining."
             embed.set_footer(text=footer_text)
 
             # sending message
@@ -549,7 +554,7 @@ class Language(discord.ext.commands.Cog):
                 continue
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
-                content = f"**Session ended with {footer_text}\n{stats_str}"
+                content = f"Session ended with {footer_text}\n{stats_str}"
                 await msg.edit(content=content, view=view, embed=None, attachments=[])
                 ws_log.append_rows(stats)
                 break
@@ -895,7 +900,7 @@ class Language(discord.ext.commands.Cog):
             self.timezone = json.load(file)["timezone"]
 
     @discord.app_commands.command(name="vocab")
-    async def vocab_listening(self, interaction, level_lesson_num: int):
+    async def vocab_listening(self, interaction, level_lesson_num: int=1):
         """Starts listening vocabulary exercise.
 
         There are 3 types of level_lesson_num in vocab_listening session:
@@ -906,9 +911,17 @@ class Language(discord.ext.commands.Cog):
            (Ten decimals represent level's lesson)
         """
 
-        await interaction.response.send_message(
-            "...Setting up vocab session..."
-        )
+        if self.busy_str:
+            await interaction.response.send_message(
+                f"The bot is busy with {self.busy_str}!"
+            )
+            return
+        else:
+            self.busy_str = "vocab session"
+            await interaction.response.send_message(
+                "...Setting up vocab session..."
+            )
+
         voice = await self.get_voice(interaction)
         if not voice:
             return
@@ -969,6 +982,7 @@ class Language(discord.ext.commands.Cog):
             ),
             status=discord.Status.online,
         )
+        self.busy_str = ""
 
     @discord.app_commands.command(name="listen")
     async def listening(self, interaction, level_lesson_num: int):
@@ -981,13 +995,21 @@ class Language(discord.ext.commands.Cog):
            (Ten decimals represent level's lesson)
         """
 
-        await interaction.response.send_message(
-            "...Setting up listening session..."
-        )
+        if self.busy_str:
+            await interaction.response.send_message(
+                f"The bot is busy with {self.busy_str}!"
+            )
+            return
+        else:
+            self.busy_str = "listening session"
+            await interaction.response.send_message(
+                "...Setting up listening session..."
+            )
+
         voice = await self.get_voice(interaction)
         if not voice:
             return
-        await self.bot.change_presence(activity=discord.Game(name="Listening"))
+        await self.bot.change_presence(activity=discord.Game(name="Listen"))
 
         (
             level_num,
@@ -1014,6 +1036,7 @@ class Language(discord.ext.commands.Cog):
             ),
             status=discord.Status.online,
         )
+        self.busy_str = ""
 
     @discord.app_commands.command(name="read")
     async def reading(self, interaction, level_lesson_num: int):
