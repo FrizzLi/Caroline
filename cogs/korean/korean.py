@@ -203,10 +203,10 @@ class Language(discord.ext.commands.Cog):
 
         df = self.vocab_df
         ws_names = (
-            f"{user_name}-Qscore-1",
-            f"{user_name}-Qscore-2",
-            f"{user_name}-Qscore-3",
-            f"{user_name}-Qscore-4",
+            f"{user_name}-score-1",
+            f"{user_name}-score-2",
+            f"{user_name}-score-3",
+            f"{user_name}-score-4",
         )
         try:
             _, scores_dfs = utils.get_worksheets(S_SPREADSHEET, ws_names)
@@ -378,7 +378,7 @@ class Language(discord.ext.commands.Cog):
         # create worksheet of scores
         ws_scores_list, _ = utils.get_worksheets(
             S_SPREADSHEET,
-            (f"{user_name}-Qscore-{level_num}",),
+            (f"{user_name}-score-{level_num}",),
             create=True,
             size=(10_000, 4),
         )
@@ -455,8 +455,6 @@ class Language(discord.ext.commands.Cog):
 
         if len(guessed_words) < consider_amount:
             consider_amount = len(guessed_words)
-        else:
-            consider_amount
 
         if consider_amount < pick_amount:
             pick_amount = consider_amount
@@ -522,7 +520,7 @@ class Language(discord.ext.commands.Cog):
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            footer_text = f"{len(unchecked_words)} words remaining."
+            footer_text = f"{len(unchecked_words)} words remaining unchecked."
             embed.set_footer(text=footer_text)
 
             # sending message
@@ -551,7 +549,7 @@ class Language(discord.ext.commands.Cog):
                 continue
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
-                content = f"{footer_text}\n{stats_str}"
+                content = f"**Session ended with {footer_text}\n{stats_str}"
                 await msg.edit(content=content, view=view, embed=None, attachments=[])
                 ws_log.append_rows(stats)
                 break
@@ -850,7 +848,7 @@ class Language(discord.ext.commands.Cog):
             elif button_id == "end":
                 if voice.is_playing():
                     voice.stop()
-                content = f"```{msg_str}\nEnding listening session.```"
+                content = f"```{msg_str}\nListening sessions has ended.```"
                 await msg.edit(content=content, view=view)
                 break
 
@@ -928,7 +926,7 @@ class Language(discord.ext.commands.Cog):
         user_name = interaction.user.name
         ws_logs, scores_dfs = utils.get_worksheets(
             S_SPREADSHEET,
-            (f"{user_name}-Q{level_num}", f"{user_name}-Qscore-{level_num}"),
+            (f"{user_name}-{level_num}", f"{user_name}-score-{level_num}"),
             create=True,
             size=(10_000, 4),
         )
@@ -967,7 +965,7 @@ class Language(discord.ext.commands.Cog):
         await self.bot.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening,
-                name="/play",
+                name=self.bot.activity_str,
             ),
             status=discord.Status.online,
         )
@@ -1012,7 +1010,7 @@ class Language(discord.ext.commands.Cog):
         await self.bot.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening,
-                name="/play",
+                name=self.bot.activity_str,
             ),
             status=discord.Status.online,
         )
@@ -1056,24 +1054,23 @@ class Language(discord.ext.commands.Cog):
         await interaction.channel.send(f"```{reading_text}```")
 
     @discord.app_commands.command(name="help")
-    async def help(self, interaction):
-        embed = discord.Embed(title="❔ Help")
+    async def help(self, interaction, private_visibility: bool=False):
+        """Sends message with guide on how to use the bot."""
+
+        embed = discord.Embed(title="❔ Guide on how to use the bot")
 
         text_general = """
 `/vocab ` (vocabulary learning)
 `/listen ` (listening practice)
 `/read ` (reading practice)
 
-Followed by the command, you have to type a certain number that determines what kind of lesson is going to be picked. There are 4 levels and each contains 30 lessons.
+Followed by the command, you have to type a certain number that determines what lesson is going to be picked.
 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
         """
-        text_vocab = """ 
-1. One **(1)** finds and starts the next user's unknown lesson session 
- - [use this when you want to learn something new]
-2. Pure Hundreds **(100, ..., 400)** starts review session of words that you have already guessed at least once in a certain level (level is represented by the hundred decimal)
- - [use this when you want to practice what you've already learned in a certain level]
-3. Hundreds up to 30 **(101, ..., 130)** starts session of one specific lesson in a certain level (hundred decimal represents the level, the number up to 30 represents a lesson).
- - [use this when you want to learn/practice one specific lesson]
+        text_vocab = """
+1. One **(1)** - starts your next unknown lesson session
+2. Hundreds **(100, ..., 400)** starts review session of words that you've already encountered in a certain level (level is represented by the hundred decimal)
+3. Hundreds up to 30 **(101, ..., 130)** starts session of one specific lesson in a certain level (hundred decimal represents level, number up to 30 represents lesson).
         """
         text_vocab_interact = """
 ✅ - know without thinking
@@ -1081,15 +1078,16 @@ Followed by the command, you have to type a certain number that determines what 
 🧩 - know only partially
 ❌ - not know
 🔁 - repeat the audio
-📄 - display more info about the word
+📄 - display additional info about the word
 🔚 - end the session
 
-The frequency of certain words showing up depend on the marks you click (especially in the review sessions that also take time into account)
+- If you encounter a word for the first time, it displays all the info about the word. If you have already encountered it, this info will be hidden, only the word with translation will be there, but spoiled. To unspoil it, click on the black text. If you want to see the additional info, use the 📄 button.
+- If the word has number attached at the end, it means it can have multiple meanings. Each number represents one meaning.
 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
         """
-        text_listen = """ 
-1. One **(1)** finds and starts the lesson with the highest number in which all the words were already guessed
-2. Hundreds up to 30 **(101, ..., 130)** starts session of one specific lesson in a certain level
+        text_listen = """
+1. One **(1)** starts your latest known lesson session
+2. Hundreds up to 30 **(101, ..., 130)** [same as above]
         """
         text_listen_interact = """
 ⏪ - rewind by 10 seconds
@@ -1098,28 +1096,23 @@ The frequency of certain words showing up depend on the marks you click (especia
 🔁 - repeat track
 🔚 - end the session
 
-*Note that listening sessions starts from 102 and reading sessions from 105.*
-
-**Used resources**:
- - Hongik University Language School audio files and grammar notes
-- Vocabulary audio downloaded from Naver
-- A Frequency Dictionary of Korean (book)
-- content generated by ChatGPT
+- Note that listening sessions starts from 102 and reading sessions from 105 lessons.
+- Listening sessions require you to understand lesson's corresponding grammar that is described inside the Google Doc's link below
         """
 
-        text_links = f"""
- - [Level 1 Grammar](https://docs.google.com/document/d/1BTBgvSy7VGwoD1AD4lCqpy0_7Zn-U_6smeU0GKdFjoU/edit?usp=sharing) (reference on grammar that is being used in listening/reading sessions)
-- [User's stats](https://docs.google.com/spreadsheets/d/1wFbxnhwc2BQAEAL_KNCPfBYoLwhdcGR5FuVKxlwjSJg/edit?usp=sharing) (information about user's guessings and sorted knowledge of words)
-- [Vocabulary](https://docs.google.com/spreadsheets/d/1mhYVWtqUWF-vVjwCz3cvlhZxH6GjfU6XyLVd2lNcWe0/edit?usp=sharing) (the whole set of korean words used in a spreadsheet)"""
+        text_links = """
+- [Level 1 Grammar](https://docs.google.com/document/d/1BTBgvSy7VGwoD1AD4lCqpy0_7Zn-U_6smeU0GKdFjoU/edit?usp=sharing) (Google Doc - grammar reference that is being used in listening/reading sessions)
+- [User's stats](https://docs.google.com/spreadsheets/d/1wFbxnhwc2BQAEAL_KNCPfBYoLwhdcGR5FuVKxlwjSJg/edit?usp=sharing) (Google Sheet - log of user's guessings and sorted scores for every encountered word)
+- [Vocabulary](https://docs.google.com/spreadsheets/d/1mhYVWtqUWF-vVjwCz3cvlhZxH6GjfU6XyLVd2lNcWe0/edit?usp=sharing) (Google Sheet -  whole set of korean words)"""
 
         embed.add_field(name="There are 3 commands that you can use by typing it into text channel:", value=text_general, inline=False)
         embed.add_field(name="For the `/vocab ` command, there are 3 types of numbers:", value=text_vocab, inline=False)
-        embed.add_field(name="Interaction:", value=text_vocab_interact, inline=False)
+        embed.add_field(name="Interactions:", value=text_vocab_interact, inline=False)
         embed.add_field(name="For the `/listen ` command, there are 2 types of numbers:", value=text_listen, inline=False)
-        embed.add_field(name="Interacting:", value=text_listen_interact, inline=False)
+        embed.add_field(name="Interactions:", value=text_listen_interact, inline=False)
         embed.add_field(name="Links:", value=text_links, inline=False)
 
-        await interaction.channel.send(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=private_visibility)
 
 async def setup(bot):
     """Loads up this module (cog) into the bot that was initialized
