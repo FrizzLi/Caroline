@@ -142,17 +142,17 @@ class Language(discord.ext.commands.Cog):
             discord.voice_client.VoiceClient: voice channel
         """
 
-        # user_voice_channel = interaction.user.voice.channel
-        # if user_voice_channel and voice:
-        #     voice.move_to(user_voice_channel)
-
         guild = interaction.guild
         user_voice = interaction.user.voice
+        if not user_voice:
+            await interaction.followup.send("You are not in a voice channel.")
+            return
+
         voice = discord.utils.get(self.bot.voice_clients, guild=guild)
-        if not voice and not user_voice:
-            await interaction.followup.send("No bot nor you is connected.")
-        elif not voice:
+        if not voice:
             await user_voice.channel.connect()
+        elif voice.channel != user_voice.channel:
+            await voice.move_to(user_voice.channel)
         voice = discord.utils.get(self.bot.voice_clients, guild=guild)
 
         return voice
@@ -228,7 +228,7 @@ class Language(discord.ext.commands.Cog):
             ws_missing_words = known_words - level_words
             if ws_missing_words:
                 update_needed_msg = (
-                    f"Vocabulary is missing words in Level {i} that user has"
+                    f"Vocabulary is missing words in Level {i} that user has "
                     f"encountered: {ws_missing_words}\n"
                     "Rename those words for user! They're outdated."
                 )
@@ -917,7 +917,6 @@ class Language(discord.ext.commands.Cog):
             )
             return
         else:
-            self.busy_str = "vocab session"
             await interaction.response.send_message(
                 "...Setting up vocab session..."
             )
@@ -925,6 +924,8 @@ class Language(discord.ext.commands.Cog):
         voice = await self.get_voice(interaction)
         if not voice:
             return
+        
+        self.busy_str = "vocab session"
         await self.bot.change_presence(
             activity=discord.Game(name="Vocabulary")
         )
@@ -1001,7 +1002,6 @@ class Language(discord.ext.commands.Cog):
             )
             return
         else:
-            self.busy_str = "listening session"
             await interaction.response.send_message(
                 "...Setting up listening session..."
             )
@@ -1009,6 +1009,8 @@ class Language(discord.ext.commands.Cog):
         voice = await self.get_voice(interaction)
         if not voice:
             return
+        
+        self.busy_str = "listening session"
         await self.bot.change_presence(activity=discord.Game(name="Listen"))
 
         (
