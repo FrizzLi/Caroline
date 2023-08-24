@@ -174,6 +174,12 @@ class Language(discord.ext.commands.Cog):
         """
 
         user_name = interaction.user.name
+        last_listened_session = False
+        if level_lesson_num == 2:
+            level_lesson_num = 1
+            last_listened_session = True
+            
+
         if level_lesson_num == 1:
             level_lesson_num = self.get_unknown_lesson_num(user_name)
 
@@ -187,6 +193,9 @@ class Language(discord.ext.commands.Cog):
                     level_lesson_num = (level_num * 100) + 30
                 else:  # get prev. lesson
                     level_lesson_num -= 1
+            
+            if last_listened_session and level_lesson_num:
+                level_lesson_num -= 1
 
         level_num, lesson_num = divmod(level_lesson_num, 100)
         if not (0 < level_num < 5 and lesson_num < 31):
@@ -900,7 +909,15 @@ class Language(discord.ext.commands.Cog):
             self.timezone = json.load(file)["timezone"]
 
     @discord.app_commands.command(name="vocab")
-    async def vocab_listening(self, interaction, level_lesson_num: int=1):
+    @discord.app_commands.describe(level_lesson_num="Select session type")
+    @discord.app_commands.choices(level_lesson_num=[
+        discord.app_commands.Choice(name="Learn new words", value=1),
+        discord.app_commands.Choice(name="Review words from Level 1", value=100),
+        discord.app_commands.Choice(name="Review words from Level 2", value=200),
+        discord.app_commands.Choice(name="Review words from Level 3", value=300),
+        discord.app_commands.Choice(name="Review words from Level 4", value=400),
+    ])
+    async def vocab_listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int]):
         """Starts listening vocabulary exercise.
 
         There are 3 types of level_lesson_num in vocab_listening session:
@@ -930,6 +947,7 @@ class Language(discord.ext.commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
+        level_lesson_num = level_lesson_num.value
         (
             level_num,
             lesson_num,
@@ -985,8 +1003,14 @@ class Language(discord.ext.commands.Cog):
         )
         self.busy_str = ""
 
+    @discord.app_commands.command(name="vocab")
+    @discord.app_commands.describe(level_lesson_num="Select session type")
+    @discord.app_commands.choices(level_lesson_num=[
+        discord.app_commands.Choice(name="Listen next lesson", value=1),
+        discord.app_commands.Choice(name="Listen previously fully listened lesson", value=2)
+    ])
     @discord.app_commands.command(name="listen")
-    async def listening(self, interaction, level_lesson_num: int):
+    async def listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int]):
         """Starts listening exercise.
 
         There are 2 types of level_lesson_num in listening sessions:
@@ -1013,6 +1037,7 @@ class Language(discord.ext.commands.Cog):
         self.busy_str = "listening session"
         await self.bot.change_presence(activity=discord.Game(name="Listen"))
 
+        level_lesson_num = level_lesson_num.value
         (
             level_num,
             lesson_num,
