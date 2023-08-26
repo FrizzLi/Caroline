@@ -765,8 +765,7 @@ class Language(discord.ext.commands.Cog):
             # sorted it because linux system reverses it
         except Exception:
             msg = (
-                f"{level_lesson_num} lesson's text or audio files "
-                "were not found!"
+                f"There are no listening files for {level_lesson_num}. lesson."
             )
             await interaction.followup.send(msg)
             assert False, msg
@@ -1066,7 +1065,12 @@ class Language(discord.ext.commands.Cog):
         self.busy_str = ""
 
     @discord.app_commands.command(name="read")
-    async def reading(self, interaction, level_lesson_num: int):
+    @discord.app_commands.describe(level_lesson_num="Select session type")
+    @discord.app_commands.choices(level_lesson_num=[
+        discord.app_commands.Choice(name="Read next lesson", value=1),
+        discord.app_commands.Choice(name="Read previously fully listened lesson", value=2)
+    ])
+    async def reading(self, interaction, level_lesson_num: discord.app_commands.Choice[int]):
         """Starts reading exercise.
 
         There are 2 types of level_lesson_num in reading sessions:
@@ -1080,6 +1084,7 @@ class Language(discord.ext.commands.Cog):
             "...Setting up reading session..."
         )
 
+        level_lesson_num = level_lesson_num.value
         (
             level_num,
             lesson_num,
@@ -1096,7 +1101,7 @@ class Language(discord.ext.commands.Cog):
             with open(text_path, encoding="utf-8") as f:
                 reading_text = f.read()
         except Exception as exc:
-            msg = f"{level_lesson_num} lesson's text files were not found!"
+            msg = f"There are no reading files for {level_lesson_num}. lesson."
             await interaction.followup.send(msg)
             raise discord.ext.commands.CommandError(msg) from exc
 
