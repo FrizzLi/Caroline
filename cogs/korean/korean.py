@@ -65,6 +65,7 @@ class Language(discord.ext.commands.Cog):
     def __init__(self, bot):
         self.vocab_audio_paths = self._get_labelled_paths(V_AUDIO_PATHS)
         self.vocab_image_paths = self._get_labelled_paths(V_IMAGE_PATHS, True)
+        self.lr_tracking_df = self._get_lr_tracking()
         self.vocab_df = self._get_vocab_table()
         self.bot = bot
         self.ffmpeg_path = (
@@ -88,6 +89,20 @@ class Language(discord.ext.commands.Cog):
         vocab_df.dropna(subset=["Lesson"], inplace=True)
 
         return vocab_df
+
+    def _get_lr_tracking(self):
+        _, tracking_df = utils.get_worksheets(
+            S_SPREADSHEET,
+            ("listen_read-tracking",),
+            create=True,
+            size=(1_000, 9),
+        )
+        if not tracking_df:
+            columns = ["Username"] + listen + read
+            tracking_df = pd.DataFrame(columns=columns)
+        
+        return tracking_df
+
 
     def _get_labelled_paths(self, glob_paths, ignore_last_letter=False):
         """Gets file names and their paths. Used for loading audio/image files.
@@ -1034,6 +1049,11 @@ class Language(discord.ext.commands.Cog):
         
         self.busy_str = "listening session"
         await self.bot.change_presence(activity=discord.Game(name="Listen"))
+
+        user_name = interaction.user.name
+        if user_name not in self.lr_tracking_df["Username"].values:
+            new_row = pd.DataFrame([[user_name, 2, 1, 1, 1, 5, 1, 1, 1]], columns=df.columns)
+            self.lr_tracking_df = self.lr_tracking_df.append(new_row, ignore_index=True)
 
         level_lesson_num = level_lesson_num.value
         (
