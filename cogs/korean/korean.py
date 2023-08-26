@@ -1002,13 +1002,12 @@ class Language(discord.ext.commands.Cog):
         )
         self.busy_str = ""
 
-    @discord.app_commands.command(name="vocab")
+    @discord.app_commands.command(name="listen")
     @discord.app_commands.describe(level_lesson_num="Select session type")
     @discord.app_commands.choices(level_lesson_num=[
         discord.app_commands.Choice(name="Listen next lesson", value=1),
         discord.app_commands.Choice(name="Listen previously fully listened lesson", value=2)
     ])
-    @discord.app_commands.command(name="listen")
     async def listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int]):
         """Starts listening exercise.
 
@@ -1118,14 +1117,6 @@ class Language(discord.ext.commands.Cog):
 `/vocab ` (vocabulary learning)
 `/listen ` (listening practice)
 `/read ` (reading practice)
-
-Followed by the command, you have to type a certain number that determines what lesson is going to be picked.
-ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-        """
-        text_vocab = """
-1. One **(1)** - starts your next unknown lesson session
-2. Hundreds **(100, ..., 400)** starts review session of words that you've already encountered in a certain level (level is represented by the hundred decimal)
-3. Hundreds up to 30 **(101, ..., 130)** starts session of one specific lesson in a certain level (hundred decimal represents level, number up to 30 represents lesson).
         """
         text_vocab_interact = """
 ✅ - know without thinking
@@ -1138,7 +1129,6 @@ Followed by the command, you have to type a certain number that determines what 
 
 - If you encounter a word for the first time, it displays all the info about the word. If you have already encountered it, this info will be hidden, only the word with translation will be there, but spoiled. To unspoil it, click on the black text. If you want to see the additional info, use the 📄 button.
 - If the word has number attached at the end, it means it can have multiple meanings. Each number represents one meaning.
-ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
         """
         text_listen = """
 1. One **(1)** starts your latest known lesson session
@@ -1156,15 +1146,13 @@ Followed by the command, you have to type a certain number that determines what 
         """
 
         text_links = """
-- [Level 1 Grammar](https://docs.google.com/document/d/1BTBgvSy7VGwoD1AD4lCqpy0_7Zn-U_6smeU0GKdFjoU/edit?usp=sharing) (Google Doc - grammar reference that is being used in listening/reading sessions)
-- [User's stats](https://docs.google.com/spreadsheets/d/1wFbxnhwc2BQAEAL_KNCPfBYoLwhdcGR5FuVKxlwjSJg/edit?usp=sharing) (Google Sheet - log of user's guessings and sorted scores for every encountered word)
-- [Vocabulary](https://docs.google.com/spreadsheets/d/1mhYVWtqUWF-vVjwCz3cvlhZxH6GjfU6XyLVd2lNcWe0/edit?usp=sharing) (Google Sheet -  whole set of korean words)"""
+- [Level 1 Grammar](https://docs.google.com/document/d/1BTBgvSy7VGwoD1AD4lCqpy0_7Zn-U_6smeU0GKdFjoU/edit?usp=sharing) (Google Doc - grammar reference (for listening/reading))
+- [User's stats](https://docs.google.com/spreadsheets/d/1wFbxnhwc2BQAEAL_KNCPfBYoLwhdcGR5FuVKxlwjSJg/edit?usp=sharing) (Google Sheet - user's logs and scores for every word)
+- [Vocabulary](https://docs.google.com/spreadsheets/d/1mhYVWtqUWF-vVjwCz3cvlhZxH6GjfU6XyLVd2lNcWe0/edit?usp=sharing) (Google Sheet -  vocabulary list)"""
 
         embed.add_field(name="There are 3 commands that you can use by typing it into text channel:", value=text_general, inline=False)
-        embed.add_field(name="For the `/vocab ` command, there are 3 types of numbers:", value=text_vocab, inline=False)
-        embed.add_field(name="Interactions:", value=text_vocab_interact, inline=False)
-        embed.add_field(name="For the `/listen ` command, there are 2 types of numbers:", value=text_listen, inline=False)
-        embed.add_field(name="Interactions:", value=text_listen_interact, inline=False)
+        embed.add_field(name="Interactions for `/vocab`:", value=text_vocab_interact, inline=False)
+        embed.add_field(name="Interactions for `/listen`:", value=text_listen_interact, inline=False)
         embed.add_field(name="Links:", value=text_links, inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=private_visibility)
