@@ -29,6 +29,8 @@ listening
 
 reading
     get_level_lesson_nums~~~
+    get_lr_level_lesson_nums~~~
+    set_lr_level_lesson_nums~~~
 
 """
 
@@ -65,7 +67,7 @@ class Language(discord.ext.commands.Cog):
     def __init__(self, bot):
         self.vocab_audio_paths = self._get_labelled_paths(V_AUDIO_PATHS)
         self.vocab_image_paths = self._get_labelled_paths(V_IMAGE_PATHS, True)
-        self.lr_tracking_df = self._get_lr_tracking()
+        self.lr_tracking = self._get_lr_tracking()
         self.vocab_df = self._get_vocab_table()
         self.bot = bot
         self.ffmpeg_path = (
@@ -91,18 +93,34 @@ class Language(discord.ext.commands.Cog):
         return vocab_df
 
     def _get_lr_tracking(self):
-        _, tracking_df = utils.get_worksheets(
+        """Gets listening/reading tracking worksheet for user.
+
+        Returns:
+            List[List[gspread.worksheet.Worksheet, pandas.core.frame.DataFrame]]: (
+                list of listening/reading worksheets (only one),
+                list of listening/reading dataframes (only one)
+            )
+        """
+
+        tracking_ws, tracking_df = utils.get_worksheets(
             S_SPREADSHEET,
             ("listen_read-tracking",),
             create=True,
             size=(1_000, 9),
         )
-        if not tracking_df:
-            columns = ["Username"] + listen + read
-            tracking_df = pd.DataFrame(columns=columns)
-        
-        return tracking_df
+        tracking_ws = tracking_ws[0]
+        tracking_df = tracking_df[0]
 
+        # create header if missing
+        listen = ["Listening 1", "Listening 2", "Listening 3", "Listening 4"]
+        read = ["Reading 1", "Reading 2", "Reading 3", "Reading 4"]
+        row = ["Username"] + listen + read
+        if not tracking_ws.get_values("A1"):
+            tracking_ws.append_row(row)
+        if tracking_df.empty:
+            tracking_df = pd.DataFrame(columns=row)
+
+        return [tracking_ws, tracking_df]
 
     def _get_labelled_paths(self, glob_paths, ignore_last_letter=False):
         """Gets file names and their paths. Used for loading audio/image files.
@@ -173,51 +191,72 @@ class Language(discord.ext.commands.Cog):
         return voice
 
     async def get_level_lesson_nums(
-        self, interaction, level_lesson_num, previous_lesson=False
+        self, interaction, level_lesson_num
     ):
-        """Gets level lesson numbers for all types of sessions.
+        """Gets level lesson numbers for vocabulary sessions.
 
         Args:
             interaction (discord.interactions.Interaction): slash cmd context
             level_lesson_num (int): level lesson number
-            previous_lesson (bool, optional): determines whether we want the
-                latest lesson which has all words visited. This is set to True
-                for listening and reading sessions. Defaults to False.
 
         Returns:
             Tuple[int, int, int]: level lesson numbers
         """
 
         user_name = interaction.user.name
-        last_listened_session = False
-        if level_lesson_num == 2:
-            level_lesson_num = 1
-            last_listened_session = True
-            
 
         if level_lesson_num == 1:
             level_lesson_num = self.get_unknown_lesson_num(user_name)
 
-            if previous_lesson:  # getting latest fully word guessed lesson
-                if level_lesson_num - 1 == 100:
-                    msg = "You haven't even guessed words of the first lesson!"
-                    await interaction.followup.send(msg)
-                    assert False, msg
-                elif not level_lesson_num % 100:  # get prev. lvl's lesson
-                    level_num = (level_lesson_num // 100) - 1
-                    level_lesson_num = (level_num * 100) + 30
-                else:  # get prev. lesson
-                    level_lesson_num -= 1
-            
-            if last_listened_session and level_lesson_num:
-                level_lesson_num -= 1
-
         level_num, lesson_num = divmod(level_lesson_num, 100)
         if not (0 < level_num < 5 and lesson_num < 31):
+            # we cannot choose certain lesson now so this is redundant
             msg = "Wrong level lesson number!"
             await interaction.followup.send(msg)
+            self.busy_str = ""
             assert False, msg
 
+        return level_num, lesson_num, level_lesson_num
+
+    def get_lr_level_lesson_nums(self, user_name, level_lesson_num, listening):
+        """Gets level lesson numbers for listening and reading sessions.
+
+        Args:
+            user_name (str): user name
+            level_lesson_num (int): level lesson number
+            listening (bool): listening session if true, otherwise reading
+
+        Returns:
+            Tuple[int, int, int]: level lesson numbers
+        """
+
+        df = self.lr_tracking[1]
+        if user_name not in df["Username"].values:
+            new_row = pd.DataFrame([[user_name, 2, 1, 1, 1, 5, 1, 1, 1]], columns=df.columns)
+            df = df.append(new_row, ignore_index=True)
+            self.lr_tracking[1] = df
+
+        if listening:
+            selected_columns = df.columns[1:5]
+        else:
+            selected_columns = df.columns[5:]
+
+        row = df.loc[df["Username"] == user_name]
+
+        for level, column_name in enumerate(selected_columns, start=1):
+            val = row[column_name]
+            val = val.values[0]
+            if val < 30:
+                # go to previus level if first lesson and last was selected
+                if not level_lesson_num + 1:
+                    level_num = level - 1
+                    lesson_num = 30
+                else:
+                    level_num = level
+                    lesson_num = level_lesson_num + val
+                level_lesson_num = level_num * 100 + lesson_num
+                break
+        
         return level_num, lesson_num, level_lesson_num
 
     def get_unknown_lesson_num(self, user_name):
@@ -783,6 +822,7 @@ class Language(discord.ext.commands.Cog):
                 f"There are no listening files for {level_lesson_num}. lesson."
             )
             await interaction.followup.send(msg)
+            self.busy_str = ""
             assert False, msg
 
         return audio_texts, audio_paths
@@ -797,6 +837,9 @@ class Language(discord.ext.commands.Cog):
             voice (discord.voice_client.VoiceClient): voice client channel
             audio_texts (List[str]): audio text
             audio_paths (List[str]): audio paths
+
+        Returns:
+            bool: listened all tracks
         """
 
         i = 0
@@ -804,6 +847,7 @@ class Language(discord.ext.commands.Cog):
         view = SessionListenView(self)
 
         play_backwards = False
+        listened_all = False
         msg = None
         audio_start = 0
 
@@ -836,6 +880,9 @@ class Language(discord.ext.commands.Cog):
                 audio_start = time.time()
             else:
                 await msg.edit(content=content, view=view)
+
+            if i+1 >= count_n:
+                listened_all = True
 
             # button interactions
             interaction = await self.bot.wait_for(
@@ -881,6 +928,8 @@ class Language(discord.ext.commands.Cog):
                 break
 
             audio_start = time.time()
+        
+        return listened_all
 
     def move_timestamp(self, audio_start, audio_source):
         """Moves timestamp (audio frames) in audio source. Updates start time.
@@ -1018,15 +1067,15 @@ class Language(discord.ext.commands.Cog):
         self.busy_str = ""
 
     @discord.app_commands.command(name="listen")
-    @discord.app_commands.describe(level_lesson_num="Select session type")
-    @discord.app_commands.choices(level_lesson_num=[
-        discord.app_commands.Choice(name="Listen next lesson", value=1),
-        discord.app_commands.Choice(name="Listen previously fully listened lesson", value=2)
+    @discord.app_commands.describe(level_lesson="Select session type")
+    @discord.app_commands.choices(level_lesson=[
+        discord.app_commands.Choice(name="Listen next lesson", value=0),
+        discord.app_commands.Choice(name="Listen previously fully listened lesson", value=-1)
     ])
-    async def listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int]):
+    async def listening(self, interaction, level_lesson: discord.app_commands.Choice[int]):
         """Starts listening exercise.
 
-        There are 2 types of level_lesson_num in listening sessions:
+        There are 2 types of level_lesson in listening sessions:
          - One ("1") starts the latest lesson which has all words visited
          - Hundreds up to 30 ("101", ..., "130") starts specific lesson
            (Hundred decimals represent level)
@@ -1050,19 +1099,12 @@ class Language(discord.ext.commands.Cog):
         self.busy_str = "listening session"
         await self.bot.change_presence(activity=discord.Game(name="Listen"))
 
-        user_name = interaction.user.name
-        if user_name not in self.lr_tracking_df["Username"].values:
-            new_row = pd.DataFrame([[user_name, 2, 1, 1, 1, 5, 1, 1, 1]], columns=df.columns)
-            self.lr_tracking_df = self.lr_tracking_df.append(new_row, ignore_index=True)
-
-        level_lesson_num = level_lesson_num.value
+        level_lesson = level_lesson.value
         (
             level_num,
             lesson_num,
             level_lesson_num,
-        ) = await self.get_level_lesson_nums(
-            interaction, level_lesson_num, True
-        )
+        ) = self.get_lr_level_lesson_nums(interaction.user.name, level_lesson, True)
 
         audio_texts, audio_paths = await self.get_listening_files(
             interaction, level_num, lesson_num, level_lesson_num
@@ -1070,9 +1112,16 @@ class Language(discord.ext.commands.Cog):
 
         await interaction.followup.send(f"Listening Lesson {level_lesson_num}")
 
-        await self.run_listening_session_loop(
+        listened_all = await self.run_listening_session_loop(
             interaction, voice, audio_texts, audio_paths
         )
+        
+        if not level_lesson and listened_all:
+            df = self.lr_tracking[1]
+            row_index = df[df['Username'] == interaction.user.name].index[0]
+            df.loc[row_index, f"Listening {level_num}"] = lesson_num + 1
+            self.lr_tracking[1] = df
+            utils.update_worksheet(self.lr_tracking[0], df)
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -1084,12 +1133,12 @@ class Language(discord.ext.commands.Cog):
         self.busy_str = ""
 
     @discord.app_commands.command(name="read")
-    @discord.app_commands.describe(level_lesson_num="Select session type")
-    @discord.app_commands.choices(level_lesson_num=[
-        discord.app_commands.Choice(name="Read next lesson", value=1),
-        discord.app_commands.Choice(name="Read previously fully listened lesson", value=2)
+    @discord.app_commands.describe(level_lesson="Select session type")
+    @discord.app_commands.choices(level_lesson=[
+        discord.app_commands.Choice(name="Read next lesson", value=0),
+        discord.app_commands.Choice(name="Read previously fully listened lesson", value=-1)
     ])
-    async def reading(self, interaction, level_lesson_num: discord.app_commands.Choice[int]):
+    async def reading(self, interaction, level_lesson: discord.app_commands.Choice[int]):
         """Starts reading exercise.
 
         There are 2 types of level_lesson_num in reading sessions:
@@ -1103,14 +1152,12 @@ class Language(discord.ext.commands.Cog):
             "...Setting up reading session..."
         )
 
-        level_lesson_num = level_lesson_num.value
+        level_lesson = level_lesson.value
         (
             level_num,
             lesson_num,
             level_lesson_num,
-        ) = await self.get_level_lesson_nums(
-            interaction, level_lesson_num, True
-        )
+        ) = self.get_lr_level_lesson_nums(interaction.user.name, level_lesson, False)
 
         # load text file
         src_dir = Path(__file__).parents[0]
@@ -1123,6 +1170,13 @@ class Language(discord.ext.commands.Cog):
             msg = f"There are no reading files for {level_lesson_num}. lesson."
             await interaction.followup.send(msg)
             raise discord.ext.commands.CommandError(msg) from exc
+        
+        if not level_lesson:
+            df = self.lr_tracking[1]
+            row_index = df[df['Username'] == interaction.user.name].index[0]
+            df.loc[row_index, f"Writing {level_num}"] = lesson_num + 1
+            self.lr_tracking[1] = df
+            utils.update_worksheet(self.lr_tracking[0], df)
 
         await interaction.followup.send(f"Reading Lesson {level_lesson_num}")
         await interaction.channel.send(f"```{reading_text}```")
@@ -1149,10 +1203,6 @@ class Language(discord.ext.commands.Cog):
 
 - If you encounter a word for the first time, it displays all the info about the word. If you have already encountered it, this info will be hidden, only the word with translation will be there, but spoiled. To unspoil it, click on the black text. If you want to see the additional info, use the 📄 button.
 - If the word has number attached at the end, it means it can have multiple meanings. Each number represents one meaning.
-        """
-        text_listen = """
-1. One **(1)** starts your latest known lesson session
-2. Hundreds up to 30 **(101, ..., 130)** [same as above]
         """
         text_listen_interact = """
 ⏪ - rewind by 10 seconds
