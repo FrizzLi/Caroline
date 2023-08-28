@@ -248,7 +248,7 @@ class Language(discord.ext.commands.Cog):
             val = val.values[0]
             if val < 30:
                 # go to previus level if first lesson and last was selected
-                if not level_lesson_num + 1:
+                if not level_lesson_num + val:
                     level_num = level - 1
                     lesson_num = 30
                 else:
@@ -617,7 +617,7 @@ class Language(discord.ext.commands.Cog):
                 continue
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
-                content = f"Session ended with {footer_text}\n{stats_str}"
+                content = f"{len(unchecked_words)} words unchecked remaining.\n{stats_str}"
                 await msg.edit(content=content, view=view, embed=None, attachments=[])
                 ws_log.append_rows(stats)
                 break
@@ -785,10 +785,9 @@ class Language(discord.ext.commands.Cog):
             f"   {marks_count['❌']}%"
         )
 
-        stats = (
-            f"Total guesses: {len(stats)}\nHardest words: "
-            f"{hardest_words_string}\n{percentages_summary}"
-        )
+        total_guesses = f"Total guesses: {len(stats)}\n"
+        hardest_words_string = f"Hardest words: {hardest_words_string}\n" if hardest_words_string else ""
+        stats = total_guesses + hardest_words_string + percentages_summary
         return stats
 
     async def get_listening_files(
@@ -974,13 +973,13 @@ class Language(discord.ext.commands.Cog):
     @discord.app_commands.command(name="vocab")
     @discord.app_commands.describe(level_lesson_num="Select session type")
     @discord.app_commands.choices(level_lesson_num=[
-        discord.app_commands.Choice(name="Learn new words", value=1),
-        discord.app_commands.Choice(name="Review words from Level 1", value=100),
-        discord.app_commands.Choice(name="Review words from Level 2", value=200),
-        discord.app_commands.Choice(name="Review words from Level 3", value=300),
-        discord.app_commands.Choice(name="Review words from Level 4", value=400),
+        discord.app_commands.Choice(name="👆Learn new words", value=1),
+        discord.app_commands.Choice(name="👆Review words from Level 1", value=100),
+        discord.app_commands.Choice(name="👆Review words from Level 2", value=200),
+        discord.app_commands.Choice(name="👆Review words from Level 3", value=300),
+        discord.app_commands.Choice(name="👆Review words from Level 4", value=400),
     ])
-    async def vocab_listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int]):
+    async def vocab_listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int], custom_number: int=0):
         """Starts listening vocabulary exercise.
 
         There are 3 types of level_lesson_num in vocab_listening session:
@@ -1010,7 +1009,7 @@ class Language(discord.ext.commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
-        level_lesson_num = level_lesson_num.value
+        level_lesson_num = custom_number if custom_number else level_lesson_num.value
         (
             level_num,
             lesson_num,
@@ -1069,8 +1068,8 @@ class Language(discord.ext.commands.Cog):
     @discord.app_commands.command(name="listen")
     @discord.app_commands.describe(level_lesson="Select session type")
     @discord.app_commands.choices(level_lesson=[
-        discord.app_commands.Choice(name="Listen next lesson", value=0),
-        discord.app_commands.Choice(name="Listen previously fully listened lesson", value=-1)
+        discord.app_commands.Choice(name="👆Listen next lesson", value=0),
+        discord.app_commands.Choice(name="👆Listen previously fully listened lesson", value=-1)
     ])
     async def listening(self, interaction, level_lesson: discord.app_commands.Choice[int]):
         """Starts listening exercise.
@@ -1135,8 +1134,8 @@ class Language(discord.ext.commands.Cog):
     @discord.app_commands.command(name="read")
     @discord.app_commands.describe(level_lesson="Select session type")
     @discord.app_commands.choices(level_lesson=[
-        discord.app_commands.Choice(name="Read next lesson", value=0),
-        discord.app_commands.Choice(name="Read previously fully listened lesson", value=-1)
+        discord.app_commands.Choice(name="👆Read next lesson", value=0),
+        discord.app_commands.Choice(name="👆Read previously read lesson", value=-1)
     ])
     async def reading(self, interaction, level_lesson: discord.app_commands.Choice[int]):
         """Starts reading exercise.
