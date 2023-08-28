@@ -51,7 +51,8 @@ from gspread.exceptions import WorksheetNotFound
 from gtts import gTTS
 
 import utils
-from cogs.korean.session_views import SessionListenView, SessionVocabView
+from cogs.korean.constants import VOCAB_CHOICES, LISTEN_CHOICES, READ_CHOICES
+from cogs.korean.session_views import SessionListenView, SessionVocabView, MenuSessionsView
 
 V_IMAGE_PATHS = ("data/*/*/vocabulary_images/*",)
 V_AUDIO_PATHS = (
@@ -603,11 +604,14 @@ class Language(discord.ext.commands.Cog):
                 await msg.add_files(file)
 
             # button interactions
-            interaction = await self.bot.wait_for(
-                "interaction",
-                check=lambda inter: "custom_id" in inter.data.keys()
-                and inter.user.name == interaction.user.name,
-            )
+            inter = 3
+            while inter != 2:  # cuz of selection
+                interaction = await self.bot.wait_for(
+                    "interaction",
+                    check=lambda inter: "custom_id" in inter.data.keys()
+                    and inter.user.name == interaction.user.name,
+                )
+                inter = interaction.data["component_type"]
 
             button_id = interaction.data["custom_id"]
             if button_id == "repeat":
@@ -620,6 +624,9 @@ class Language(discord.ext.commands.Cog):
                 content = f"{len(unchecked_words)} words unchecked remaining.\n{stats_str}"
                 await msg.edit(content=content, view=view, embed=None, attachments=[])
                 ws_log.append_rows(stats)
+
+                view = MenuSessionsView(self)
+                await interaction.channel.send(view=view)
                 break
 
             if guide:
@@ -972,13 +979,10 @@ class Language(discord.ext.commands.Cog):
 
     @discord.app_commands.command(name="vocab")
     @discord.app_commands.describe(level_lesson_num="Select session type")
-    @discord.app_commands.choices(level_lesson_num=[
-        discord.app_commands.Choice(name="👆Learn new words", value=1),
-        discord.app_commands.Choice(name="👆Review words from Level 1", value=100),
-        discord.app_commands.Choice(name="👆Review words from Level 2", value=200),
-        discord.app_commands.Choice(name="👆Review words from Level 3", value=300),
-        discord.app_commands.Choice(name="👆Review words from Level 4", value=400),
-    ])
+    @discord.app_commands.choices(level_lesson_num=VOCAB_CHOICES)
+    async def _vocab_listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int], custom_number: int=0):
+        await self.vocab_listening(interaction, level_lesson_num, custom_number)
+
     async def vocab_listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int], custom_number: int=0):
         """Starts listening vocabulary exercise.
 
@@ -1009,7 +1013,7 @@ class Language(discord.ext.commands.Cog):
             activity=discord.Game(name="Vocabulary")
         )
 
-        level_lesson_num = custom_number if custom_number else level_lesson_num.value
+        level_lesson_num = custom_number if custom_number else level_lesson_num
         (
             level_num,
             lesson_num,
@@ -1043,6 +1047,12 @@ class Language(discord.ext.commands.Cog):
                 f"session: {session_number}"
             )
         else:
+            if not guessed_words:
+                self.busy_str = ""
+                await interaction.followup.send(
+                    "You haven't guessed any words in selected level!"
+                )
+                return
             vocab = self.get_review_vocab(guessed_words)
             msg = (
                 f"Vocabulary Review Level {level_num}, "
@@ -1067,10 +1077,10 @@ class Language(discord.ext.commands.Cog):
 
     @discord.app_commands.command(name="listen")
     @discord.app_commands.describe(level_lesson="Select session type")
-    @discord.app_commands.choices(level_lesson=[
-        discord.app_commands.Choice(name="👆Listen next lesson", value=0),
-        discord.app_commands.Choice(name="👆Listen previously fully listened lesson", value=-1)
-    ])
+    @discord.app_commands.choices(level_lesson=LISTEN_CHOICES)
+    async def _listening(self, interaction, level_lesson: discord.app_commands.Choice[int]):
+        await self.listening(interaction, level_lesson)
+
     async def listening(self, interaction, level_lesson: discord.app_commands.Choice[int]):
         """Starts listening exercise.
 
@@ -1098,7 +1108,6 @@ class Language(discord.ext.commands.Cog):
         self.busy_str = "listening session"
         await self.bot.change_presence(activity=discord.Game(name="Listen"))
 
-        level_lesson = level_lesson.value
         (
             level_num,
             lesson_num,
@@ -1133,10 +1142,10 @@ class Language(discord.ext.commands.Cog):
 
     @discord.app_commands.command(name="read")
     @discord.app_commands.describe(level_lesson="Select session type")
-    @discord.app_commands.choices(level_lesson=[
-        discord.app_commands.Choice(name="👆Read next lesson", value=0),
-        discord.app_commands.Choice(name="👆Read previously read lesson", value=-1)
-    ])
+    @discord.app_commands.choices(level_lesson=READ_CHOICES)
+    async def _reading(self, interaction, level_lesson: discord.app_commands.Choice[int]):
+        await self.reading(interaction, level_lesson)
+
     async def reading(self, interaction, level_lesson: discord.app_commands.Choice[int]):
         """Starts reading exercise.
 
@@ -1151,7 +1160,6 @@ class Language(discord.ext.commands.Cog):
             "...Setting up reading session..."
         )
 
-        level_lesson = level_lesson.value
         (
             level_num,
             lesson_num,
@@ -1224,7 +1232,11 @@ class Language(discord.ext.commands.Cog):
         embed.add_field(name="Interactions for `/listen`:", value=text_listen_interact, inline=False)
         embed.add_field(name="Links:", value=text_links, inline=False)
 
-        await interaction.response.send_message(embed=embed, ephemeral=private_visibility)
+        # TODO: PERMA BUTTON
+        view = MenuSessionsView(self) 
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=private_visibility)
+
+        # await interaction.channel.send(view.msg, view=view)
 
 async def setup(bot):
     """Loads up this module (cog) into the bot that was initialized
