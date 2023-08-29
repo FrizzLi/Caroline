@@ -34,6 +34,7 @@ reading
 
 """
 
+import asyncio
 import json
 import os
 import random
@@ -51,8 +52,9 @@ from gspread.exceptions import WorksheetNotFound
 from gtts import gTTS
 
 import utils
-from cogs.korean.constants import VOCAB_CHOICES, LISTEN_CHOICES, READ_CHOICES
-from cogs.korean.session_views import SessionListenView, SessionVocabView, MenuSessionsView
+from cogs.korean.constants import LISTEN_CHOICES, READ_CHOICES, VOCAB_CHOICES
+from cogs.korean.session_views import (MenuSessionsView, SessionListenView,
+                                       SessionVocabView)
 
 V_IMAGE_PATHS = ("data/*/*/vocabulary_images/*",)
 V_AUDIO_PATHS = (
@@ -621,12 +623,12 @@ class Language(discord.ext.commands.Cog):
                 continue
             elif button_id == "end":
                 stats_str = self.create_ending_session_stats(stats)
-                content = f"{len(unchecked_words)} words unchecked remaining.\n{stats_str}"
+                unchecked_remain = f"{len(unchecked_words)} words unchecked remaining.\n"
+                msg_delete_notification = "This message will be deleted in a minute\n"
+                content = unchecked_remain + stats_str + msg_delete_notification
+
                 await msg.edit(content=content, view=view, embed=None, attachments=[])
                 ws_log.append_rows(stats)
-
-                view = MenuSessionsView(self)
-                await interaction.channel.send(view=view)
                 break
 
             if guide:
@@ -655,6 +657,8 @@ class Language(discord.ext.commands.Cog):
                     session_number,
                 ]
             )
+        
+        return msg
 
     def prepare_word_output(self, row, guide, i=[0]):
         """Prepares variables needed for outputting word data.
@@ -994,24 +998,25 @@ class Language(discord.ext.commands.Cog):
            (Ten decimals represent level's lesson)
         """
 
+        msgs = []
         if self.busy_str:
-            await interaction.response.send_message(
+            msg = await interaction.response.send_message(
                 f"The bot is busy with {self.busy_str}!"
             )
+            await asyncio.sleep(10)
+            await msg.delete()
             return
         else:
-            await interaction.response.send_message(
+            msg = await interaction.response.send_message(
                 "...Setting up vocab session..."
             )
+            msgs.append(msg)
 
         voice = await self.get_voice(interaction)
         if not voice:
             return
         
         self.busy_str = "vocab session"
-        await self.bot.change_presence(
-            activity=discord.Game(name="Vocabulary")
-        )
 
         level_lesson_num = custom_number if custom_number else level_lesson_num
         (
@@ -1048,23 +1053,36 @@ class Language(discord.ext.commands.Cog):
             )
         else:
             if not guessed_words:
-                self.busy_str = ""
-                await interaction.followup.send(
+                msg = await interaction.followup.send(
                     "You haven't guessed any words in selected level!"
                 )
+                msgs.append(msg)
+                await asyncio.sleep(10)
+                for msg in msgs:
+                    await msg.delete()
+                self.busy_str = ""
                 return
             vocab = self.get_review_vocab(guessed_words)
             msg = (
                 f"Vocabulary Review Level {level_num}, "
                 f"session: {session_number}"
             )
-        await interaction.followup.send(msg)
+        msg = await interaction.followup.send(msg)
+        msgs.append(msg)
 
-        await self.run_vocab_session_loop(
-            interaction, voice, ws_log, session_number, guessed_words, vocab
+        await self.bot.change_presence(
+            activity=discord.Game(name="Vocabulary")
         )
 
+        msg = await self.run_vocab_session_loop(
+            interaction, voice, ws_log, session_number, guessed_words, vocab
+        )
+        msgs.append(msg)
+
         self.create_users_level_score_ws(ws_log, user_name, level_num)
+
+        for msg in msgs:
+            await msg.delete()
 
         await self.bot.change_presence(
             activity=discord.Activity(
