@@ -939,7 +939,7 @@ class Language(discord.ext.commands.Cog):
 
             audio_start = time.time()
         
-        return listened_all
+        return listened_all, msg
 
     def move_timestamp(self, audio_start, audio_source):
         """Moves timestamp (audio frames) in audio source. Updates start time.
@@ -1003,7 +1003,7 @@ class Language(discord.ext.commands.Cog):
             msg = await interaction.response.send_message(
                 f"The bot is busy with {self.busy_str}!"
             )
-            await asyncio.sleep(10)
+            await asyncio.sleep(60)
             await msg.delete()
             return
         else:
@@ -1057,7 +1057,7 @@ class Language(discord.ext.commands.Cog):
                     "You haven't guessed any words in selected level!"
                 )
                 msgs.append(msg)
-                await asyncio.sleep(10)
+                await asyncio.sleep(60)
                 for msg in msgs:
                     await msg.delete()
                 self.busy_str = ""
@@ -1080,6 +1080,8 @@ class Language(discord.ext.commands.Cog):
         msgs.append(msg)
 
         self.create_users_level_score_ws(ws_log, user_name, level_num)
+
+        await asyncio.sleep(60)
 
         for msg in msgs:
             await msg.delete()
@@ -1109,22 +1111,25 @@ class Language(discord.ext.commands.Cog):
            (Ten decimals represent level's lesson)
         """
 
+        msgs = []
         if self.busy_str:
-            await interaction.response.send_message(
+            msg = await interaction.response.send_message(
                 f"The bot is busy with {self.busy_str}!"
             )
+            await asyncio.sleep(60)
+            await msg.delete()
             return
         else:
-            await interaction.response.send_message(
+            msg = await interaction.response.send_message(
                 "...Setting up listening session..."
             )
+            msgs.append(msg)
 
         voice = await self.get_voice(interaction)
         if not voice:
             return
         
         self.busy_str = "listening session"
-        await self.bot.change_presence(activity=discord.Game(name="Listen"))
 
         (
             level_num,
@@ -1136,11 +1141,15 @@ class Language(discord.ext.commands.Cog):
             interaction, level_num, lesson_num, level_lesson_num
         )
 
-        await interaction.followup.send(f"Listening Lesson {level_lesson_num}")
+        msg = await interaction.followup.send(f"Listening Lesson {level_lesson_num}")
+        msgs.append(msg)
 
-        listened_all = await self.run_listening_session_loop(
+        await self.bot.change_presence(activity=discord.Game(name="Listen"))
+
+        listened_all, msg = await self.run_listening_session_loop(
             interaction, voice, audio_texts, audio_paths
         )
+        msgs.append(msg)
         
         if not level_lesson and listened_all:
             df = self.lr_tracking[1]
@@ -1148,6 +1157,11 @@ class Language(discord.ext.commands.Cog):
             df.loc[row_index, f"Listening {level_num}"] = lesson_num + 1
             self.lr_tracking[1] = df
             utils.update_worksheet(self.lr_tracking[0], df)
+        
+        await asyncio.sleep(60)
+
+        for msg in msgs:
+            await msg.delete()
 
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -1212,11 +1226,6 @@ class Language(discord.ext.commands.Cog):
 
         embed = discord.Embed(title="❔ Guide on how to use the bot")
 
-        text_general = """
-`/vocab ` (vocabulary learning)
-`/listen ` (listening practice)
-`/read ` (reading practice)
-        """
         text_vocab_interact = """
 ✅ - know without thinking
 🤔 - know after thinking
@@ -1238,6 +1247,7 @@ class Language(discord.ext.commands.Cog):
 
 - Note that listening sessions starts from 102 and reading sessions from 105 lessons.
 - Listening sessions require you to understand lesson's corresponding grammar that is described inside the Google Doc's link below
+- Session messages will be deleted 1 minute after the session ends.
         """
 
         text_links = """
@@ -1245,12 +1255,10 @@ class Language(discord.ext.commands.Cog):
 - [User's stats](https://docs.google.com/spreadsheets/d/1wFbxnhwc2BQAEAL_KNCPfBYoLwhdcGR5FuVKxlwjSJg/edit?usp=sharing) (Google Sheet - user's logs and scores for every word)
 - [Vocabulary](https://docs.google.com/spreadsheets/d/1mhYVWtqUWF-vVjwCz3cvlhZxH6GjfU6XyLVd2lNcWe0/edit?usp=sharing) (Google Sheet -  vocabulary list)"""
 
-        embed.add_field(name="There are 3 commands that you can use by typing it into text channel:", value=text_general, inline=False)
         embed.add_field(name="Interactions for `/vocab`:", value=text_vocab_interact, inline=False)
         embed.add_field(name="Interactions for `/listen`:", value=text_listen_interact, inline=False)
         embed.add_field(name="Links:", value=text_links, inline=False)
 
-        # TODO: PERMA BUTTON
         view = MenuSessionsView(self) 
         await interaction.response.send_message(embed=embed, view=view, ephemeral=private_visibility)
 
