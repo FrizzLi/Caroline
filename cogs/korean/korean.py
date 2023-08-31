@@ -622,10 +622,9 @@ class Language(discord.ext.commands.Cog):
                 unvisited_words.add(row.Korean)
                 continue
             elif button_id == "end":
-                stats_str = self.create_ending_session_stats(stats)
                 unchecked_remain = f"{len(unchecked_words)} words unchecked remaining.\n"
-                msg_delete_notification = "This message will be deleted in a minute\n"
-                content = unchecked_remain + stats_str + msg_delete_notification
+                stats_str = self.create_ending_session_stats(stats)
+                content = unchecked_remain + stats_str
 
                 await msg.edit(content=content, view=view, embed=None, attachments=[])
                 ws_log.append_rows(stats)
@@ -978,6 +977,7 @@ class Language(discord.ext.commands.Cog):
         consistent with all cogs, on_ready is being used for config loading.
         Surveillance module needs to load it there."""
 
+        # TODO: remove all messages except for the one help msg
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
 
@@ -1000,17 +1000,14 @@ class Language(discord.ext.commands.Cog):
 
         msgs = []
         if self.busy_str:
-            msg = await interaction.response.send_message(
-                f"The bot is busy with {self.busy_str}!"
+            await interaction.response.send_message(
+                f"The bot is busy with {self.busy_str}!", delete_after=5
             )
-            await asyncio.sleep(60)
-            await msg.delete()
             return
         else:
-            msg = await interaction.response.send_message(
-                "...Setting up vocab session..."
+            await interaction.response.send_message(
+                "...Setting up vocab session...", delete_after=1
             )
-            msgs.append(msg)
 
         voice = await self.get_voice(interaction)
         if not voice:
@@ -1080,6 +1077,7 @@ class Language(discord.ext.commands.Cog):
         msgs.append(msg)
 
         self.create_users_level_score_ws(ws_log, user_name, level_num)
+        self.busy_str = ""
 
         await asyncio.sleep(60)
 
@@ -1093,7 +1091,6 @@ class Language(discord.ext.commands.Cog):
             ),
             status=discord.Status.online,
         )
-        self.busy_str = ""
 
     @discord.app_commands.command(name="listen")
     @discord.app_commands.describe(level_lesson="Select session type")
@@ -1111,19 +1108,15 @@ class Language(discord.ext.commands.Cog):
            (Ten decimals represent level's lesson)
         """
 
-        msgs = []
         if self.busy_str:
-            msg = await interaction.response.send_message(
-                f"The bot is busy with {self.busy_str}!"
+            await interaction.response.send_message(
+                f"The bot is busy with {self.busy_str}!", delete_after=5
             )
-            await asyncio.sleep(60)
-            await msg.delete()
             return
         else:
-            msg = await interaction.response.send_message(
-                "...Setting up listening session..."
+            await interaction.response.send_message(
+                "...Setting up listening session...", delete_after=1
             )
-            msgs.append(msg)
 
         voice = await self.get_voice(interaction)
         if not voice:
@@ -1141,6 +1134,7 @@ class Language(discord.ext.commands.Cog):
             interaction, level_num, lesson_num, level_lesson_num
         )
 
+        msgs = []
         msg = await interaction.followup.send(f"Listening Lesson {level_lesson_num}")
         msgs.append(msg)
 
@@ -1158,6 +1152,7 @@ class Language(discord.ext.commands.Cog):
             self.lr_tracking[1] = df
             utils.update_worksheet(self.lr_tracking[0], df)
         
+        self.busy_str = ""
         await asyncio.sleep(60)
 
         for msg in msgs:
@@ -1170,7 +1165,6 @@ class Language(discord.ext.commands.Cog):
             ),
             status=discord.Status.online,
         )
-        self.busy_str = ""
 
     @discord.app_commands.command(name="read")
     @discord.app_commands.describe(level_lesson="Select session type")
@@ -1189,7 +1183,7 @@ class Language(discord.ext.commands.Cog):
         """
 
         await interaction.response.send_message(
-            "...Setting up reading session..."
+            "...Setting up reading session...", delete_after=5
         )
 
         (
@@ -1207,7 +1201,8 @@ class Language(discord.ext.commands.Cog):
                 reading_text = f.read()
         except Exception as exc:
             msg = f"There are no reading files for {level_lesson_num}. lesson."
-            await interaction.followup.send(msg)
+            msg = await interaction.followup.send(msg)
+            await msg.delete()
             raise discord.ext.commands.CommandError(msg) from exc
         
         if not level_lesson:
@@ -1217,8 +1212,11 @@ class Language(discord.ext.commands.Cog):
             self.lr_tracking[1] = df
             utils.update_worksheet(self.lr_tracking[0], df)
 
-        await interaction.followup.send(f"Reading Lesson {level_lesson_num}")
-        await interaction.channel.send(f"```{reading_text}```")
+        msg1 = await interaction.followup.send(f"Reading Lesson {level_lesson_num}")
+        msg2 = await interaction.channel.send(f"```{reading_text}```")
+        await asyncio.sleep(15 * 60)
+        await msg1.delete()
+        await msg2.delete()
 
     @discord.app_commands.command(name="help")
     async def help(self, interaction, private_visibility: bool=False):
@@ -1247,7 +1245,7 @@ class Language(discord.ext.commands.Cog):
 
 - Note that listening sessions starts from 102 and reading sessions from 105 lessons.
 - Listening sessions require you to understand lesson's corresponding grammar that is described inside the Google Doc's link below
-- Session messages will be deleted 1 minute after the session ends.
+- Session messages will be deleted 1 minute after the session ends. Reading ends in 15 minutes.
         """
 
         text_links = """
@@ -1260,9 +1258,8 @@ class Language(discord.ext.commands.Cog):
         embed.add_field(name="Links:", value=text_links, inline=False)
 
         view = MenuSessionsView(self) 
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=private_visibility)
-
-        # await interaction.channel.send(view.msg, view=view)
+        # ephemeral=private_visibility
+        await interaction.response.send_message(embed=embed, view=view)
 
 async def setup(bot):
     """Loads up this module (cog) into the bot that was initialized
