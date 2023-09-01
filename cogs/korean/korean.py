@@ -181,7 +181,7 @@ class Language(discord.ext.commands.Cog):
         guild = interaction.guild
         user_voice = interaction.user.voice
         if not user_voice:
-            await interaction.followup.send("You are not in a voice channel.")
+            await interaction.followup.send("You are not in a voice channel.", delete_after=5)
             return
 
         voice = discord.utils.get(self.bot.voice_clients, guild=guild)
@@ -215,7 +215,7 @@ class Language(discord.ext.commands.Cog):
         if not (0 < level_num < 5 and lesson_num < 31):
             # we cannot choose certain lesson now so this is redundant
             msg = "Wrong level lesson number!"
-            await interaction.followup.send(msg)
+            await interaction.followup.send(msg, delete_after=5)
             self.busy_str = ""
             assert False, msg
 
@@ -830,7 +830,7 @@ class Language(discord.ext.commands.Cog):
             msg = (
                 f"There are no listening files for {level_lesson_num}. lesson."
             )
-            await interaction.followup.send(msg)
+            await interaction.followup.send(msg, delete_after=5)
             self.busy_str = ""
             assert False, msg
 
@@ -1050,7 +1050,7 @@ class Language(discord.ext.commands.Cog):
             )
         else:
             if not guessed_words:
-                msg = await interaction.followup.send(
+                msg = await interaction.channel.send(
                     "You haven't guessed any words in selected level!"
                 )
                 msgs.append(msg)
@@ -1064,7 +1064,7 @@ class Language(discord.ext.commands.Cog):
                 f"Vocabulary Review Level {level_num}, "
                 f"session: {session_number}"
             )
-        msg = await interaction.followup.send(msg)
+        msg = await interaction.channel.send(msg)
         msgs.append(msg)
 
         await self.bot.change_presence(
@@ -1135,7 +1135,7 @@ class Language(discord.ext.commands.Cog):
         )
 
         msgs = []
-        msg = await interaction.followup.send(f"Listening Lesson {level_lesson_num}")
+        msg = await interaction.channel.send(f"Listening Lesson {level_lesson_num}")
         msgs.append(msg)
 
         await self.bot.change_presence(activity=discord.Game(name="Listen"))
@@ -1201,8 +1201,7 @@ class Language(discord.ext.commands.Cog):
                 reading_text = f.read()
         except Exception as exc:
             msg = f"There are no reading files for {level_lesson_num}. lesson."
-            msg = await interaction.followup.send(msg)
-            await msg.delete()
+            await interaction.followup.send(msg, delete_after=5)
             raise discord.ext.commands.CommandError(msg) from exc
         
         if not level_lesson:
@@ -1212,7 +1211,7 @@ class Language(discord.ext.commands.Cog):
             self.lr_tracking[1] = df
             utils.update_worksheet(self.lr_tracking[0], df)
 
-        msg1 = await interaction.followup.send(f"Reading Lesson {level_lesson_num}")
+        msg1 = await interaction.channel.send(f"Reading Lesson {level_lesson_num}")
         msg2 = await interaction.channel.send(f"```{reading_text}```")
         await asyncio.sleep(15 * 60)
         await msg1.delete()
