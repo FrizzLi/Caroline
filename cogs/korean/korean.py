@@ -977,7 +977,6 @@ class Language(discord.ext.commands.Cog):
         consistent with all cogs, on_ready is being used for config loading.
         Surveillance module needs to load it there."""
 
-        # TODO: remove all messages except for the one help msg
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
 
@@ -985,9 +984,9 @@ class Language(discord.ext.commands.Cog):
     @discord.app_commands.describe(level_lesson_num="Select session type")
     @discord.app_commands.choices(level_lesson_num=VOCAB_CHOICES)
     async def _vocab_listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int], custom_number: int=0):
-        await self.vocab_listening(interaction, level_lesson_num, custom_number)
+        await self.vocab_listening(interaction, level_lesson_num.value, custom_number)
 
-    async def vocab_listening(self, interaction, level_lesson_num: discord.app_commands.Choice[int], custom_number: int=0):
+    async def vocab_listening(self, interaction, session_type: int, level_lesson_num: int=0):
         """Starts listening vocabulary exercise.
 
         There are 3 types of level_lesson_num in vocab_listening session:
@@ -1015,7 +1014,7 @@ class Language(discord.ext.commands.Cog):
         
         self.busy_str = "vocab session"
 
-        level_lesson_num = custom_number if custom_number else level_lesson_num
+        level_lesson_num = level_lesson_num if level_lesson_num else session_type
         (
             level_num,
             lesson_num,
@@ -1096,9 +1095,9 @@ class Language(discord.ext.commands.Cog):
     @discord.app_commands.describe(level_lesson="Select session type")
     @discord.app_commands.choices(level_lesson=LISTEN_CHOICES)
     async def _listening(self, interaction, level_lesson: discord.app_commands.Choice[int]):
-        await self.listening(interaction, level_lesson)
+        await self.listening(interaction, level_lesson.value)
 
-    async def listening(self, interaction, level_lesson: discord.app_commands.Choice[int]):
+    async def listening(self, interaction, level_lesson: int):
         """Starts listening exercise.
 
         There are 2 types of level_lesson in listening sessions:
@@ -1170,9 +1169,9 @@ class Language(discord.ext.commands.Cog):
     @discord.app_commands.describe(level_lesson="Select session type")
     @discord.app_commands.choices(level_lesson=READ_CHOICES)
     async def _reading(self, interaction, level_lesson: discord.app_commands.Choice[int]):
-        await self.reading(interaction, level_lesson)
+        await self.reading(interaction, level_lesson.value)
 
-    async def reading(self, interaction, level_lesson: discord.app_commands.Choice[int]):
+    async def reading(self, interaction, level_lesson: int):
         """Starts reading exercise.
 
         There are 2 types of level_lesson_num in reading sessions:
