@@ -1230,9 +1230,6 @@ class Language(discord.ext.commands.Cog):
 🔁 - repeat the audio
 📄 - display additional info about the word
 🔚 - end the session
-
-- If you encounter a word for the first time, it displays all the info about the word. If you have already encountered it, this info will be hidden, only the word with translation will be there, but spoiled. To unspoil it, click on the black text. If you want to see the additional info, use the 📄 button.
-- If the word has number attached at the end, it means it can have multiple meanings. Each number represents one meaning.
         """
         text_listen_interact = """
 ⏪ - rewind by 10 seconds
@@ -1240,22 +1237,25 @@ class Language(discord.ext.commands.Cog):
 ⏩ - next track
 🔁 - repeat track
 🔚 - end the session
-
-- Note that listening sessions starts from 102 and reading sessions from 105 lessons.
-- Listening sessions require you to understand lesson's corresponding grammar that is described inside the Google Doc's link below
-- Session messages will be deleted 1 minute after the session ends. Reading ends in 15 minutes.
         """
-
+        text_notes = """
+- If you encounter a word for the first time, it displays all the info about the word. If you have already encountered it, this info will be hidden, only the word with translation will be there, but spoiled. To unspoil it, click on the black text. If you want to see the additional info, use the 📄 button.
+- If the word has number attached at the end, it means it can have multiple meanings. Each number represents one meaning.
+- Listening sessions starts from 102 and reading sessions from 105 lessons.
+- Listening/Reading sessions require you to understand lesson's corresponding grammar that is described inside the Google Doc's link below
+- Vocab/Listening session messages will be deleted 1 minute after the session ends. Reading session ends in 15 minutes.
+        """
         text_links = """
 - [Level 1 Grammar](https://docs.google.com/document/d/1BTBgvSy7VGwoD1AD4lCqpy0_7Zn-U_6smeU0GKdFjoU/edit?usp=sharing) (Google Doc - grammar reference (for listening/reading))
 - [User's stats](https://docs.google.com/spreadsheets/d/1wFbxnhwc2BQAEAL_KNCPfBYoLwhdcGR5FuVKxlwjSJg/edit?usp=sharing) (Google Sheet - user's logs and scores for every word)
 - [Vocabulary](https://docs.google.com/spreadsheets/d/1mhYVWtqUWF-vVjwCz3cvlhZxH6GjfU6XyLVd2lNcWe0/edit?usp=sharing) (Google Sheet -  vocabulary list)"""
 
-        embed.add_field(name="Interactions for `/vocab`:", value=text_vocab_interact, inline=False)
-        embed.add_field(name="Interactions for `/listen`:", value=text_listen_interact, inline=False)
+        embed.add_field(name="Interactions for vocab session:", value=text_vocab_interact, inline=False)
+        embed.add_field(name="Interactions for listening session:", value=text_listen_interact, inline=False)
+        embed.add_field(name="Notes:", value=text_notes, inline=False)
         embed.add_field(name="Links:", value=text_links, inline=False)
 
-        view = MenuSessionsView(self) 
+        view = MenuSessionsView(self)
         # ephemeral=private_visibility
         await interaction.response.send_message(embed=embed, view=view)
 
