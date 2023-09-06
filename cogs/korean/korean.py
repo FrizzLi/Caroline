@@ -979,6 +979,7 @@ class Language(discord.ext.commands.Cog):
 
         with open("config.json", encoding="utf-8") as file:
             self.timezone = json.load(file)["timezone"]
+        self.bot.add_view(MenuSessionsView(self))
 
     @discord.app_commands.command(name="vocab")
     @discord.app_commands.describe(level_lesson_num="Select session type")
@@ -1248,7 +1249,9 @@ class Language(discord.ext.commands.Cog):
         text_links = """
 - [Level 1 Grammar](https://docs.google.com/document/d/1BTBgvSy7VGwoD1AD4lCqpy0_7Zn-U_6smeU0GKdFjoU/edit?usp=sharing) (Google Doc - grammar reference (for listening/reading))
 - [User's stats](https://docs.google.com/spreadsheets/d/1wFbxnhwc2BQAEAL_KNCPfBYoLwhdcGR5FuVKxlwjSJg/edit?usp=sharing) (Google Sheet - user's logs and scores for every word)
-- [Vocabulary](https://docs.google.com/spreadsheets/d/1mhYVWtqUWF-vVjwCz3cvlhZxH6GjfU6XyLVd2lNcWe0/edit?usp=sharing) (Google Sheet -  vocabulary list)"""
+- [Vocabulary](https://docs.google.com/spreadsheets/d/1mhYVWtqUWF-vVjwCz3cvlhZxH6GjfU6XyLVd2lNcWe0/edit?usp=sharing) (Google Sheet -  vocabulary list)
+
+**Select YOUR sessions in the dropdown below**"""
 
         embed.add_field(name="Interactions for vocab session:", value=text_vocab_interact, inline=False)
         embed.add_field(name="Interactions for listening session:", value=text_listen_interact, inline=False)
