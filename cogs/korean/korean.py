@@ -70,7 +70,7 @@ class Language(discord.ext.commands.Cog):
     def __init__(self, bot):
         self.vocab_audio_paths = self._get_labelled_paths(V_AUDIO_PATHS)
         self.vocab_image_paths = self._get_labelled_paths(V_IMAGE_PATHS, True)
-        self.lr_tracking = self._get_lr_tracking()
+        self.lr_tracking_table = self._get_lr_tracking_table()
         self.vocab_df = self._get_vocab_table()
         self.bot = bot
         self.ffmpeg_path = (
@@ -95,7 +95,7 @@ class Language(discord.ext.commands.Cog):
 
         return vocab_df
 
-    def _get_lr_tracking(self):
+    def _get_lr_tracking_table(self):
         """Gets listening/reading tracking worksheet for user.
 
         Returns:
@@ -233,11 +233,11 @@ class Language(discord.ext.commands.Cog):
             Tuple[int, int, int]: level lesson numbers
         """
 
-        df = self.lr_tracking[1]
+        df = self.lr_tracking_table[1]
         if user_name not in df["Username"].values:
             new_row = pd.DataFrame([[user_name, 2, 1, 1, 1, 5, 1, 1, 1]], columns=df.columns)
             df = df.append(new_row, ignore_index=True)
-            self.lr_tracking[1] = df
+            self.lr_tracking_table[1] = df
 
         if listening:
             selected_columns = df.columns[1:5]
@@ -1146,11 +1146,11 @@ class Language(discord.ext.commands.Cog):
         msgs.append(msg)
         
         if not level_lesson and listened_all:
-            df = self.lr_tracking[1]
+            df = self.lr_tracking_table[1]
             row_index = df[df['Username'] == interaction.user.name].index[0]
             df.loc[row_index, f"Listening {level_num}"] = lesson_num + 1
-            self.lr_tracking[1] = df
-            utils.update_worksheet(self.lr_tracking[0], df)
+            self.lr_tracking_table[1] = df
+            utils.update_worksheet(self.lr_tracking_table[0], df)
         
         self.busy_str = ""
         await asyncio.sleep(60)
@@ -1205,11 +1205,11 @@ class Language(discord.ext.commands.Cog):
             raise discord.ext.commands.CommandError(msg) from exc
         
         if not level_lesson:
-            df = self.lr_tracking[1]
-            row_index = df[df['Username'] == interaction.user.name].index[0]
-            df.loc[row_index, f"Writing {level_num}"] = lesson_num + 1
-            self.lr_tracking[1] = df
-            utils.update_worksheet(self.lr_tracking[0], df)
+            df = self.lr_tracking_table[1]
+            user_row = df[df['Username'] == interaction.user.name].index[0]
+            df.loc[user_row, f"Reading {level_num}"] = lesson_num + 1
+            self.lr_tracking_table[1] = df
+            utils.update_worksheet(self.lr_tracking_table[0], df)
 
         msg1 = await interaction.channel.send(f"Reading Lesson {level_lesson_num}")
         msg2 = await interaction.channel.send(f"```{reading_text}```")
