@@ -1,11 +1,11 @@
 I want to further clarify the translation and create additional explanation for my vocabulary list this way:
-Additional_translations - find translations other than the ones in Translation, but stick to their meaning
+Additional_translations - find similar translations other than the ones in Translation, but stick to their meaning
 Explanation - give one sentence explanation for the expression
-Explanation_of_syllables - give one sentence explanation for each syllable in the Expression if it commonly carries general meaning
-Example_for_image - create simple example according to the Explanation, with extensive description with concrete details (with no "or" words) that will be used for drawing an image by text prompt
-Example_for_sentence_with_Korean_translation - create a short simple sentence example of usage according to the Explanation
+Explanation_of_syllables - give one sentence explanation for each syllable in the Expression only if it commonly carries general meaning
+Example_for_image - create example according to the Explanation that is easily expressed by an image with at least 3 sentences. Provide extensive description with many objects with concrete details. The description is meant to be used as the text prompt for image generation by AI. Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
+Example_for_sentence_with_Korean_translation - create a very short simple sentence example of usage according to the Explanation in Korean, and put its translation into brackets
 
 Do it for these words:
-Expression: 주부, Translation: housewife
-Expression: 배우, Translation: actor, actress
-Expression: 문화, Translation: culture
+Expression: 거울, Translation: mirror
+Expression: 크다, Translation: to be big / large
+Expression: 아프다, Translation: to be sick, ill, painful
