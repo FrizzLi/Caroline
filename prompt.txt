@@ -1,24 +1,18 @@
 I want to create additional information of words in my vocabulary list.
 Additional_translations:
-find similar translations other than the ones in Translation, but stick to their meaning if it can have more meanings
+Find similar translations other than the ones in Translation, but stick to their meaning if it can have more meanings
 
-Explanation:
-give one sentence explanation for the expression
+Explanation_of_Expression:
+Give one sentence explanation for the expression
 
 Explanation_of_syllables:
-give one sentence explanation for each syllable in the Expression only if it commonly carries general meaning
+Give one sentence explanation for each syllable in the Expression only if it commonly carries general meaning
 
 Example_for_image:
-create example according to the Explanation that is easily expressed by an image with at least 3 sentences. Provide extensive description with many objects with concrete details, with extra emphasis on the Expression. The description is meant to be used as the Text Prompt for image generation by AI. Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
+create example according to the Explanation that is easily expressed by an image with three  sentences. Provide extensive description with many objects with concrete details, with extra emphasis on the Expression. The description is meant to be used as the Text Prompt for image generation by AI. Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
 
 Image_tags:
-According to generated Example_for_image text, find appropriate tags for image generation.
-Example 1: 
-Example_for_image - Environment castle nathria in world of warcraft, gothic style fully developed castle
-Tags - cinematic, raining, night time, detailed, epic , concept art, Matte painting, shafts of lighting, mist, photorealistic, concept art, volumetric light, cinematic epic + rule of thirds, movie concept art, 8k, cinematic, trending on artstation, movie concept art, cinematic composition , ultra detailed, realistic , hyper realistic , volumetric lighting , 8k –ar 3:1
-Example 2:
-Example_for_image - forest wanderer by dominic mayer painterly style by Gerald parel
-Tags - craig mullins, marc simonetti, mike mignola, flat colors illustration, bright and colorful, high contrast, Mythology, cinematic, detailed, atmospheric, epic , concept art, Matte painting, Lord of the rings, Game of Thrones, shafts of lighting, mist, , photorealistic, concept art, volumetric light, cinematic epic + rule of thirds | 35mm| octane render, 8k, corona render, movie concept art, octane render, 8k, corona render, cinematic, trending on artstation, movie concept art, cinematic composition , ultra detailed, realistic , hiperealistic , volumetric lighting , 8k –ar 3:1 –test –uplight
+According to generated Example_for_image text, create ten tags that are very closely related with the Explanation_of_Expression only.
 
 Example_for_sentence_with_Korean_translation:
 create a very short simple sentence example of usage according to the Explanation in Korean, and put its translation into brackets
