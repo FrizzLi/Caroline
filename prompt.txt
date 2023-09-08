@@ -9,7 +9,7 @@ Explanation_of_Syllables:
 Give one sentence explaining each syllable in the Expression, only if it commonly carries general meaning
 
 Example_for_Image:
-Create an example according to the Explanation which is easily expressed by an image with three sentences only! Provide extensive description with many objects with concrete details, with extra emphasis on the Expression. The description is meant to be used as the Text Prompt for image generation by AI. Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
+Create an example according to the Explanation which is easily expressed by an image. Do not exceed three-sentence limit! Provide extensive description with many objects with concrete details, with extra emphasis on the Expression. The description is meant to be used as the Text Prompt for image generation by AI. Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
 
 Image_tags:
 According to generated Example_for_Image text, create ten tags that are closely related only with Explanation_of_Expression.
