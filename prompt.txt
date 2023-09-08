@@ -1,18 +1,18 @@
 I want to create additional information of words in my vocabulary list.
 Additional_translations:
-Find similar translations other than the ones in Translation, but stick to their meaning if it can have more meanings
+Find similar translations other than the ones in Translation, but stick to their meaning if it has more meanings
 
 Explanation_of_Expression:
 Give one sentence explanation for the expression, do not use any Korean words
 
 Explanation_of_Syllables:
-Give one sentence explaining each syllable in the Expression, only if it commonly carries general meaning
+Use one sentence to explain the syllable for all the syllables in the Expression only if the syllables has independent meaning by themselves
 
 Example_for_Image:
 Create an example according to the Explanation which is easily expressed by an image. Do not exceed three-sentence limit! Provide extensive description with many objects with concrete details, with extra emphasis on the Expression. The description is meant to be used as the Text Prompt for image generation by AI. Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
 
 Image_tags:
-According to generated Example_for_Image text, create ten tags that are closely related only with Explanation_of_Expression.
+Create ten tags that are closely related only with the Explanation_of_Expression.
 
 Example_for_sentence_with_Korean_translation:
 Create a very short simple sentence example of usage according to the Explanation_of_Expression in Korean. Put its translation into brackets.
