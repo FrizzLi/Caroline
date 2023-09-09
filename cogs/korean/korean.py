@@ -1095,10 +1095,10 @@ class Language(discord.ext.commands.Cog):
     @discord.app_commands.command(name="listen")
     @discord.app_commands.describe(level_lesson="Select session type")
     @discord.app_commands.choices(level_lesson=LISTEN_CHOICES)
-    async def _listening(self, interaction, level_lesson: discord.app_commands.Choice[int]):
-        await self.listening(interaction, level_lesson.value)
+    async def _listening(self, interaction, level_lesson: discord.app_commands.Choice[int], custom_number: int=0):
+        await self.listening(interaction, level_lesson.value, custom_number)
 
-    async def listening(self, interaction, level_lesson: int):
+    async def listening(self, interaction, level_lesson: int, level_lesson_num: int=0):
         """Starts listening exercise.
 
         There are 2 types of level_lesson in listening sessions:
@@ -1124,11 +1124,16 @@ class Language(discord.ext.commands.Cog):
         
         self.busy_str = "listening session"
 
-        (
-            level_num,
-            lesson_num,
-            level_lesson_num,
-        ) = self.get_lr_level_lesson_nums(interaction.user.name, level_lesson, True)
+        level_lesson_num = level_lesson_num if level_lesson_num else level_lesson
+        if level_lesson_num:
+            level_num = level_lesson_num // 100
+            lesson_num = level_lesson_num % 100
+        else:
+            (
+                level_num,
+                lesson_num,
+                level_lesson_num,
+            ) = self.get_lr_level_lesson_nums(interaction.user.name, level_lesson, True)
 
         audio_texts, audio_paths = await self.get_listening_files(
             interaction, level_num, lesson_num, level_lesson_num
@@ -1169,10 +1174,10 @@ class Language(discord.ext.commands.Cog):
     @discord.app_commands.command(name="read")
     @discord.app_commands.describe(level_lesson="Select session type")
     @discord.app_commands.choices(level_lesson=READ_CHOICES)
-    async def _reading(self, interaction, level_lesson: discord.app_commands.Choice[int]):
-        await self.reading(interaction, level_lesson.value)
+    async def _reading(self, interaction, level_lesson: discord.app_commands.Choice[int], custom_number: int=0):
+        await self.reading(interaction, level_lesson.value, custom_number)
 
-    async def reading(self, interaction, level_lesson: int):
+    async def reading(self, interaction, level_lesson: int, level_lesson_num: int=0):
         """Starts reading exercise.
 
         There are 2 types of level_lesson_num in reading sessions:
@@ -1186,11 +1191,16 @@ class Language(discord.ext.commands.Cog):
             "...Setting up reading session...", delete_after=5
         )
 
-        (
-            level_num,
-            lesson_num,
-            level_lesson_num,
-        ) = self.get_lr_level_lesson_nums(interaction.user.name, level_lesson, False)
+        level_lesson_num = level_lesson_num if level_lesson_num else level_lesson
+        if level_lesson_num:
+            level_num = level_lesson_num // 100
+            lesson_num = level_lesson_num % 100
+        else:
+            (
+                level_num,
+                lesson_num,
+                level_lesson_num,
+            ) = self.get_lr_level_lesson_nums(interaction.user.name, level_lesson, False)
 
         # load text file
         src_dir = Path(__file__).parents[0]
