@@ -9,13 +9,13 @@ Explanation_of_Syllables:
 Use one sentence to explain the syllable for all the syllables in the Expression only if the syllables has independent meaning by themselves
 
 Example_for_Image:
-Create an example according to the Explanation which is easily expressed by an image. Do not exceed four-sentence limit! Provide extensive description with many objects with concrete details, with extra emphasis on the Expression. The description is meant to be used as the Text Prompt for image generation by AI. Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
+Create an example according to the Explanation which is easily expressed by an image. Use three sentences only! Provide extensive description with many objects with concrete details, with extra emphasis on the Expression. The description is meant to be used as the Text Prompt for image generation by AI. Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
 
 Image_tags:
 Create ten tags that describe the background details and are closely related only with the Translations and Explanation_of_Expression.
 
 Example_for_sentence_with_Korean_translation:
-Create a sentence example of usage according to the Explanation_of_Expression in Korean, use no more than 6 words! Put its translation into brackets.
+Create a sentence example of usage according to the Explanation_of_Expression in Korean, use three to six words! Put its translation into brackets.
 
 Do it for these words:
 Expression: 듣다, Translation: to listen, hear
