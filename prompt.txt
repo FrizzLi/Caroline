@@ -18,5 +18,4 @@ Example_for_sentence_with_Korean_translation:
 Create a sentence example of usage according to the Explanation_of_Expression in Korean, use no more than 6 words! Put its translation into brackets.
 
 Do it for these words:
-Expression: 거울, Translation: mirror
 Expression: 크다, Translation: to be big / large
