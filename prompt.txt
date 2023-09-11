@@ -1,12 +1,14 @@
 I want to create additional information of words in my vocabulary list.
 Additional_translations:
-Find similar translations other than the ones in Translation, but stick to their meaning if it has more meanings
+ - Find similar translations other than the ones in Translation
+ - Stick to the meaning that the Translation posses
 
 Explanation_of_Expression:
-Give one sentence explanation for the expression, do not use any Korean words
+ - Give one sentence explanation for the expression
+ - Use only English text
 
 Explanation_of_Syllables:
-Use one sentence to explain the syllable for all the syllables in the Expression only if the syllables has independent meaning by themselves
+ - For each syllable in the Expression, find its independent meaning, if it has one, use one sentence to explain it
 
 Image_Description:
  - Create Image Description according to the Explanation which is easily expressed by an image
