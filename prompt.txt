@@ -13,10 +13,11 @@ Image_Description:
  - Provide it with many detailed objects, with extra emphasis on the Expression
  - The description is meant to be used as the Text Prompt for image generation by AI
  - Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
- - The Image Description must be three sentences long! It must not contain less than three sentences, and no more than three sentences!!!
+ - The Description must be three sentences long! It must not contain less than three sentences, and no more than three sentences!!!
 
 Image_tags:
-Create ten tags that describe the background details and are closely related only with the Translations and Explanation_of_Expression.
+ - Create ten tags that describe the background details and are closely related only with the Translations and Explanation_of_Expression
+ - Separate them by coma
 
 Example_for_sentence_with_Korean_translation:
  - Create a sentence example of usage according to the Explanation_of_Expression
