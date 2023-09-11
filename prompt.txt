@@ -11,9 +11,7 @@ Use one sentence to explain the syllable for all the syllables in the Expression
 Image_Description:
  - Create Image Description according to the Explanation which is easily expressed by an image
  - Provide it with many detailed objects, with extra emphasis on the Expression
- - The description is meant to be used as the Text Prompt for image generation by AI
- - Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
- - The Description must be three sentences long! It must not contain less than three sentences, and no more than three sentences!!!
+ - The Description must be three sentences long!
 
 Image_tags:
  - Create ten tags that describe the background details and are closely related only with the Translations and Explanation_of_Expression
