@@ -8,18 +8,20 @@ Give one sentence explanation for the expression, do not use any Korean words
 Explanation_of_Syllables:
 Use one sentence to explain the syllable for all the syllables in the Expression only if the syllables has independent meaning by themselves
 
-Example_for_Image:
- - Create an example according to the Explanation which is easily expressed by an image.
- - Provide extensive Description with many objects with concrete details, with extra emphasis on the Expression
- - The description is meant to be used as the Text Prompt for image generation by AI.
+Image_Description:
+ - Create Image Description according to the Explanation which is easily expressed by an image
+ - Provide it with many detailed objects, with extra emphasis on the Expression
+ - The description is meant to be used as the Text Prompt for image generation by AI
  - Be deterministic, don't use general expressions that could be drawn in many ways, avoid using words like "or".
- - The example must be only three sentences long!
+ - The Image Description must be three sentences long! It must not contain less than three sentences, and no more than three sentences!!!
 
 Image_tags:
 Create ten tags that describe the background details and are closely related only with the Translations and Explanation_of_Expression.
 
 Example_for_sentence_with_Korean_translation:
-Create a sentence example of usage according to the Explanation_of_Expression in Korean, use three to six words! Put its translation into brackets.
+ - Create a sentence example of usage according to the Explanation_of_Expression
+ - Provide it in Korean language and put its translation into brackets
+ - Example_for_sentence_with_Korean_translation must contain only three to six Korean words
 
 Do it for these words:
 Expression: 듣다, Translation: to listen, hear
