@@ -1,9 +1,9 @@
 I want to create additional information of words in my vocabulary list.
 Additional_translations:
- - Find similar translations other than the ones in Translation, but stick to their meaning
+ - Find additional translations other than the ones in Translation, but with the same meaning
 
 Explanation_of_Expression:
- - Give one sentence explanation  for the expression only with English text
+ - Give one sentence explanation for the expression only with English text
 
 Explanation_of_Syllables:
  - For each syllable in the Expression, find its independent meaning, if it has one, use one sentence to explain it
@@ -17,8 +17,7 @@ Image_tags:
  - Create ten tags that describe the background details and are closely related only with the Translations and Explanation_of_Expression
 
 Example_for_sentence_with_Korean_translation:
- - Create a sentence example of usage according to the Explanation_of_Expression
- - Provide it in Korean language and put its translation into brackets
+ - Create a sentence example of usage according to the Explanation_of_Expression with translation
  - The Example MUST be three to six Korean words long only
 
 Do it for these words:
