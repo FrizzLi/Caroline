@@ -13,11 +13,10 @@ Explanation_of_Syllables:
 Image_Description:
  - Create Image Description according to the Explanation which is easily expressed by an image
  - Provide it with many detailed objects, with extra emphasis on the Expression
- - The Description must be three sentences long!
+ - The Description MUST absolutely, without exception, be exactly three sentences in length!
 
 Image_tags:
  - Create ten tags that describe the background details and are closely related only with the Translations and Explanation_of_Expression
- - Separate them by coma
 
 Example_for_sentence_with_Korean_translation:
  - Create a sentence example of usage according to the Explanation_of_Expression
