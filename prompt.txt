@@ -1,11 +1,9 @@
 I want to create additional information of words in my vocabulary list.
 Additional_translations:
- - Find similar translations other than the ones in Translation
- - Stick to the meaning that the Translation posses
+ - Find similar translations other than the ones in Translation, but stick to their meaning
 
 Explanation_of_Expression:
- - Give one sentence explanation for the expression
- - Use only English text
+ - Give one sentence explanation  for the expression only with English text
 
 Explanation_of_Syllables:
  - For each syllable in the Expression, find its independent meaning, if it has one, use one sentence to explain it
@@ -13,7 +11,7 @@ Explanation_of_Syllables:
 Image_Description:
  - Create Image Description according to the Explanation which is easily expressed by an image
  - Provide it with many detailed objects, with extra emphasis on the Expression
- - The Description MUST absolutely, without exception, be exactly three sentences in length!
+ - The Description MUST be exactly three sentences in length!
 
 Image_tags:
  - Create ten tags that describe the background details and are closely related only with the Translations and Explanation_of_Expression
@@ -21,7 +19,7 @@ Image_tags:
 Example_for_sentence_with_Korean_translation:
  - Create a sentence example of usage according to the Explanation_of_Expression
  - Provide it in Korean language and put its translation into brackets
- - Example_for_sentence_with_Korean_translation must contain only three to six Korean words
+ - The Example MUST be three to six Korean words long only
 
 Do it for these words:
 Expression: 듣다, Translation: to listen, hear
