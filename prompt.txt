@@ -20,4 +20,4 @@ Example_for_sentence_with_Korean_translation:
  - Create a short sentence example of usage according to the Explanation_of_Expression with translation
 
 Do it for these words:
-Expression: 듣다, Translation: to listen, hear
+Expression: 비빔밥, Translation: Bibimbap
