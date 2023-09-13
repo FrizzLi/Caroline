@@ -10,11 +10,16 @@
 - [ ] Pylint - resolve all errors (or at least have above 9.0 score)
 - [ ] Opts prompts: find mistakes in following code, Write a docstring for the following function
 - [ ] Run pylint everywhere with command for scoring --> opt.
+- [ ] Discord bots -> bot off dont take other bots into account
 
 - [ ] Integrate ChatGPT with my Discord server
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
 - [ ] surveillance.py: Voice stats graphs, Process old logs
-- [ ] music.py: 
+- [ ] music.py:
+  - [ ] FIX: queue is getting updated, but not being sent as the last msg
+  - [ ] Dont lose queue upon leaving, async attach
+  - [ ] Sync music bots msg
+  - [ ] FIX: when the queue is fully played, it stops listening to requests
   - [ ] Create radio (automatically picks songs)
   - [ ] Do deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
   - [ ] Bug: when the bot leaves the voice, refresh button still works..
@@ -22,6 +27,16 @@
   - [ ] Like button (to remember URL for next time)
 
 - [ ] korean.py
+  - [ ] rearranged columns in google sheets --> might need update for that
+  - [ ] Save upon leaving
+  - [ ] (WORKSHEETS ARE ONLY UPDATING, SHOULD WORK) Multiple users access the sheets.. the update might not be synced!
+  - [ ] Brainstorm: Together chat with listening tracks / texts... Who don't know what.... Score, explain... Sessions 
+  - [ ] Auto-repeat every 5 sec (check all audio get max length)
+  - [ ] Memo help feature... If i want to learn sth well (waiting/repeating... Add sth more)
+  - [ ] learn new words (only ones that were not encountered yet!) --> auto review suggestion
+  - [ ] learn new words unselect need!...
+  - [ ] bot's session is opened for one day...
+  - [ ] Auto save for users
   - [ ] Bug - msg not removed, why (left the channel too soon maybe)
   - [ ] IMP - when to go for new words or stick with review - automatically calculate
   - [ ] FIX: left voice -> bot left, and forgot about session in text channel (no guesses(?))
@@ -57,6 +72,7 @@
          - [ ] Creating content with your Vocab
          - [ ] Intercativity with button, ephimwral personalize (guide, line translate, words during reading)
          - [ ] clustering words relations (similar words opts!)
+         - [ ] Well known story concept .. harry potter,,, take ur favo char... Be with it
 
 ### Done ✓
 
