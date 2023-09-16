@@ -1045,7 +1045,7 @@ class Language(discord.ext.commands.Cog):
         if lesson_num:
             vocab = self.get_lesson_vocab(level_lesson_num)
             msg = (
-                f"Vocabulary Lesson {level_lesson_num}, "
+                f"Vocabulary Level {level_num} - Lesson {level_lesson_num}, "
                 f"session: {session_number}"
             )
         else:
