@@ -27,6 +27,7 @@
   - [ ] Like button (to remember URL for next time)
 
 - [ ] korean.py
+  - [ ] BUG: disconnected from voice during session -> Wait a bit, repeat the unplayed audio!!! [ Not connected to voice.]
   - [ ] rearranged columns in google sheets --> might need update for that
   - [ ] Save upon leaving
   - [ ] (WORKSHEETS ARE ONLY UPDATING, SHOULD WORK) Multiple users access the sheets.. the update might not be synced!
