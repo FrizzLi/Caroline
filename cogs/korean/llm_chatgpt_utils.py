@@ -87,6 +87,33 @@ def compute_constants():
 
     return prompt, format_instructions, llm, output_parser
 
+def clean_tags(output_dict):
+    image_tags_no_dupl = ""
+    img_descr_lower = output_dict["image_description1"].lower()
+    for i, tag in enumerate(output_dict["image_tags"].split(",")):
+        if tag.lower() not in img_descr_lower:
+            image_tags_no_dupl += f"{tag},"
+        if i > 4:
+            break
+    
+    output_dict["image_tags"] = image_tags_no_dupl
+
+    return output_dict
+
+
+
+def get_addition_word_data(korean, translation):
+    messages = PROMPT.format_messages(
+        korean=korean,
+        translation=translation,
+        format_instructions=FORMAT_INSTRUCTIONS,
+    )
+    response = LLM(messages)
+    output_dict = OUTPUT_PARSER.parse(response.content)
+    output_dict = clean_tags(output_dict)
+
+    return output_dict
+
 PROMPT, FORMAT_INSTRUCTIONS, LLM, OUTPUT_PARSER = compute_constants()
 
 # # for Tokens used printing
