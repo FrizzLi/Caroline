@@ -45,3 +45,37 @@ def delete_resized_images(image_paths, source_image_names):
         os.remove(resized_image)
     
     print("Done!")
+
+def get_source_images(image_paths):
+    print("Getting source images... ", end="")
+
+    pattern = re.compile(r"[a-z]+\.png$")
+    filtered_paths = []
+
+    for path in image_paths.values():
+        if pattern.search(path):
+            filtered_paths.append(path)
+
+    print("Done!")
+    return filtered_paths
+
+image_paths = get_labelled_file_paths(("data/*/*/vocabulary_images/*",))
+source_image_names = get_source_images(image_paths)
+
+# create_resized_images(source_image_names)
+# delete_resized_images(image_paths, source_image_names)
+
+# this is for finding out missing images, remember this for next pics
+def find_missing_images(image_paths, up_to_lesson_number):
+    def get_source_images2(image_paths):
+        print("Getting source images... ", end="")
+
+        pattern = re.compile(r"[a-z]+\.png$")
+        filtered_paths = []
+
+        for path in image_paths.values():
+            if pattern.search(path):
+                filtered_paths.append(Path(path).stem[:-1])
+
+        print("Done!")
+        return filtered_paths
