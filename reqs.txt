@@ -1,5 +1,6 @@
 discord.py @ git+https://github.com/Rapptz/discord.py
 youtube_dl
+yt-dlp
 pillow
 pandas  # (pytz, numpy)
 types-pytz
