@@ -27,6 +27,7 @@
   - [ ] Like button (to remember URL for next time)
 
 - [ ] korean.py
+  - [ ] You need to be connected to start session message...!!!
   - [ ] BUG: disconnected from voice during session -> Wait a bit, repeat the unplayed audio!!! [ Not connected to voice.]
   - [ ] rearranged columns in google sheets --> might need update for that
   - [ ] Save upon leaving
