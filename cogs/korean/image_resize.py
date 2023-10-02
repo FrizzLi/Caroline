@@ -79,3 +79,24 @@ def find_missing_images(image_paths, up_to_lesson_number):
 
         print("Done!")
         return filtered_paths
+
+    image_words = set(get_source_images2(image_paths))
+
+    import sys
+    sys.path.append(str(Path(__file__).parents[2]))
+    import utils
+
+    _, vocab_dfs = utils.get_worksheets("Korea - Vocabulary", ("Level 1-2 (modified)",))
+    vocab_df = vocab_dfs[0]
+    vocab_df["Lesson"].replace("", np.nan, inplace=True)
+    vocab_df.dropna(subset=["Lesson"], inplace=True)
+
+    sheet_words = set(vocab_df.loc[vocab_df["Lesson"] < up_to_lesson_number, "Korean"])
+    diff = sheet_words - image_words
+    targets = vocab_df.loc[vocab_df["Korean"].isin(diff), ["Lesson", "Korean"]]
+
+    return targets
+
+missings = find_missing_images(image_paths, 110)
+
+print(missings)
