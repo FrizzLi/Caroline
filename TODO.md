@@ -27,6 +27,13 @@
   - [ ] Like button (to remember URL for next time)
 
 - [ ] korean.py
+  - [ ] clarify notes for certain session types with bold font
+  - [ ] remind to leave the voice chat when its over
+  - [ ] inform that you can uncover the expressions to see the answer
+  - [ ] notes command? /help only for the session, too much text might drive users away
+  - [ ] BUG: Zeke - bot too busy - pressing dropdown cmd too fast!
+  - [ ] Add error msg if not connected
+  - [ ] Press the same again
   - [ ] You need to be connected to start session message...!!!
   - [ ] BUG: disconnected from voice during session -> Wait a bit, repeat the unplayed audio!!! [ Not connected to voice.]
   - [ ] rearranged columns in google sheets --> might need update for that
@@ -44,12 +51,12 @@
   - [ ] FIX: left voice -> bot left, and forgot about session in text channel (no guesses(?))
   - [ ] Check percentage calculation
   - [ ] Add translations for reading/listening
-  - [ ] Calculate avg scores, whether there was improvement (watch time though, only at end update)
   - [ ] Session time, unselect opt. (cannot select mistaken opt.)
 
   - [ ] create spreadsheet for each user?
   - [ ] Publishing it: Make it in your server (networking) [UPON WEBSITE BUILDING], Elastic search for gsheet data for all users?
   - [ ] Example sentences do not distinguish synonyms issue
+  - [ ] Implement Grammar patterns
 
   - [ ] Discarded:
     - [ ] Scoring system, vocab picking:
