@@ -108,5 +108,4 @@ bot = MyBot(bot_vars)
 bot.run(bot_vars["token"])
 
 # pylint: disable=<err_name> (pylint)
-# type: ignore (mypy)
 # TODO: wrap idea (logging function calls)..>!! (*EVERYWHERE)
