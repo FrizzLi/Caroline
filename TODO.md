@@ -32,7 +32,6 @@
   - [ ] inform that you can uncover the expressions to see the answer
   - [ ] notes command? /help only for the session, too much text might drive users away
   - [ ] BUG: Zeke - bot too busy - pressing dropdown cmd too fast!
-  - [ ] Add error msg if not connected
   - [ ] Press the same again
   - [ ] You need to be connected to start session message...!!!
   - [ ] BUG: disconnected from voice during session -> Wait a bit, repeat the unplayed audio!!! [ Not connected to voice.]

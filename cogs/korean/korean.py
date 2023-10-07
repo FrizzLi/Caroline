@@ -181,7 +181,9 @@ class Language(discord.ext.commands.Cog):
         guild = interaction.guild
         user_voice = interaction.user.voice
         if not user_voice:
-            await interaction.followup.send("You are not in a voice channel.", delete_after=5)
+            msg = await interaction.followup.send("You are not in a voice channel.")
+            await asyncio.sleep(10.0)
+            await msg.delete()
             return
 
         voice = discord.utils.get(self.bot.voice_clients, guild=guild)
@@ -215,7 +217,9 @@ class Language(discord.ext.commands.Cog):
         if not (0 < level_num < 5 and lesson_num < 31):
             # we cannot choose certain lesson now so this is redundant
             msg = "Wrong level lesson number!"
-            await interaction.followup.send(msg, delete_after=5)
+            msg = await interaction.followup.send(msg)
+            await asyncio.sleep(10.0)
+            await msg.delete()
             self.busy_str = ""
             assert False, msg
 
@@ -830,7 +834,9 @@ class Language(discord.ext.commands.Cog):
             msg = (
                 f"There are no listening files for {level_lesson_num}. lesson."
             )
-            await interaction.followup.send(msg, delete_after=5)
+            msg = await interaction.followup.send(msg)
+            await asyncio.sleep(10.0)
+            await msg.delete()
             self.busy_str = ""
             assert False, msg
 
@@ -1211,7 +1217,9 @@ class Language(discord.ext.commands.Cog):
                 reading_text = f.read()
         except Exception as exc:
             msg = f"There are no reading files for {level_lesson_num}. lesson."
-            await interaction.followup.send(msg, delete_after=5)
+            msg = await interaction.followup.send(msg)
+            await asyncio.sleep(10.0)
+            await msg.delete()
             raise discord.ext.commands.CommandError(msg) from exc
         
         if not level_lesson:
