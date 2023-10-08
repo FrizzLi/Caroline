@@ -6,56 +6,39 @@
 
 ### Todo
 
-- [ ] Polish Discord related stuff: Pylint, Document, Optimize code, and Async, Logs
-- [ ] Pylint - resolve all errors (or at least have above 9.0 score)
-- [ ] Opts prompts: find mistakes in following code, Write a docstring for the following function
-- [ ] Run pylint everywhere with command for scoring --> opt.
-- [ ] Discord bots -> bot off dont take other bots into account
-
-- [ ] Integrate ChatGPT with my Discord server
+- [ ] Opt: Pylint (errs, with cmd! -> 9.0 score above), Async, Logs; Document
+- [ ] Discord bots -> voice chat leaving - dont take other bots into account
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
 - [ ] surveillance.py: Voice stats graphs, Process old logs
 - [ ] music.py:
-  - [ ] FIX: queue is getting updated, but not being sent as the last msg
-  - [ ] Dont lose queue upon leaving, async attach
-  - [ ] Sync music bots msg
-  - [ ] FIX: when the queue is fully played, it stops listening to requests
-  - [ ] Create radio (automatically picks songs)
-  - [ ] Do deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
-  - [ ] Bug: when the bot leaves the voice, refresh button still works..
-  - [ ] Voice: dont leave right away when everybody leaves, wait 10 seconds at least
-  - [ ] Like button (to remember URL for next time)
+  - [ ] IMP: Dont lose queue upon leaving, async attach (for voice continent change, 10sec?)
+  - [ ] IMP: Most played dropdown choose at all times
+  - [ ] IMP: Create radio (automatically picks songs)
+  - [ ] IMP: Like button (to remember URL for next time)
+  - [ ] FIX: When the queue is fully played, it stops listening to requests
+  - [ ] FIX: when the bot leaves the voice, refresh button still works..
+  - [ ] UPD: Deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
 
 - [ ] korean.py
-  - [ ] clarify notes for certain session types with bold font
-  - [ ] remind to leave the voice chat when its over
-  - [ ] inform that you can uncover the expressions to see the answer
-  - [ ] notes command? /help only for the session, too much text might drive users away
-  - [ ] BUG: Zeke - bot too busy - pressing dropdown cmd too fast!
-  - [ ] Press the same again
-  - [ ] You need to be connected to start session message...!!!
-  - [ ] BUG: disconnected from voice during session -> Wait a bit, repeat the unplayed audio!!! [ Not connected to voice.]
-  - [ ] rearranged columns in google sheets --> might need update for that
-  - [ ] Save upon leaving
-  - [ ] (WORKSHEETS ARE ONLY UPDATING, SHOULD WORK) Multiple users access the sheets.. the update might not be synced!
-  - [ ] Brainstorm: Together chat with listening tracks / texts... Who don't know what.... Score, explain... Sessions 
-  - [ ] Auto-repeat every 5 sec (check all audio get max length)
-  - [ ] Memo help feature... If i want to learn sth well (waiting/repeating... Add sth more)
-  - [ ] learn new words (only ones that were not encountered yet!) --> auto review suggestion
-  - [ ] learn new words unselect need!...
-  - [ ] bot's session is opened for one day...
-  - [ ] Auto save for users
-  - [ ] Bug - msg not removed, why (left the channel too soon maybe)
-  - [ ] IMP - when to go for new words or stick with review - automatically calculate
-  - [ ] FIX: left voice -> bot left, and forgot about session in text channel (no guesses(?))
-  - [ ] Check percentage calculation
-  - [ ] Add translations for reading/listening
-  - [ ] Session time, unselect opt. (cannot select mistaken opt.)
+  - [ ] IMP: Clarify notes for certain session types with bold font
+  - [ ] IMP: Remind to leave the voice chat when its over
+  - [ ] IMP: Inform that you can uncover the expressions to see the answer
+  - [ ] IMP: Notes command? /help only for the session, too much text might drive users away
+  - [ ] IMP: Resolve pressing the same option in dropdown
+  - [ ] FIX: Disconnected from voice during session -> Wait a bit, repeat the unplayed audio!!! [ Not connected to voice.]
+  - [ ] UPD: Rearranged columns in google sheets --> might need update for that
+  - [ ] IMP: Auto-repeat every 5 sec (check all audio get max length) + stop sound if buttoned
+  - [ ] FIX: Left voice -> bot left, and forgot about session in text channel (no guesses(?))
+  - [ ] IMP: Auto connect + Auto disconnect from voice when interacting with interface
+  - [ ] IMP: When to go for new words or stick with review? - automatically calculate, 
+  - [ ] IMP: New words session without the words i encountered?
+  - [ ] UPD: Check percentage calculation
+  - [ ] IMP: Implement Grammar patterns
 
-  - [ ] create spreadsheet for each user?
   - [ ] Publishing it: Make it in your server (networking) [UPON WEBSITE BUILDING], Elastic search for gsheet data for all users?
   - [ ] Example sentences do not distinguish synonyms issue
-  - [ ] Implement Grammar patterns
+  - [ ] Brainstorm: Together chat with listening tracks / texts... Who don't know what.... Score, explain... Sessions 
+  - [ ] IMP: Add translations for reading/listening
 
   - [ ] Discarded:
     - [ ] Scoring system, vocab picking:
