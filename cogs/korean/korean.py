@@ -1012,7 +1012,7 @@ class Language(discord.ext.commands.Cog):
             return
         else:
             await interaction.response.send_message(
-                "...Setting up vocab session...", delete_after=1
+                "...Setting up vocab session...", delete_after=5
             )
 
         voice = await self.get_voice(interaction)
@@ -1121,7 +1121,7 @@ class Language(discord.ext.commands.Cog):
             return
         else:
             await interaction.response.send_message(
-                "...Setting up listening session...", delete_after=1
+                "...Setting up listening session...", delete_after=5
             )
 
         voice = await self.get_voice(interaction)
