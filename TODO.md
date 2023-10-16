@@ -6,7 +6,7 @@
 
 ### Todo
 
-- [ ] Opt: Pylint (errs, with cmd! -> 9.0 score above), Async, Logs; Document
+- [ ] Opt: Pylint (errs, with cmd! -> 9.0 score above), Async, Logs (function calls!); Document
 - [ ] Discord bots -> voice chat leaving - dont take other bots into account
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
 - [ ] surveillance.py: Voice stats graphs, Process old logs
@@ -37,7 +37,6 @@
   - [ ] UPD: Rearranged columns in google sheets --> might need update for that
   - [ ] FIX: Disconnected from voice during session -> "Wait a bit, ..." [ Not connected to voice.]
   - [ ] FIX: Left voice -> bot left, and forgot about session in text channel (no guesses(?))
-
   - [ ] Discarded:
     - [ ] IMP: Visualize: streak play, daily q, graph of practice intensity like on github
     - [ ] IMP: Writing vocab f.: vocab_writing [REM] vocab writing function
