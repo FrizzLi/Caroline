@@ -7,7 +7,6 @@
 ### Todo
 
 - [ ] Opt: Pylint (errs, with cmd! -> 9.0 score above), Async, Logs (function calls!); Document
-- [ ] Discord bots -> voice chat leaving - dont take other bots into account
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
 - [ ] surveillance.py: Voice stats graphs, Process old logs
 - [ ] music.py:
