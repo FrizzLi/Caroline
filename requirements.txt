@@ -54,7 +54,7 @@ tomlkit==0.12.1
 types-pytz==2023.3.1.1
 typing_extensions==4.8.0
 tzdata==2023.3
-urllib3==1.26.16
+urllib3==1.26.18
 websockets==11.0.3
 wrapt==1.15.0
 yarl==1.9.2
