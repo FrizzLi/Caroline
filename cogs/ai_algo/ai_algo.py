@@ -77,7 +77,7 @@ class AiAlgo(commands.Cog):
     chain_fname_load_facts = "facts_init"
     chain_fname_load_rules = "rules"
     chain_step_by_step = True
-    chain_randomize_facts_order = False  #
+    chain_randomize_facts_order = True  #
 
     view_skip_rake = False  #
 

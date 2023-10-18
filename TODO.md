@@ -8,14 +8,13 @@
 
 - [ ] Opt: Pylint (errs, with cmd! -> 9.0 score above), Async, Logs (function calls!); Document
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
-- [ ] surveillance.py: Voice stats graphs, Process old logs
+- [ ] surveillance.py: Deep opt.; Voice stats graphs, Process old logs
+- [ ] korean.py on website presentation: show the graphs of right/wrongs for each person
 - [ ] music.py:
   - [ ] IMP: Dont lose queue upon leaving, async attach (for voice continent change, 10sec?)
-  - [ ] IMP: Most played dropdown choose at all times
-  - [ ] IMP: Create radio (automatically picks songs)
-  - [ ] IMP: Like button (to remember URL for next time)
+  - [ ] IMP: Most played dropdown choose at all times; auto select with distribution (radio)
   - [ ] FIX: When the queue is fully played, it stops listening to requests
-  - [ ] FIX: when the bot leaves the voice, refresh button still works..
+  - [ ] FIX: When the bot leaves the voice, refresh button still works, pause doesnt pause the timer!...
   - [ ] UPD: Deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
 
 - [ ] korean.py
@@ -40,8 +39,12 @@
     - [ ] IMP: Visualize: streak play, daily q, graph of practice intensity like on github
     - [ ] IMP: Writing vocab f.: vocab_writing [REM] vocab writing function
     - [ ] IMP: Audio for reading too (?) Lvl 3 already done
+    - [ ] Images for words (text -> img -> text -> same text? (supervised))
   
     - [ ] LLM/ChatGPT Problems:
+      - [ ] Knowledge graph? Similarity between Korean words (spaced in dash app)
+      - [ ] IMP: Make questions about listening, also with choices.. nn type!
+      - [ ] IMP: Answering questions - Q&A for Grammar Book + TTMIK
       - [ ] IMP: Sentences creation for listening / reading idea
       - [ ] IMP: Example sentences do not distinguish synonyms issue
       - [ ] IMP: Add more pics (automate without checking them)
