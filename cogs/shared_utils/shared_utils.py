@@ -28,16 +28,16 @@ class SharedUtils(discord.ext.commands.Cog):
                 (anyone's) action [unused]
         """
 
-        bots_voice_state = member.guild.voice_client
-        if not bots_voice_state:
+        bot_voice_state = member.guild.voice_client
+        if not bot_voice_state:
             return
 
-        members = bots_voice_state.channel.members
+        members = bot_voice_state.channel.members
         users_amount = len([member for member in members if not member.bot])
 
         # Checks if the bot is connected in the voice channel and
         # whether theres only 1 member connected to it (the bot itself)
-        if voice_state and not users_amount:
+        if bot_voice_state and not users_amount:
             try:
                 await member.guild.voice_client.disconnect()
             except AttributeError:
