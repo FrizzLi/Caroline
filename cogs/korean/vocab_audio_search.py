@@ -8,10 +8,6 @@ import time
 
 from pathlib import Path
 
-# TODO: Vocab audio download:
-# Fix/Improve audio downloading (current script is published in memo bookmark)
-# Word by word mp3, to make sound for two words / or remove two words?
-
 
 def dl_vocab():
     def search_words(koreanWords):

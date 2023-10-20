@@ -346,7 +346,6 @@ class Music(commands.Cog):
             player.view.update_msg()
             await player.update_player_status_message()
 
-    # TODO: Update view?
     @app_commands.command(name="volume")
     async def change_volume(self, interaction, *, volume: int = None):
         """Change or see the volume of player in percentages.
@@ -594,7 +593,3 @@ async def setup(bot):
     await bot.add_cog(
         Music(bot), guilds=[discord.Object(id=os.environ["GUILD_ID"])]
     )
-
-# TODO: fix seek command, pause-timestamp bug, player did not update, playlist takes non playlist, add example gif vid into github
-#   reqs
-  

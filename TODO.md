@@ -11,10 +11,12 @@
 - [ ] surveillance.py: Deep opt.; Voice stats graphs, Process old logs
 - [ ] korean.py on website presentation: show the graphs of right/wrongs for each person
 - [ ] music.py:
-  - [ ] IMP: Dont lose queue upon leaving, async attach (for voice continent change, 10sec?)
+  - [ ] FIX: Finish queue -> loop queue -> pause and play -> jump [did not work]
+  - [ ] FIX: Pause button does not take Duration into account
+  - [ ] FIX: Seek command, Playlist takes non playlist
+
   - [ ] IMP: Most played dropdown choose at all times; auto select with distribution (radio)
-  - [ ] FIX: When the queue is fully played, it stops listening to requests
-  - [ ] FIX: When the bot leaves the voice, refresh button still works, pause doesnt pause the timer!...
+  - [ ] FIX: Disable buttons after disconnecting/clearing the queue
   - [ ] UPD: Deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
 
 - [ ] korean.py
@@ -35,6 +37,7 @@
   - [ ] UPD: Rearranged columns in google sheets --> might need update for that
   - [ ] FIX: Disconnected from voice during session -> "Wait a bit, ..." [ Not connected to voice.]
   - [ ] FIX: Left voice -> bot left, and forgot about session in text channel (no guesses(?))
+  - [ ] FIX: /Improve audio downloading (current script is published in memo bookmark)
   - [ ] Discarded:
     - [ ] IMP: Visualize: streak play, daily q, graph of practice intensity like on github
     - [ ] IMP: Writing vocab f.: vocab_writing [REM] vocab writing function
