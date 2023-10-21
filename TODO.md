@@ -11,12 +11,13 @@
 - [ ] surveillance.py: Deep opt.; Voice stats graphs, Process old logs
 - [ ] korean.py on website presentation: show the graphs of right/wrongs for each person
 - [ ] music.py:
-  - [ ] FIX: Finish queue -> loop queue -> pause and play -> jump [did not work]
-  - [ ] FIX: Pause button does not take Duration into account
-  - [ ] FIX: Seek command, Playlist takes non playlist
+  - [ ] BUG EXAMPLES: Finish queue -> loop queue -> pause and play -> jump [did not work]
+  - [ ] FIX: Disable buttons upon disconnect/no-playing (disable first two)
+  - [ ] FIX: Loop queue --> automatically wakes up if at the end of queue
+  - [ ] FIX: Jump --> automatically wakes up if it doesn't play
 
   - [ ] IMP: Most played dropdown choose at all times; auto select with distribution (radio)
-  - [ ] FIX: Disable buttons after disconnecting/clearing the queue
+  - [ ] FIX: Seek command, Playlist takes non playlist
   - [ ] UPD: Deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
 
 - [ ] korean.py

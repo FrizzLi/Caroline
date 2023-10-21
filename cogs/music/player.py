@@ -39,6 +39,7 @@ class MusicPlayer:
     async def player_loop(self):
         """Our main player loop."""
 
+        guild = self.interaction.guild
         await self.interaction.client.wait_until_ready()
 
         while not self.interaction.client.is_closed():
@@ -58,7 +59,8 @@ class MusicPlayer:
                 source = self.queue[self.current_pointer]
 
             except (IndexError, asyncio.TimeoutError):
-                return self.destroy(self.interaction.guild)
+                await self.music.bot.cogs["SharedUtils"].cleanup(guild)
+                return
 
             try:
                 while self.workaround:
@@ -144,10 +146,3 @@ class MusicPlayer:
         """Loops the currently playing track."""
 
         self.loop_track = not self.loop_track
-
-    def destroy(self, guild):
-        """Disconnect and cleanup the player."""
-
-        return self.interaction.client.loop.create_task(
-            self.music.cleanup(guild)
-        )

@@ -4,8 +4,8 @@ import discord
 
 
 class SharedUtils(discord.ext.commands.Cog):
-    """Represents cog extension that tracks activity on all voice channels
-    and also allows us to run Python code.
+    """Represents cog extension that deals with connecting or disconnecting
+    to voice channels.
 
     Args:
         commands (discord.ext.commands.cog.CogMeta): class that is taken to
@@ -35,13 +35,26 @@ class SharedUtils(discord.ext.commands.Cog):
         members = bot_voice_state.channel.members
         users_amount = len([member for member in members if not member.bot])
 
-        # Checks if the bot is connected in the voice channel and
-        # whether theres only 1 member connected to it (the bot itself)
         if bot_voice_state and not users_amount:
-            try:
-                await member.guild.voice_client.disconnect()
-            except AttributeError:
-                pass
+            await self.cleanup(member.guild)
+    
+    async def cleanup(self, guild):
+        """Deletes guild player if one exists.
+
+        Args:
+            guild (discord.guild.Guild): discord server the bot is currently in
+        """
+
+        try:
+            await guild.voice_client.disconnect()
+        except AttributeError:
+            pass
+
+        try:
+            player = self.bot.cogs["Music"].players[guild.id]
+            del player
+        except KeyError:
+            pass
 
     @discord.app_commands.command()
     async def join(
@@ -104,10 +117,7 @@ class SharedUtils(discord.ext.commands.Cog):
             msg = "I'm not connected to a voice channel."
             return await interaction.response.send_message(msg)
 
-        try:
-            await interaction.guild.voice_client.disconnect()
-        except AttributeError:
-            pass
+        await self.cleanup(interaction.guild)
 
         embed = discord.Embed(
             description=f"Left **{voice.channel.name}** channel.",
