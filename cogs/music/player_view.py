@@ -57,6 +57,7 @@ class PlayerView(View):
         self.player = player
         self.source = source
         self.start = default_timer()
+        self.pause_ts = 0
         self.update_msg()
 
     def update_msg(self):
@@ -66,7 +67,8 @@ class PlayerView(View):
         """Display information about player and queue of songs."""
 
         tracks, remains, volume, loop_q, loop_t = self._get_page_info()
-        end = default_timer()
+        paused = self.children[0].emoji.name == '▶️'
+        end = self.pause_ts if paused else default_timer()
         dur_total = self.source.duration
         dur_total = get_readable_duration(dur_total)
         dur_total = "0:00:00" if dur_total.startswith("-") else dur_total
@@ -144,10 +146,12 @@ class PlayerView(View):
             error = await self.player.music.pause(interaction)
             if not error:
                 button.emoji.name = "▶️"
+                self.pause_ts = default_timer()
         elif button.emoji.name == "▶️":
             error = await self.player.music.resume(interaction)
             if not error:
                 button.emoji.name = "⏸️"
+                self.start += (default_timer() - self.pause_ts)
 
         await interaction.response.edit_message(view=self)
 
