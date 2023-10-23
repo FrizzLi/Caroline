@@ -52,7 +52,12 @@ class MusicPlayer:
                     if self.loop_queue:
                         self.next_pointer = 0  # queue loop
                     else:
+                        self.view.children[0].disabled = True
+                        self.view.children[1].disabled = True
+                        await self.update_player_status_message()
                         await self.next.wait()
+                        self.view.children[0].disabled = False
+                        self.view.children[1].disabled = False
                         self.next.clear()
 
                 self.current_pointer = self.next_pointer
