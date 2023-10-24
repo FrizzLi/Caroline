@@ -396,10 +396,17 @@ class Music(commands.Cog):
             msg = f"Could not find a track at '{index}' index."
             return await interaction.response.send_message(msg)
 
-        player.next_pointer = index - 2
+        descr = f"Jumped to {index}. song. "
+        index -= 1
 
-        descr = f"Jumped to a {index}. song. "
-        descr += "It will be played after current one finishes."
+        if not vc.is_playing() and not vc.is_paused():
+            player.next.set()
+            print("SIGNAL FROM JUMP MUSIC.PY")
+        else:
+            index -= 1
+            descr += "It will be played after current one finishes."
+
+        player.next_pointer = index
         embed = discord.Embed(
             description=descr,
             color=discord.Color.green(),
