@@ -446,31 +446,6 @@ class Music(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command()
-    async def clear(self, interaction):
-        """Deletes entire queue of songs."""
-
-        vc = interaction.guild.voice_client
-        if not vc or not vc.is_connected():
-            msg = "I'm not connected to a voice channel."
-            return await interaction.response.send_message(msg)
-
-        player = self.get_player(interaction)
-        if not player.queue:
-            msg = "There is no queue."
-            return await interaction.response.send_message(msg)
-
-        player.queue.clear()
-        player.current_pointer = 0
-        player.next_pointer = -1
-        vc.stop()
-
-        embed = discord.Embed(
-            description="Queue has been cleared.",
-            color=discord.Color.green(),
-        )
-        await interaction.response.send_message(embed=embed)
-
     # duration view does not work according to it!
     @app_commands.command()
     async def seek(self, interaction, second: int = 0):
