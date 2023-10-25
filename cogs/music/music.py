@@ -559,9 +559,19 @@ class Music(commands.Cog):
         player = self.get_player(interaction)
         player.toggle_loop_queue()
 
+        vc = interaction.guild.voice_client
+        if player.loop_queue and not vc.is_playing() and not vc.is_paused():
+            player.next_pointer = 0
+            player.next.set()
+
     async def loop_track(self, interaction):
         player = self.get_player(interaction)
         player.toggle_loop_track()
+
+        vc = interaction.guild.voice_client
+        if player.loop_track and not vc.is_playing() and not vc.is_paused():
+            player.next_pointer -= 1
+            player.next.set()
 
 
 async def setup(bot):

@@ -43,7 +43,7 @@
     - [ ] Images for words (text -> img -> text -> same text? (supervised))
   
     - [ ] LLM/ChatGPT Problems:
-      - [ ] Knowledge graph? Similarity between Korean words (spaced in dash app)
+      - [ ] Knowledge graph? Similarity between Korean words (spaced in dash app) [2 syllables same, same base english word]
       - [ ] IMP: Make questions about listening, also with choices.. nn type!
       - [ ] IMP: Answering questions - Q&A for Grammar Book + TTMIK
       - [ ] IMP: Sentences creation for listening / reading idea
