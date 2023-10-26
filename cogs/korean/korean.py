@@ -285,12 +285,15 @@ class Language(discord.ext.commands.Cog):
         )
         try:
             _, scores_dfs = utils.get_worksheets(S_SPREADSHEET, ws_names)
+            if scores_dfs[0].empty:
+                raise WorksheetNotFound
+                # TODO: this kinda needs optimization, unreadable f. and doc
         except WorksheetNotFound:
             # going for first level
             level_lesson_num = 101
             scores_dfs = []
 
-        # going for next unknown levels' lessons
+        # going for next (2. level or more) unknown levels' lessons
         for i, level_scores_df in enumerate(scores_dfs, 1):
             known_words = set(level_scores_df[level_scores_df.columns[0]])
             level_words = set(df.loc[df["Lesson"] // 100 == i, "Korean"])
