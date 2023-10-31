@@ -1,6 +1,7 @@
 import asyncio
 import random
 import time
+import traceback
 
 from discord.errors import ClientException, NotFound
 
@@ -131,8 +132,9 @@ class MusicPlayer:
                 )
 
         except NotFound as err:
-            print(err)
-            print(self)
+            print("1: " + err)
+            print("2: " + self)
+            print("3: " + traceback.print_exc())
 
     def shuffle(self):
         """Randomizes the position of tracks in queue."""
