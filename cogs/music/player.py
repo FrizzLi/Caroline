@@ -2,7 +2,7 @@ import asyncio
 import random
 import time
 
-from discord.errors import ClientException
+from discord.errors import ClientException, NotFound
 
 from cogs.music.player_view import PlayerView
 from cogs.music.source import YTDLSource
@@ -109,24 +109,31 @@ class MusicPlayer:
         self.next.set()
 
     async def update_player_status_message(self):
-        # if no np.msg, create new msg
-        if not self.np_msg:
-            self.np_msg = await self.interaction.channel.send(
-                content=self.view.msg, view=self.view
-            )
 
-        # if np.msg is the last one, just update it
-        elif self.np_msg.channel.last_message_id == self.np_msg.id:
-            self.np_msg = await self.np_msg.edit(
-                content=self.view.msg, view=self.view
-            )
+        try:
+            # if no np.msg, create new msg
+            if not self.np_msg:
+                self.np_msg = await self.interaction.channel.send(
+                    content=self.view.msg, view=self.view
+                )
 
-        # if np.msg is not the last one, remove old and create new one
-        else:  
-            await self.np_msg.delete()
-            self.np_msg = await self.interaction.channel.send(
-                content=self.view.msg, view=self.view
-            )
+            # if np.msg is the last one, just update it
+            elif self.np_msg.channel.last_message_id == self.np_msg.id:
+                self.np_msg = await self.np_msg.edit(
+                    content=self.view.msg, view=self.view
+                )
+
+            # if np.msg is not the last one, remove old and create new one
+            else:  
+                await self.np_msg.delete()
+                self.np_msg = await self.interaction.channel.send(
+                    content=self.view.msg, view=self.view
+                )
+
+        except NotFound as err:
+            print(err)
+            print(self)
+
 
 
     def shuffle(self):
