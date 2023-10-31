@@ -134,8 +134,6 @@ class MusicPlayer:
             print(err)
             print(self)
 
-
-
     def shuffle(self):
         """Randomizes the position of tracks in queue."""
 
