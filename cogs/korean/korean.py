@@ -48,7 +48,7 @@ import discord
 import numpy as np
 import pandas as pd
 import pytz
-from gspread.exceptions import WorksheetNotFound
+from gspread.exceptions import WorksheetNotFound, APIError
 from gtts import gTTS
 
 import utils
@@ -598,7 +598,7 @@ class Language(discord.ext.commands.Cog):
             except Exception as err:
                 print(f"Wait a bit, repeat the unplayed audio!!! [{err}]")
 
-            footer_text = f"{len(unchecked_words)} words unchecked remaining."
+            footer_text = f"{len(unchecked_words)} words remaining."
             embed.set_footer(text=footer_text)
 
             # sending message
@@ -629,7 +629,7 @@ class Language(discord.ext.commands.Cog):
                 unvisited_words.add(row.Korean)
                 continue
             elif button_id == "end":
-                unchecked_remain = f"{len(unchecked_words)} words unchecked remaining.\n"
+                unchecked_remain = f"{len(unchecked_words)} words remained.\n"
                 stats_str = self.create_ending_session_stats(stats)
                 content = unchecked_remain + stats_str
 
@@ -1049,7 +1049,12 @@ class Language(discord.ext.commands.Cog):
         else:
             guessed_words = tuple(scores_df[scores_df.columns[0]])
 
-        session_number = self.get_session_number(ws_log)
+        try:
+            session_number = self.get_session_number(ws_log)
+        except APIError as err:
+            msg = f"Something went wrong with Google, try again! ({err})"
+            await interaction.response.send_message(msg, delete_after=10)
+            return
 
         if lesson_num:
             vocab = self.get_lesson_vocab(level_lesson_num)
