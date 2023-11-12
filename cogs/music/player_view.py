@@ -72,7 +72,7 @@ class PlayerView(View):
         dur_total = self.source.duration
         dur_total = get_readable_duration(dur_total)
         dur_total = "0:00:00" if dur_total.startswith("-") else dur_total
-        dur_curr = end - self.start
+        dur_curr = end - self.start + self.player.seek_sec
         dur_curr = get_readable_duration(dur_curr)
         dur_curr = "0:00:00" if dur_curr.startswith("-") else dur_curr
 

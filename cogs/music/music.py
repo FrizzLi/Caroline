@@ -461,6 +461,7 @@ class Music(commands.Cog):
             msg = "There is no song being played."
             return await interaction.response.send_message(msg)
 
+        player.seek_sec = second
         player.timestamp = second
         player.next_pointer -= 1
         vc.stop()

@@ -31,6 +31,7 @@ class MusicPlayer:
         self.loop_track = False
 
         self.timestamp = 0
+        self.seek_sec = 0
 
         self.view = None
         self.workaround = 1
@@ -45,6 +46,7 @@ class MusicPlayer:
 
         while not self.interaction.client.is_closed():
             self.next.clear()
+            seek = self.seek_sec
 
             try:
                 if not self.loop_track:
@@ -52,7 +54,7 @@ class MusicPlayer:
                 if self.next_pointer >= len(self.queue):
                     if self.loop_queue:
                         self.next_pointer = 0  # queue loop
-                    else:
+                    else:  # no song in queue (waiting...)
                         self.view.children[0].disabled = True
                         self.view.children[1].disabled = True
                         await self.update_player_status_message()
@@ -100,8 +102,9 @@ class MusicPlayer:
             self.next.clear()
             self.view = PlayerView(self, re_source)
             await self.update_player_status_message()
-
             await self.next.wait()
+            if seek:
+                self.seek_sec = 0
 
     def play_next_song(self, error=None):
         if error:

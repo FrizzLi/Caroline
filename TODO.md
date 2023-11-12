@@ -8,13 +8,11 @@
 
 - [ ] Opt: Pylint (errs, with cmd! -> 9.0 score above), Async, Logs (function calls!); Document
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
-- [ ] surveillance.py: Deep opt.; Voice stats graphs, Process old logs
-- [ ] korean.py on website presentation: show the graphs of right/wrongs for each person
+- [ ] surveillance.py: Deep opt, Voice stats graphs, Process old logs
+- [ ] korean.py: Present on website - Show the graphs of right/wrongs for each person
 - [ ] music.py:
-  - [ ] FIX: Seek command (Duration not according to it)
-  - [ ] IMP: Reimplement clear command? No need for now..
+  - [ ] FIX: Playlist takes non playlist
   - [ ] IMP: Most played dropdown choose at all times; auto select with distribution (radio)
-  - [ ] FIX: Seek command, Playlist takes non playlist
   - [ ] UPD: Deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
 
 - [ ] korean.py
