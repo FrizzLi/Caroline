@@ -39,7 +39,7 @@ def get_worksheets(gs_name, ws_names, create=False, size=(10_000, 20)):
 
     print("Getting worksheets... ", end="")
 
-    credentials_dict_str = os.environ["GOOGLE_CREDENTIALS"]
+    credentials_dict_str = os.environ["GOOGLE_GSHEET_CREDENTIALS"]
     credentials_dict = json.loads(credentials_dict_str)
     google_credentials = gspread.service_account_from_dict(credentials_dict)
     try:
@@ -56,8 +56,11 @@ def get_worksheets(gs_name, ws_names, create=False, size=(10_000, 20)):
         for ws_name in ws_names:
             worksheet = spreadsheet.worksheet(ws_name)
             worksheets.append(worksheet)
-            worksheet_df = pd.DataFrame(worksheet.get_all_records())
-            worksheet_dfs.append(worksheet_df)
+            try:
+                worksheet_df = pd.DataFrame(worksheet.get_all_records())
+                worksheet_dfs.append(worksheet_df)
+            except IndexError:
+                worksheet_dfs = []
     except gspread.exceptions.WorksheetNotFound as err:
         if len(ws_name) == 1 and ws_names.startswith(ws_name):
             message = "You probably havent put your worksheets into the tuple!"
@@ -68,9 +71,18 @@ def get_worksheets(gs_name, ws_names, create=False, size=(10_000, 20)):
                 worksheet = spreadsheet.add_worksheet(
                     ws_name, rows=size[0], cols=size[1]
                 )
-                worksheets.append(worksheet)
-                worksheet_df = pd.DataFrame(worksheet.get_all_records())
-                worksheet_dfs.append(worksheet_df)
+                # worksheets.append(worksheet)
+                # listen = ["Listening 1", "Listening 2", "Listening 3", "Listening 4"]
+                # read = ["Reading 1", "Reading 2", "Reading 3", "Reading 4"]
+                # row = ["Username"] + listen + read
+                # if not tracking_ws.get_values("A1"):
+                #     tracking_ws.append_row(row)
+                try:
+                    worksheet_df = pd.DataFrame(worksheet.get_all_records())
+                    worksheet_dfs.append(worksheet_df)
+                except IndexError:
+                    worksheet_dfs = []
+                
         elif not worksheet_dfs:
             raise err
 
@@ -80,7 +92,7 @@ def get_worksheets(gs_name, ws_names, create=False, size=(10_000, 20)):
 
 
 def update_worksheet(ws, ws_df):
-    """Updates worksheet with dataframe. (appends new rows, updates existing values?)
+    """Updates worksheet with dataframe.
 
     Args:
         ws_df (pandas.core.frame.DataFrame): worksheet dataframe table

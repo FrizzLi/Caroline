@@ -5,7 +5,7 @@
 - [ ]
 
 ### Todo
-
+- [ ] Fix passive errors...
 - [ ] Opt: Pylint (errs, with cmd! -> 9.0 score above), Async, Logs (function calls!); Document
 - [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
 - [ ] surveillance.py: Deep opt, Voice stats graphs, Process old logs
@@ -16,6 +16,13 @@
   - [ ] UPD: Deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
 
 - [ ] korean.py
+  - [ ] Korean.py, girst interaction is slow...
+  - [ ] Maybe "thinking" emoji shouldnt come so late
+  - [ ] Speech recognition (not only google's voice.. [because of phrases later!])
+  - [ ] FIX: bug -- 48 words on lvl 2, why
+  - [ ] FIX: The bot is not leaving for some reason
+  - [ ] FIX: (maybe its ok now) self.np_msg.delete() --> discord.errors.NotFound: 404 Not Found (error code: 10008): Unknown Message
+  - [ ] UPD: Format the output more nicely after session is done
   - [ ] IMP: Clarify notes for certain session types with bold font
   - [ ] IMP: Remind to leave the voice chat when its over
   - [ ] IMP: Inform that you can uncover the expressions to see the answer
