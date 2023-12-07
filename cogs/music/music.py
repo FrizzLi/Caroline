@@ -515,7 +515,7 @@ class Music(commands.Cog):
         # load it into view
         player = self.get_player(interaction)
         view = SearchView(player, entries)
-        player.view.update_msg()
+        # player.view.update_msg()
         await interaction.channel.send(view.msg, view=view)
 
     # Button commands

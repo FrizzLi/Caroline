@@ -55,12 +55,14 @@ class MusicPlayer:
                     if self.loop_queue:
                         self.next_pointer = 0  # queue loop
                     else:  # no song in queue (waiting...)
-                        self.view.children[0].disabled = True
-                        self.view.children[1].disabled = True
+                        if self.view:  # skip cuz its search/playlist cmd (polish)
+                            self.view.children[0].disabled = True
+                            self.view.children[1].disabled = True
                         await self.update_player_status_message()
                         await self.next.wait()
-                        self.view.children[0].disabled = False
-                        self.view.children[1].disabled = False
+                        if self.view:
+                            self.view.children[0].disabled = False
+                            self.view.children[1].disabled = False
                         self.next.clear()
 
                 self.current_pointer = self.next_pointer
@@ -117,9 +119,10 @@ class MusicPlayer:
         try:
             # if no np.msg, create new msg
             if not self.np_msg:
-                self.np_msg = await self.interaction.channel.send(
-                    content=self.view.msg, view=self.view
-                )
+                if self.view:  # search/playlist
+                    self.np_msg = await self.interaction.channel.send(
+                        content=self.view.msg, view=self.view
+                    )
 
             # if np.msg is the last one, just update it
             elif self.np_msg.channel.last_message_id == self.np_msg.id:
