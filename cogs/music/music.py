@@ -473,8 +473,8 @@ class Music(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command()
-    async def search(self, interaction, search: str):
-        """Searches 10 entries from query."""
+    async def search(self, interaction, query: str):
+        """Searches 10 entries from query or displays songs from a playlist."""
 
         # making sure interaction timeout does not expire
         await interaction.response.send_message(
@@ -482,9 +482,16 @@ class Music(commands.Cog):
         )
 
         try:
-            entries = await YTDLSource.search_source(
-                search, loop=self.bot.loop
-            )
+            # pick from playlist
+            if query.startswith("https://www.youtube.com/playlist"):
+                entries = await YTDLSource.create_source(
+                    interaction, query, loop=self.bot.loop, playlist=True
+                )
+            # search for song
+            else:
+                entries = await YTDLSource.search_source(
+                    query, loop=self.bot.loop
+                )
         except youtube_dl.utils.DownloadError as err:
             await interaction.followup.send(err)
             return
@@ -492,30 +499,6 @@ class Music(commands.Cog):
         # load it into view
         player = self.get_player(interaction)
         view = SearchView(player, entries)
-        await interaction.channel.send(view.msg, view=view)
-
-    @app_commands.command(name="playlist")
-    async def playlist(self, interaction, playlist_url: str):
-        """Display all songs from a playlist to pick from."""
-
-        # making sure interaction timeout does not expire
-        await interaction.response.send_message(
-            "...Looking for song(s)... wait..."
-        )
-
-        # get entries
-        try:
-            entries = await YTDLSource.create_source(
-                interaction, playlist_url, loop=self.bot.loop, playlist=True
-            )
-        except youtube_dl.utils.DownloadError as err:
-            await interaction.followup.send(err)
-            return
-
-        # load it into view
-        player = self.get_player(interaction)
-        view = SearchView(player, entries)
-        # player.view.update_msg()
         await interaction.channel.send(view.msg, view=view)
 
     # Button commands
