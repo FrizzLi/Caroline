@@ -5,18 +5,20 @@
 - [ ]
 
 ### Todo
-- [ ] Fix passive errors...
-- [ ] Opt: Pylint (errs, with cmd! -> 9.0 score above), Async, Logs (function calls!); Document
-- [ ] ai_algo.py: Tests (_apply_actions test (rmv), docs)
-- [ ] surveillance.py: Deep opt, Voice stats graphs, Process old logs
-- [ ] korean.py: Present on website - Show the graphs of right/wrongs for each person
+- [ ] surveillance.py: Voice stats graphs, Process old logs
+
+- [ ] Optimization of everything:
+  - Pylint (errs, with cmd! -> 9.0 score above)
+  - Async
+  - Logs (function calls?!)
+  - Document/Test (ai_algo.py - _apply_actions test (rmv))
 - [ ] music.py:
-  - [ ] FIX: Playlist takes non playlist
-  - [ ] IMP: Most played dropdown choose at all times; auto select with distribution (radio)
   - [ ] UPD: Deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
+  - [ ] IMP: Most played dropdown choose at all times; auto select with distribution (radio)
 
 - [ ] korean.py
-  - [ ] Korean.py, girst interaction is slow...
+  - [ ] Present on website - Show the graphs of right/wrongs for each person
+  - [ ] FIX: Korean.py, first interaction is slow...
   - [ ] Maybe "thinking" emoji shouldnt come so late
   - [ ] Speech recognition (not only google's voice.. [because of phrases later!])
   - [ ] FIX: bug -- 48 words on lvl 2, why
@@ -41,6 +43,7 @@
   - [ ] FIX: Disconnected from voice during session -> "Wait a bit, ..." [ Not connected to voice.]
   - [ ] FIX: Left voice -> bot left, and forgot about session in text channel (no guesses(?))
   - [ ] FIX: /Improve audio downloading (current script is published in memo bookmark)
+  - [ ] ???: Commit - [UPD] move connect/disconnect from music.py into shared utils https://github.com/freezpmark/personal-discord-bot/commit/e69a415341308cc6004442a331903421b5692099#diff-35606ac1b506923433a05188f57dfd000f0b13a62abc984a0ea8f41ab0a14fbf
   - [ ] Discarded:
     - [ ] IMP: Visualize: streak play, daily q, graph of practice intensity like on github
     - [ ] IMP: Writing vocab f.: vocab_writing [REM] vocab writing function
