@@ -17,11 +17,11 @@
   - [ ] IMP: Most played dropdown choose at all times; auto select with distribution (radio)
 
 - [ ] korean.py
+  - [ ] FIX: ending the session and fast opening a ne wone will crash (cuz saving worksheets!)
   - [ ] Present on website - Show the graphs of right/wrongs for each person
   - [ ] FIX: Korean.py, first interaction is slow...
   - [ ] Maybe "thinking" emoji shouldnt come so late
   - [ ] Speech recognition (not only google's voice.. [because of phrases later!])
-  - [ ] FIX: bug -- 48 words on lvl 2, why
   - [ ] FIX: The bot is not leaving for some reason
   - [ ] FIX: (maybe its ok now) self.np_msg.delete() --> discord.errors.NotFound: 404 Not Found (error code: 10008): Unknown Message
   - [ ] UPD: Format the output more nicely after session is done

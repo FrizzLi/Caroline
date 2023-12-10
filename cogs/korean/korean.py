@@ -301,7 +301,7 @@ class Language(discord.ext.commands.Cog):
             ws_missing_words = known_words - level_words
             if ws_missing_words:
                 update_needed_msg = (
-                    f"Vocabulary is missing words in Level {i} that user has "
+                    f"Vocabulary sheet is missing words in Level {i} that user has "
                     f"encountered: {ws_missing_words}\n"
                     "Rename those words for user! They're outdated."
                 )
@@ -314,7 +314,7 @@ class Language(discord.ext.commands.Cog):
                 rows = df[df.Lesson == level_lesson_num].values
                 unknown_words = ", ".join([row[1] for row in rows])
                 missing_words_msg = (
-                    "User is missing these words in lesson"
+                    "User haven't encountered these words from sheet's lesson"
                     f"{level_lesson_num}: {unknown_words}"
                 )
                 print(missing_words_msg)
