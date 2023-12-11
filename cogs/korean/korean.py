@@ -1093,7 +1093,7 @@ class Language(discord.ext.commands.Cog):
         self.create_users_level_score_ws(ws_log, user_name, level_num)
         self.busy_str = ""
 
-        await asyncio.sleep(60)
+        await asyncio.sleep(120)
 
         for msg in msgs:
             await msg.delete()
@@ -1269,8 +1269,8 @@ class Language(discord.ext.commands.Cog):
 - If you encounter a word for the first time, it displays all the info about the word. If you have already encountered it, this info will be hidden, only the word with translation will be there, but spoiled. To unspoil it, click on the black text. If you want to see the additional info, use the 📄 button.
 - If the word has number attached at the end, it means it can have multiple meanings. Each number represents one meaning.
 - Listening sessions starts from 102 and reading sessions from 105 lessons.
-- Listening/Reading sessions require you to understand lesson's corresponding grammar that is described inside the Google Doc's link below
-- Vocab/Listening session messages will be deleted 1 minute after the session ends. Reading session ends in 15 minutes.
+- Listening/Reading sessions require you to understand lesson's corresponding grammar that is described inside the Google Doc
+- Vocab/Listening session messages will be deleted 2 minutes after the session ends. Reading session ends in 15 minutes.
         """
         text_links = """
 - [Level 1 Grammar](https://docs.google.com/document/d/1BTBgvSy7VGwoD1AD4lCqpy0_7Zn-U_6smeU0GKdFjoU/edit?usp=sharing) (Google Doc - grammar reference (for listening/reading))
