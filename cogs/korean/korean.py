@@ -581,9 +581,12 @@ class Language(discord.ext.commands.Cog):
         unvisited_words = unchecked_words - set(guessed_words)
         stats = []
         msg = None
+        
+        # first usage of pytz is slow, to make it more smooth during the 
+        # first button interaction, it is called during the setup
+        stat_time = datetime.now(pytz.timezone(self.timezone))
 
         while True:
-
             # prepare output data
             row = vocab[-1]
             guide = row.Korean in unvisited_words
