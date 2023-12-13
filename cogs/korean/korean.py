@@ -649,9 +649,9 @@ class Language(discord.ext.commands.Cog):
                 if row.Korean in unchecked_words:
                     unchecked_words.remove(row.Korean)
             elif button_id == "effort":
-                vocab.insert(len(vocab) // 2, row_to_move)
-            elif button_id == "partial":
                 vocab.insert(len(vocab) // 3, row_to_move)
+            elif button_id == "partial":
+                vocab.insert(len(vocab) // 4, row_to_move)
             elif button_id == "forgot":
                 vocab.insert(-len(vocab) // 5, row_to_move)
 
