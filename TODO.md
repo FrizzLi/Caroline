@@ -5,17 +5,22 @@
 - [ ]
 
 ### Todo
+- [ ] Fix music bot ---> player only in one channel for now pls
 - [ ] surveillance.py: Voice stats graphs, Process old logs
 - [ ] Optimization of everything:
   - Pylint (errs, with cmd! -> 9.0 score above)
   - Async
   - Logs (function calls?!)
   - Document/Test (ai_algo.py - _apply_actions test (rmv))
+  - ChatGPT on Discord 
+  - ChatGPT Base forms of vocab occurences in listening/reading files
+  - Discord Activity + Music monitoring (Voice, Music, Korean)
 - [ ] music.py:
   - [ ] UPD: Deep opt., polishing with other bots as insp., apply logs instead of prints (+wrappers?)
   - [ ] IMP: Most played dropdown choose at all times; auto select with distribution (radio)
 
 - [ ] korean.py
+  - [ ] Take into account on which days u guessed it.. if u still know after long time -> alot of points!, For each in the same time, less points ---- prove with data science!... less chance to pick something from the same day..! Already there but.. more sophisticated
   - [ ] UPD format the output more nicely after session is done (check opts; clarify notes for certain session types with bold font)
   - [ ] UPD inform that you can uncover the expressions to see the answer (help cmd)
   - [ ] IMP Notes command? /help only for the session, too much text might drive users away
@@ -61,6 +66,96 @@
 ### Done ✓
 
 - [x] Create my first TODO.md  
+
+- [ ] Update Korean module notes:
+_____________
+Per Level (START)
+ - get reading and listening text into data files
+
+--------------------
+Per Lesson (START):
+   - Google Docs (Grammar): 
+     - Process Hongik+Topik (add translations, make it more clear)
+
+   - Google Sheets (Vocab):
+     - merge Book + Freq + Topik words into one cell
+     - expr. like 한국 사람 into separate words (except for using verbs (하다)
+   - Use POS Tagger (gsheet4) and manually check listening/writing text files
+   - Add sound labels (gsheet5)
+
+   - Discord Learning:
+     - learn the vocab
+     - practice listening + writing
+     - During the learning of vocab, fix ","'s and ";"s but also the words in general (after listening, the meaning might be different)
+--------------------
+
+Per Level (END)
+Check grammar again with: TTMIK + Grammar Book + Mirinae
+
+_______________________
+POS TAGGER PROCESS - filling Listening_Used / Reading_Used in Sheets [LVL 1-2 sheet only]
+ - Play the listening file, or read if it is reading. Fix the mistakes that were made by Google Lens text transition from picture.
+ - Turn on POS Tagger (gsheet4)
+   1. Check whether we have any duplicates, if yes, we should search the meanings in the text. According to that we might add a word (which we already have, but with different meaning) with a different number
+   2. Basic word checking:
+     - check numbered words whether the meaning corresponds to the text
+     - check whether the base form of the word is correct
+     - Out of lesson (in previous) - no need to do anything
+     - Out of lesson (in next) - modify Lesson column into current Lesson
+     - Fill added, cuz 사! is number, but it was 사요 -> 사다.. check forms!
+
+--<number> correcting number of the meaning of the word with {number} 
+-- wrongly formed word, add it corrected (++ attachable)
+~~ discard - grammar point / wrongly parsed word
+++ new word
+
+Update occurence tabs:
+ - Iterate over the words again, and what is marked as above, we should modify/delete the written listening/writing occurences tabs
+ - As for "All out of vocab" marked words, we have to add them since they were not present in our vocab at all
+
+
+
+_____________________________
+GOOGLE SPREADSHEET INFO
+Korea - Vocabulary (raw)
+Tabs:
+ - raw - raw source of vocabulary that was made during my lessons
+ - arranged - easier to read version of vocabulary of raw
+ - freq unique - words that are not present in my vocab (informational purpose)
+ - topi unique - words that are not present in my vocab (informational purpose)
+ - freq - all words that are present in freq. book
+
+Korea - Vocabulary
+Tabs:
+ - listening/reading occurences shall be merged together, group rows by Word too
+ - Copy of ... tab - serves as backup
+ - Dupl. meanings - synonyms that are grammarly used differently, we already have such words included, it is just slightly different on the type of word (mentioned in Abbreviations)
+ - Grammar pts. - potential content to use for grammar docs (waiting for being used in writing/listening and then mention it!)
+ - Abbreviations - clarification of abbreviations of freq's content
+
+Korea - Users stats
+ - each user has a tab where logs of vocab practice is stored
+
+_________________
+PROGRAM PLAN
+Korean Program (individuality value added, no flashcards needed!!!)
+Vocabulary <>
+Tracks (Play, Pause, Back, Replay, Next, Previous) [display/hide text]
+Stats for both!
+Grammar part - later!
+
+Columns: Presence in topik/freq [underline], listening/reading [bold] files, audio [no spoil]
+
+_____________
+Installing KoNLPy https://konlpy.org/
+3. https://www.youtube.com/watch?v=104dNWmM6Rs
+4. Find JPype1‑1.4.0‑cp310‑cp310‑win_amd64.whl, download it and put it into folder from which you will install it via command
+ - 310 means 3.10 Python
+ - 64 means Windows 64 bit ver.
+
+_____________
+Installing ffmpeg for voice:
+https://www.youtube.com/watch?v=IECI72XEox0
 
 
 
