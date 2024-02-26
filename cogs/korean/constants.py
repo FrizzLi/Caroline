@@ -17,6 +17,14 @@ READ_CHOICES = [
     discord.app_commands.Choice(name="👉 Read previously read lesson", value=-1)
 ]
 
+# VOCAB_AUTO_CHOICES = [
+#     discord.app_commands.Choice(name="👉 Auto: Learn new words", value=1),
+#     discord.app_commands.Choice(name="👉 Auto: Review words from Level 1", value=100),
+#     discord.app_commands.Choice(name="👉 Auto: Review words from Level 2", value=200),
+#     discord.app_commands.Choice(name="👉 Auto: Review words from Level 3", value=300),
+#     discord.app_commands.Choice(name="👉 Auto: Review words from Level 4", value=400),
+# ]
+
 VOCAB_DESCR = (
     "Gets next lesson with words that you haven't encountered yet.",
     "Reviews all the words you encountered in Level 1",
@@ -32,6 +40,13 @@ READ_DESCR = (
     "Gets next lesson with reading text that you haven't encountered yet.",
     "Gets lesson with reading text that you've lastly encountered.",
 )
+# VOCAB_AUTO_DESCR = (
+#     "Auto: Gets next lesson with words that you haven't encountered yet.",
+#     "Auto: Reviews all the words you encountered in Level 1",
+#     "Auto: Reviews all the words you encountered in Level 2",
+#     "Auto: Reviews all the words you encountered in Level 3",
+#     "Auto: Reviews all the words you encountered in Level 4",
+# )
 
 CHOICES = (VOCAB_CHOICES, LISTEN_CHOICES, READ_CHOICES)
 CHOICES_DESCR = (VOCAB_DESCR, LISTEN_DESCR, READ_DESCR)

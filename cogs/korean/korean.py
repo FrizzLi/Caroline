@@ -575,6 +575,7 @@ class Language(discord.ext.commands.Cog):
             "partial": "🧩",
             "forgot": "❌",
         }
+        timeout = False
         view = SessionVocabView()
 
         unchecked_words = {row.Korean for row in vocab}
@@ -590,7 +591,7 @@ class Language(discord.ext.commands.Cog):
             # prepare output data
             row = vocab[-1]
             guide = row.Korean in unvisited_words
-            embed, file, audio_path = self.prepare_word_output(row, guide)
+            embed, file, audio_path = self.prepare_word_output(row, guide, timeout)
             try:
                 voice.play(
                     discord.FFmpegPCMAudio(
@@ -617,13 +618,40 @@ class Language(discord.ext.commands.Cog):
 
             # button interactions
             inter = 3
-            while inter != 2:  # cuz of selection
-                interaction = await self.bot.wait_for(
-                    "interaction",
-                    check=lambda inter: "custom_id" in inter.data.keys()
-                    and inter.user.name == interaction.user.name,
-                )
-                inter = interaction.data["component_type"]
+            try:
+                while inter != 2:  # cuz of selection
+                    interaction = await self.bot.wait_for(
+                        "interaction",
+                        check=lambda inter: "custom_id" in inter.data.keys()
+                        and inter.user.name == interaction.user.name,
+                        timeout=60
+                    )
+                    inter = interaction.data["component_type"]
+            except asyncio.TimeoutError:
+                timeout = True
+                filename = "auto_timed_vocab_data.json"
+                row_to_move = vocab.pop()
+                vocab.insert(0, row_to_move)
+                ################
+                stat_time = datetime.now(pytz.timezone(self.timezone))
+                stat_time_str = stat_time.strftime("%Y-%m-%d %H:%M:%S")
+                rec = {
+                    "stat_time_str": stat_time_str,
+                    "korean": row_to_move.Korean,
+                    "session_number": session_number
+                }
+                try:
+                    with open(filename, 'r') as file:
+                        records = json.load(file)
+                except FileNotFoundError:
+                    records = []
+                
+                records.append(rec)
+
+                with open(filename, 'w') as file:
+                    json.dump(records, file, indent=4)
+                ################
+                continue
 
             button_id = interaction.data["custom_id"]
             if button_id == "repeat":
@@ -637,6 +665,8 @@ class Language(discord.ext.commands.Cog):
                 content = unchecked_remain + stats_str
 
                 await msg.edit(content=content, view=view, embed=None, attachments=[])
+                # TODO: https://stackoverflow.com/questions/65881761/discord-gateway-warning-shard-id-none-heartbeat-blocked-for-more-than-10-second
+                # https://discordpy.readthedocs.io/en/stable/faq.html?highlight=heartbeat#what-does-blocking-mean
                 ws_log.append_rows(stats)
                 break
 
@@ -669,7 +699,7 @@ class Language(discord.ext.commands.Cog):
         
         return msg
 
-    def prepare_word_output(self, row, guide, i=[0]):
+    def prepare_word_output(self, row, guide, timeout, i=[0]):
         """Prepares variables needed for outputting word data.
 
         Args:
@@ -695,7 +725,7 @@ class Language(discord.ext.commands.Cog):
         spoil_spacing = " " * (i[0])
         eng_add = f"; ({row.English_Add})" if row.English_Add else ""
         content = f"**{row.Korean} - {row.Book_English}{eng_add}**"
-        if not guide:
+        if not guide and not timeout:
             content = f"||{content}{spoil_spacing}||"
 
         url = "https://korean.dict.naver.com/koendict/#/search?range=all&query"
@@ -1010,7 +1040,6 @@ class Language(discord.ext.commands.Cog):
            (Ten decimals represent level's lesson)
         """
 
-        msgs = []
         if self.busy_str:
             await interaction.response.send_message(
                 f"The bot is busy with {self.busy_str}!", delete_after=5
@@ -1059,6 +1088,7 @@ class Language(discord.ext.commands.Cog):
             await interaction.response.send_message(msg, delete_after=10)
             return
 
+        msgs = []
         if lesson_num:
             vocab = self.get_lesson_vocab(level_lesson_num)
             msg = (

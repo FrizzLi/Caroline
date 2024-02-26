@@ -6,6 +6,7 @@
 
 ### Todo
 - [ ] Fix music bot ---> player only in one channel for now pls
+- [ ] AUTO TIMED VOCAB PRACTICE !!! DONE --> voice recognition next!
 - [ ] surveillance.py: Voice stats graphs, Process old logs
 - [ ] Optimization of everything:
   - Pylint (errs, with cmd! -> 9.0 score above)

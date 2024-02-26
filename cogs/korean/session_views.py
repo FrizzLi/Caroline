@@ -109,6 +109,8 @@ class MenuSessionSelect(Select):
             await self.korean.listening(interaction, level_lesson)
         elif command_selection == 2:
             await self.korean.reading(interaction, level_lesson)
+        # elif command_selection == 3:
+        #     await self.korean.vocab_listening(interaction, level_lesson)
 
 class MenuSessionsView(View):
     def __init__(self, korean):
