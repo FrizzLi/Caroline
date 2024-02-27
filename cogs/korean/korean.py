@@ -653,6 +653,7 @@ class Language(discord.ext.commands.Cog):
                 ################
                 continue
 
+            timeout = False
             button_id = interaction.data["custom_id"]
             if button_id == "repeat":
                 continue
