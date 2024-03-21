@@ -6,6 +6,7 @@
 
 ### Todo
 - [ ] Fix music bot ---> player only in one channel for now pls
+- [ ] FIX music bot ---> private videos break it
 - [ ] AUTO TIMED VOCAB PRACTICE !!! DONE --> voice recognition next!
 - [ ] surveillance.py: Voice stats graphs, Process old logs
 - [ ] Optimization of everything:
