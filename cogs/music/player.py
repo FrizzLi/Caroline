@@ -138,9 +138,9 @@ class MusicPlayer:
                 )
 
         except NotFound as err:
-            print("1: " + err)
-            print("2: " + self)
-            print("3: " + traceback.print_exc())
+            print("1: " + str(err))
+            print("2: " + str(self))
+            print("3: " + str(traceback.print_exc()))
 
     def shuffle(self):
         """Randomizes the position of tracks in queue."""
