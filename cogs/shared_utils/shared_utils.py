@@ -51,8 +51,7 @@ class SharedUtils(discord.ext.commands.Cog):
             pass
 
         try:
-            player = self.bot.cogs["Music"].players[guild.id]
-            del player
+            del self.bot.cogs["Music"].players[guild.id]
         except KeyError:
             pass
 
