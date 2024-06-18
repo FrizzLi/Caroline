@@ -90,14 +90,14 @@ class MusicPlayer:
                     time.sleep(1)
 
             except (ClientException, AttributeError) as err:
-                print(f"ClientException: {err}")
+                print(f"HANDLED ClientException: {err}")
                 return
             except AttributeError as err:
-                print(f"AttributeError: {err}")
+                print(f"HANDLED AttributeError: {err}")
                 return
             except Exception as err:
-                print(f"Exception: {err}")
-                msg = f"Error:\n```css\n[{err}]\n```"
+                print(f"HANDLED Exception: {err}")
+                msg = f"HANDLED Error:\n```css\n[{err}]\n```"
                 await self.interaction.channel.send(msg)
                 return
 
