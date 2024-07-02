@@ -1,3 +1,4 @@
+import logging
 import os
 
 import discord
@@ -36,6 +37,7 @@ class SharedUtils(discord.ext.commands.Cog):
         users_amount = len([member for member in members if not member.bot])
 
         if bot_voice_state and not users_amount:
+            logging.warning(f"Calling Cleanup\nbot_voice_state: {bot_voice_state}\nusers_amount: {users_amount}")
             await self.cleanup(member.guild)
     
     async def cleanup(self, guild):

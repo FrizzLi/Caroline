@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 import time
 import traceback
@@ -68,7 +69,8 @@ class MusicPlayer:
                 self.current_pointer = self.next_pointer
                 source = self.queue[self.current_pointer]
 
-            except (IndexError, asyncio.TimeoutError):
+            except (IndexError, asyncio.TimeoutError) as err:
+                logging.warning(f"Calling Cleanup (error): {err}")
                 await self.music.bot.cogs["SharedUtils"].cleanup(guild)
                 return
 
