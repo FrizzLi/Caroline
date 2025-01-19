@@ -171,6 +171,10 @@ _____________
 Installing ffmpeg for voice:
 https://www.youtube.com/watch?v=IECI72XEox0
 
+Guide?:
+python -m venv venv
+call venv/Scripts/activate.bat
+pip install -e .
 
 
 
